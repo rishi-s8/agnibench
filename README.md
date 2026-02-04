@@ -2,6 +2,8 @@
 
 A comprehensive benchmarking framework for evaluating AI agents on multi-step tool-calling tasks.
 
+> ⚠️ **Warning**: This project is under active development with regular breaking changes in the API.
+
 ## Overview
 
 agnibench provides a structured framework for testing and comparing AI agent performance across various domains including customer service, data analysis, mathematical reasoning, research synthesis, and workspace management.
