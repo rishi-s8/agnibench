@@ -77,9 +77,107 @@ class GenerateSummaryParams(BaseModel):
     focus_topic: Optional[str] = Field(default=None, description="Topic to focus the summary on")
 
 
+# Pydantic result models
+
+class DocumentSearchResult(BaseModel):
+    """A single document search result."""
+    id: Optional[str] = None
+    title: Optional[str] = None
+    type: Optional[str] = None
+    author: Optional[str] = None
+    created_at: Optional[str] = None
+    preview: Optional[str] = None
+    relevance: Optional[str] = None
+
+
+class SearchDocumentsResult(BaseModel):
+    """Result of searching documents."""
+    query: str
+    results: List[DocumentSearchResult]
+    count: int
+
+
+class ReadDocumentResult(BaseModel):
+    """Result of reading a document."""
+    found: bool
+    document: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class ExtractFactsResult(BaseModel):
+    """Result of extracting facts."""
+    document_id: Optional[str] = None
+    document_title: Optional[str] = None
+    facts: List[str]
+    focus_area: Optional[str] = None
+    error: Optional[str] = None
+
+
+class DocumentReference(BaseModel):
+    """A reference to a document in comparison."""
+    id: str
+    title: Optional[str] = None
+
+
+class CompareSourcesResult(BaseModel):
+    """Result of comparing sources."""
+    documents: Optional[List[DocumentReference]] = None
+    comparison_aspect: Optional[str] = None
+    similarities: Optional[List[str]] = None
+    differences: Optional[List[str]] = None
+    contradictions: Optional[List[str]] = None
+    error: Optional[str] = None
+
+
+class TakeNotesResult(BaseModel):
+    """Result of taking notes."""
+    success: bool
+    note_id: Optional[str] = None
+    message: Optional[str] = None
+
+
+class WebSearchItem(BaseModel):
+    """A web search result item."""
+    title: str
+    url: str
+    snippet: str
+    published: Optional[str] = None
+
+
+class SearchWebResult(BaseModel):
+    """Result of web search."""
+    query: str
+    results: List[WebSearchItem]
+    count: int
+
+
+class DocumentKeyPoints(BaseModel):
+    """Key points from a document."""
+    title: Optional[str] = None
+    key_points: List[str]
+
+
+class SummaryDetails(BaseModel):
+    """Details of a generated summary."""
+    id: str
+    document_count: int
+    note_count: int
+    focus_topic: Optional[str] = None
+    sources: List[DocumentKeyPoints]
+    notes_included: List[str]
+    generated_at: str
+
+
+class GenerateSummaryResult(BaseModel):
+    """Result of generating a summary."""
+    summary_id: Optional[str] = None
+    summary: Optional[SummaryDetails] = None
+    success: bool
+
+
 # Tool implementation functions
 
-def search_documents(params: SearchDocumentsParams) -> Dict[str, Any]:
+def search_documents(params: SearchDocumentsParams) -> SearchDocumentsResult:
     """Search the document corpus."""
     documents = _research_data.get("documents", [])
     results = []
@@ -98,44 +196,44 @@ def search_documents(params: SearchDocumentsParams) -> Dict[str, Any]:
                 if doc.get("type", "").lower() != params.doc_type.lower():
                     continue
 
-            results.append({
-                "id": doc.get("id"),
-                "title": doc.get("title"),
-                "type": doc.get("type"),
-                "author": doc.get("author"),
-                "created_at": doc.get("created_at"),
-                "preview": doc.get("content", "")[:200] + "..." if len(doc.get("content", "")) > 200 else doc.get("content", ""),
-                "relevance": "high" if title_match else "medium",
-            })
+            results.append(DocumentSearchResult(
+                id=doc.get("id"),
+                title=doc.get("title"),
+                type=doc.get("type"),
+                author=doc.get("author"),
+                created_at=doc.get("created_at"),
+                preview=doc.get("content", "")[:200] + "..." if len(doc.get("content", "")) > 200 else doc.get("content", ""),
+                relevance="high" if title_match else "medium",
+            ))
 
             if len(results) >= params.limit:
                 break
 
-    return {
-        "query": params.query,
-        "results": results,
-        "count": len(results),
-    }
+    return SearchDocumentsResult(
+        query=params.query,
+        results=results,
+        count=len(results),
+    )
 
 
-def read_document(params: ReadDocumentParams) -> Dict[str, Any]:
+def read_document(params: ReadDocumentParams) -> ReadDocumentResult:
     """Read a document's full content."""
     documents = _research_data.get("documents", [])
 
     for doc in documents:
         if doc.get("id") == params.document_id:
-            return {
-                "found": True,
-                "document": doc,
-            }
+            return ReadDocumentResult(
+                found=True,
+                document=doc,
+            )
 
-    return {
-        "found": False,
-        "error": f"Document '{params.document_id}' not found",
-    }
+    return ReadDocumentResult(
+        found=False,
+        error=f"Document '{params.document_id}' not found",
+    )
 
 
-def extract_facts(params: ExtractFactsParams) -> Dict[str, Any]:
+def extract_facts(params: ExtractFactsParams) -> ExtractFactsResult:
     """Extract key facts from a document."""
     documents = _research_data.get("documents", [])
 
@@ -150,20 +248,20 @@ def extract_facts(params: ExtractFactsParams) -> Dict[str, Any]:
             if params.focus_area:
                 facts = [f for f in facts if params.focus_area.lower() in f.lower()]
 
-            return {
-                "document_id": params.document_id,
-                "document_title": doc.get("title"),
-                "facts": facts,
-                "focus_area": params.focus_area,
-            }
+            return ExtractFactsResult(
+                document_id=params.document_id,
+                document_title=doc.get("title"),
+                facts=facts,
+                focus_area=params.focus_area,
+            )
 
-    return {
-        "error": f"Document '{params.document_id}' not found",
-        "facts": [],
-    }
+    return ExtractFactsResult(
+        error=f"Document '{params.document_id}' not found",
+        facts=[],
+    )
 
 
-def compare_sources(params: CompareSourcesParams) -> Dict[str, Any]:
+def compare_sources(params: CompareSourcesParams) -> CompareSourcesResult:
     """Compare two documents."""
     documents = _research_data.get("documents", [])
 
@@ -177,26 +275,24 @@ def compare_sources(params: CompareSourcesParams) -> Dict[str, Any]:
             doc2 = doc
 
     if not doc1:
-        return {"error": f"Document '{params.document_id_1}' not found"}
+        return CompareSourcesResult(error=f"Document '{params.document_id_1}' not found")
     if not doc2:
-        return {"error": f"Document '{params.document_id_2}' not found"}
+        return CompareSourcesResult(error=f"Document '{params.document_id_2}' not found")
 
     # Simulated comparison
-    comparison = {
-        "documents": [
-            {"id": doc1["id"], "title": doc1.get("title")},
-            {"id": doc2["id"], "title": doc2.get("title")},
+    return CompareSourcesResult(
+        documents=[
+            DocumentReference(id=doc1["id"], title=doc1.get("title")),
+            DocumentReference(id=doc2["id"], title=doc2.get("title")),
         ],
-        "comparison_aspect": params.comparison_aspect,
-        "similarities": doc1.get("comparisons", {}).get(doc2["id"], {}).get("similarities", []),
-        "differences": doc1.get("comparisons", {}).get(doc2["id"], {}).get("differences", []),
-        "contradictions": doc1.get("comparisons", {}).get(doc2["id"], {}).get("contradictions", []),
-    }
-
-    return comparison
+        comparison_aspect=params.comparison_aspect,
+        similarities=doc1.get("comparisons", {}).get(doc2["id"], {}).get("similarities", []),
+        differences=doc1.get("comparisons", {}).get(doc2["id"], {}).get("differences", []),
+        contradictions=doc1.get("comparisons", {}).get(doc2["id"], {}).get("contradictions", []),
+    )
 
 
-def take_notes(params: TakeNotesParams) -> Dict[str, Any]:
+def take_notes(params: TakeNotesParams) -> TakeNotesResult:
     """Store a research note."""
     note = {
         "id": f"note_{len(_research_data.get('notes', []))+1}",
@@ -210,39 +306,39 @@ def take_notes(params: TakeNotesParams) -> Dict[str, Any]:
         _research_data["notes"] = []
     _research_data["notes"].append(note)
 
-    return {
-        "success": True,
-        "note_id": note["id"],
-        "message": "Note saved successfully",
-    }
+    return TakeNotesResult(
+        success=True,
+        note_id=note["id"],
+        message="Note saved successfully",
+    )
 
 
-def search_web(params: SearchWebParams) -> Dict[str, Any]:
+def search_web(params: SearchWebParams) -> SearchWebResult:
     """Search the web for information (simulated)."""
     # Return simulated search results relevant to research
     simulated_results = [
-        {
-            "title": f"Latest research on {params.query}",
-            "url": f"https://research.example.com/{params.query.replace(' ', '-')}",
-            "snippet": f"Recent findings about {params.query} suggest important developments in the field...",
-            "published": "2024-01-15",
-        },
-        {
-            "title": f"{params.query}: A comprehensive overview",
-            "url": f"https://wiki.example.com/{params.query.replace(' ', '_')}",
-            "snippet": f"This article provides a comprehensive overview of {params.query} and related topics...",
-            "published": "2024-02-01",
-        },
+        WebSearchItem(
+            title=f"Latest research on {params.query}",
+            url=f"https://research.example.com/{params.query.replace(' ', '-')}",
+            snippet=f"Recent findings about {params.query} suggest important developments in the field...",
+            published="2024-01-15",
+        ),
+        WebSearchItem(
+            title=f"{params.query}: A comprehensive overview",
+            url=f"https://wiki.example.com/{params.query.replace(' ', '_')}",
+            snippet=f"This article provides a comprehensive overview of {params.query} and related topics...",
+            published="2024-02-01",
+        ),
     ]
 
-    return {
-        "query": params.query,
-        "results": simulated_results[:params.limit],
-        "count": len(simulated_results[:params.limit]),
-    }
+    return SearchWebResult(
+        query=params.query,
+        results=simulated_results[:params.limit],
+        count=len(simulated_results[:params.limit]),
+    )
 
 
-def generate_summary(params: GenerateSummaryParams) -> Dict[str, Any]:
+def generate_summary(params: GenerateSummaryParams) -> GenerateSummaryResult:
     """Generate a summary from documents and notes."""
     documents = _research_data.get("documents", [])
     notes = _research_data.get("notes", [])
@@ -251,10 +347,10 @@ def generate_summary(params: GenerateSummaryParams) -> Dict[str, Any]:
     doc_contents = []
     for doc in documents:
         if not params.document_ids or doc.get("id") in params.document_ids:
-            doc_contents.append({
-                "title": doc.get("title"),
-                "key_points": doc.get("extracted_facts", [])[:3],
-            })
+            doc_contents.append(DocumentKeyPoints(
+                title=doc.get("title"),
+                key_points=doc.get("extracted_facts", [])[:3],
+            ))
 
     # Include notes if requested
     note_contents = []
@@ -267,25 +363,28 @@ def generate_summary(params: GenerateSummaryParams) -> Dict[str, Any]:
                 note_contents.append(note.get("content"))
 
     # Store the summary
-    summary = {
-        "id": f"summary_{len(_research_data.get('summaries', []))+1}",
-        "document_count": len(doc_contents),
-        "note_count": len(note_contents),
-        "focus_topic": params.focus_topic,
-        "sources": doc_contents,
-        "notes_included": note_contents,
-        "generated_at": datetime.now().isoformat(),
-    }
+    summary_id = f"summary_{len(_research_data.get('summaries', []))+1}"
+    generated_at = datetime.now().isoformat()
+
+    summary = SummaryDetails(
+        id=summary_id,
+        document_count=len(doc_contents),
+        note_count=len(note_contents),
+        focus_topic=params.focus_topic,
+        sources=doc_contents,
+        notes_included=note_contents,
+        generated_at=generated_at,
+    )
 
     if "summaries" not in _research_data:
         _research_data["summaries"] = []
-    _research_data["summaries"].append(summary)
+    _research_data["summaries"].append(summary.model_dump())
 
-    return {
-        "summary_id": summary["id"],
-        "summary": summary,
-        "success": True,
-    }
+    return GenerateSummaryResult(
+        summary_id=summary_id,
+        summary=summary,
+        success=True,
+    )
 
 
 # Tool creation

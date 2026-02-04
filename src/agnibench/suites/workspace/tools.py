@@ -113,9 +113,116 @@ class LookupContactParams(BaseModel):
     department: Optional[str] = Field(default=None, description="Filter by department")
 
 
+# Pydantic result models
+
+class EmailSummary(BaseModel):
+    """Summary of an email in search results."""
+    id: Optional[str] = None
+    sender: Optional[str] = None
+    subject: Optional[str] = None
+    timestamp: Optional[str] = None
+    read: Optional[bool] = None
+    preview: Optional[str] = None
+
+
+class SearchEmailsResult(BaseModel):
+    """Result of searching emails."""
+    results: List[EmailSummary]
+    count: int
+    total_matches: int
+
+
+class ReadEmailResult(BaseModel):
+    """Result of reading an email."""
+    found: bool
+    email: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class SendEmailResult(BaseModel):
+    """Result of sending an email."""
+    success: bool
+    email_id: Optional[str] = None
+    message: Optional[str] = None
+
+
+class SearchCalendarResult(BaseModel):
+    """Result of searching calendar."""
+    results: List[Dict[str, Any]]
+    count: int
+
+
+class CreateEventResult(BaseModel):
+    """Result of creating an event."""
+    success: bool
+    event_id: Optional[str] = None
+    message: Optional[str] = None
+    event: Optional[Dict[str, Any]] = None
+
+
+class TimeSlot(BaseModel):
+    """A time slot."""
+    start: str
+    end: str
+    title: Optional[str] = None
+
+
+class AttendeeAvailability(BaseModel):
+    """Availability for an attendee."""
+    busy_slots: List[TimeSlot]
+    free_slots: List[TimeSlot]
+
+
+class CheckAvailabilityResult(BaseModel):
+    """Result of checking availability."""
+    date: Optional[str] = None
+    attendees: Optional[List[str]] = None
+    individual_availability: Optional[Dict[str, AttendeeAvailability]] = None
+    availability: Optional[Dict[str, AttendeeAvailability]] = None
+    common_free_slots: Optional[List[TimeSlot]] = None
+    duration_requested: Optional[int] = None
+    error: Optional[str] = None
+
+
+class SearchSlackResult(BaseModel):
+    """Result of searching Slack."""
+    results: List[Dict[str, Any]]
+    count: int
+
+
+class SendSlackResult(BaseModel):
+    """Result of sending Slack message."""
+    success: bool
+    message_id: Optional[str] = None
+    channel: Optional[str] = None
+
+
+class WebSearchResultItem(BaseModel):
+    """A web search result item."""
+    title: str
+    url: str
+    snippet: str
+
+
+class WebSearchResult(BaseModel):
+    """Result of web search."""
+    query: str
+    results: List[WebSearchResultItem]
+    count: int
+
+
+class LookupContactResult(BaseModel):
+    """Result of looking up a contact."""
+    found: bool
+    contact: Optional[Dict[str, Any]] = None
+    multiple_matches: Optional[bool] = None
+    contacts: Optional[List[Dict[str, Any]]] = None
+    message: Optional[str] = None
+
+
 # Tool implementation functions
 
-def search_emails(params: SearchEmailsParams) -> Dict[str, Any]:
+def search_emails(params: SearchEmailsParams) -> SearchEmailsResult:
     """Search emails with various filters."""
     emails = _workspace_data.get("emails", [])
     results = []
@@ -155,43 +262,43 @@ def search_emails(params: SearchEmailsParams) -> Dict[str, Any]:
             except ValueError:
                 pass
 
-        results.append({
-            "id": email.get("id"),
-            "sender": email.get("sender"),
-            "subject": email.get("subject"),
-            "timestamp": email.get("timestamp"),
-            "read": email.get("read"),
-            "preview": email.get("body", "")[:100] + "..." if len(email.get("body", "")) > 100 else email.get("body", "")
-        })
+        results.append(EmailSummary(
+            id=email.get("id"),
+            sender=email.get("sender"),
+            subject=email.get("subject"),
+            timestamp=email.get("timestamp"),
+            read=email.get("read"),
+            preview=email.get("body", "")[:100] + "..." if len(email.get("body", "")) > 100 else email.get("body", ""),
+        ))
 
         if len(results) >= params.limit:
             break
 
-    return {
-        "results": results,
-        "count": len(results),
-        "total_matches": len(results),
-    }
+    return SearchEmailsResult(
+        results=results,
+        count=len(results),
+        total_matches=len(results),
+    )
 
 
-def read_email(params: ReadEmailParams) -> Dict[str, Any]:
+def read_email(params: ReadEmailParams) -> ReadEmailResult:
     """Read a specific email by ID."""
     emails = _workspace_data.get("emails", [])
 
     for email in emails:
         if email.get("id") == params.email_id:
-            return {
-                "found": True,
-                "email": email
-            }
+            return ReadEmailResult(
+                found=True,
+                email=email,
+            )
 
-    return {
-        "found": False,
-        "error": f"Email with ID '{params.email_id}' not found"
-    }
+    return ReadEmailResult(
+        found=False,
+        error=f"Email with ID '{params.email_id}' not found",
+    )
 
 
-def send_email(params: SendEmailParams) -> Dict[str, Any]:
+def send_email(params: SendEmailParams) -> SendEmailResult:
     """Send an email."""
     email = {
         "id": f"sent_{len(_workspace_data.get('sent_emails', []))+1}",
@@ -207,14 +314,14 @@ def send_email(params: SendEmailParams) -> Dict[str, Any]:
         _workspace_data["sent_emails"] = []
     _workspace_data["sent_emails"].append(email)
 
-    return {
-        "success": True,
-        "email_id": email["id"],
-        "message": f"Email sent to {params.to}"
-    }
+    return SendEmailResult(
+        success=True,
+        email_id=email["id"],
+        message=f"Email sent to {params.to}",
+    )
 
 
-def search_calendar(params: SearchCalendarParams) -> Dict[str, Any]:
+def search_calendar(params: SearchCalendarParams) -> SearchCalendarResult:
     """Search calendar events."""
     events = _workspace_data.get("calendar_events", [])
     results = []
@@ -256,13 +363,13 @@ def search_calendar(params: SearchCalendarParams) -> Dict[str, Any]:
 
         results.append(event)
 
-    return {
-        "results": results,
-        "count": len(results)
-    }
+    return SearchCalendarResult(
+        results=results,
+        count=len(results),
+    )
 
 
-def create_event(params: CreateEventParams) -> Dict[str, Any]:
+def create_event(params: CreateEventParams) -> CreateEventResult:
     """Create a calendar event."""
     event = {
         "id": f"event_{len(_workspace_data.get('created_events', []))+1}",
@@ -280,15 +387,15 @@ def create_event(params: CreateEventParams) -> Dict[str, Any]:
         _workspace_data["created_events"] = []
     _workspace_data["created_events"].append(event)
 
-    return {
-        "success": True,
-        "event_id": event["id"],
-        "message": f"Event '{params.title}' created",
-        "event": event
-    }
+    return CreateEventResult(
+        success=True,
+        event_id=event["id"],
+        message=f"Event '{params.title}' created",
+        event=event,
+    )
 
 
-def check_availability(params: CheckAvailabilityParams) -> Dict[str, Any]:
+def check_availability(params: CheckAvailabilityParams) -> CheckAvailabilityResult:
     """Check availability for attendees on a given date."""
     events = _workspace_data.get("calendar_events", [])
     availability = {}
@@ -296,7 +403,7 @@ def check_availability(params: CheckAvailabilityParams) -> Dict[str, Any]:
     try:
         check_date = datetime.fromisoformat(params.date).date()
     except ValueError:
-        return {"error": f"Invalid date format: {params.date}"}
+        return CheckAvailabilityResult(error=f"Invalid date format: {params.date}")
 
     for attendee in params.attendees:
         attendee_lower = attendee.lower()
@@ -309,11 +416,11 @@ def check_availability(params: CheckAvailabilityParams) -> Dict[str, Any]:
                     start = datetime.fromisoformat(event.get("start_time", ""))
                     end = datetime.fromisoformat(event.get("end_time", ""))
                     if start.date() == check_date:
-                        busy_slots.append({
-                            "start": start.strftime("%H:%M"),
-                            "end": end.strftime("%H:%M"),
-                            "title": event.get("title")
-                        })
+                        busy_slots.append(TimeSlot(
+                            start=start.strftime("%H:%M"),
+                            end=end.strftime("%H:%M"),
+                            title=event.get("title"),
+                        ))
                 except ValueError:
                     continue
 
@@ -321,44 +428,45 @@ def check_availability(params: CheckAvailabilityParams) -> Dict[str, Any]:
         free_slots = []
         work_start = 9
         work_end = 17
-        busy_sorted = sorted(busy_slots, key=lambda x: x["start"])
+        busy_sorted = sorted(busy_slots, key=lambda x: x.start)
 
         current_time = work_start
         for slot in busy_sorted:
-            slot_start = int(slot["start"].split(":")[0])
+            slot_start = int(slot.start.split(":")[0])
             if current_time < slot_start:
-                free_slots.append({
-                    "start": f"{current_time:02d}:00",
-                    "end": f"{slot_start:02d}:00"
-                })
-            slot_end = int(slot["end"].split(":")[0])
+                free_slots.append(TimeSlot(
+                    start=f"{current_time:02d}:00",
+                    end=f"{slot_start:02d}:00",
+                ))
+            slot_end = int(slot.end.split(":")[0])
             current_time = max(current_time, slot_end)
 
         if current_time < work_end:
-            free_slots.append({
-                "start": f"{current_time:02d}:00",
-                "end": f"{work_end:02d}:00"
-            })
+            free_slots.append(TimeSlot(
+                start=f"{current_time:02d}:00",
+                end=f"{work_end:02d}:00",
+            ))
 
-        availability[attendee] = {
-            "busy_slots": busy_slots,
-            "free_slots": free_slots
-        }
+        availability[attendee] = AttendeeAvailability(
+            busy_slots=busy_slots,
+            free_slots=free_slots,
+        )
 
     # Find common free times
     if len(params.attendees) > 1:
         # Simplified: find overlapping free slots
         common_free = []
         first_attendee = params.attendees[0]
-        for slot in availability.get(first_attendee, {}).get("free_slots", []):
+        for slot in availability.get(first_attendee, AttendeeAvailability(busy_slots=[], free_slots=[])).free_slots:
             is_common = True
             for other in params.attendees[1:]:
-                other_free = availability.get(other, {}).get("free_slots", [])
+                other_avail = availability.get(other, AttendeeAvailability(busy_slots=[], free_slots=[]))
+                other_free = other_avail.free_slots
                 # Check if this slot overlaps with any free slot of other attendee
                 overlap = False
                 for other_slot in other_free:
-                    if (slot["start"] < other_slot["end"] and
-                        slot["end"] > other_slot["start"]):
+                    if (slot.start < other_slot.end and
+                        slot.end > other_slot.start):
                         overlap = True
                         break
                 if not overlap:
@@ -367,23 +475,23 @@ def check_availability(params: CheckAvailabilityParams) -> Dict[str, Any]:
             if is_common:
                 common_free.append(slot)
 
-        return {
-            "date": params.date,
-            "attendees": params.attendees,
-            "individual_availability": availability,
-            "common_free_slots": common_free,
-            "duration_requested": params.duration_minutes
-        }
+        return CheckAvailabilityResult(
+            date=params.date,
+            attendees=params.attendees,
+            individual_availability=availability,
+            common_free_slots=common_free,
+            duration_requested=params.duration_minutes,
+        )
 
-    return {
-        "date": params.date,
-        "attendees": params.attendees,
-        "availability": availability,
-        "duration_requested": params.duration_minutes
-    }
+    return CheckAvailabilityResult(
+        date=params.date,
+        attendees=params.attendees,
+        availability=availability,
+        duration_requested=params.duration_minutes,
+    )
 
 
-def search_slack(params: SearchSlackParams) -> Dict[str, Any]:
+def search_slack(params: SearchSlackParams) -> SearchSlackResult:
     """Search Slack messages."""
     messages = _workspace_data.get("slack_messages", [])
     results = []
@@ -406,13 +514,13 @@ def search_slack(params: SearchSlackParams) -> Dict[str, Any]:
         if len(results) >= params.limit:
             break
 
-    return {
-        "results": results,
-        "count": len(results)
-    }
+    return SearchSlackResult(
+        results=results,
+        count=len(results),
+    )
 
 
-def send_slack(params: SendSlackParams) -> Dict[str, Any]:
+def send_slack(params: SendSlackParams) -> SendSlackResult:
     """Send a Slack message."""
     message = {
         "id": f"slack_{len(_workspace_data.get('sent_slack', []))+1}",
@@ -426,32 +534,32 @@ def send_slack(params: SendSlackParams) -> Dict[str, Any]:
         _workspace_data["sent_slack"] = []
     _workspace_data["sent_slack"].append(message)
 
-    return {
-        "success": True,
-        "message_id": message["id"],
-        "channel": params.channel
-    }
+    return SendSlackResult(
+        success=True,
+        message_id=message["id"],
+        channel=params.channel,
+    )
 
 
-def web_search(params: WebSearchParams) -> Dict[str, Any]:
+def web_search(params: WebSearchParams) -> WebSearchResult:
     """Perform a web search (simulated)."""
     # Return simulated search results based on query
     results = [
-        {
-            "title": f"Result for: {params.query}",
-            "url": f"https://example.com/search?q={params.query.replace(' ', '+')}",
-            "snippet": f"Information about {params.query}..."
-        }
+        WebSearchResultItem(
+            title=f"Result for: {params.query}",
+            url=f"https://example.com/search?q={params.query.replace(' ', '+')}",
+            snippet=f"Information about {params.query}...",
+        )
     ]
 
-    return {
-        "query": params.query,
-        "results": results[:params.limit],
-        "count": len(results)
-    }
+    return WebSearchResult(
+        query=params.query,
+        results=results[:params.limit],
+        count=len(results),
+    )
 
 
-def lookup_contact(params: LookupContactParams) -> Dict[str, Any]:
+def lookup_contact(params: LookupContactParams) -> LookupContactResult:
     """Look up contact information."""
     contacts = _workspace_data.get("contacts", [])
     results = []
@@ -472,21 +580,21 @@ def lookup_contact(params: LookupContactParams) -> Dict[str, Any]:
         results.append(contact)
 
     if len(results) == 1:
-        return {
-            "found": True,
-            "contact": results[0]
-        }
+        return LookupContactResult(
+            found=True,
+            contact=results[0],
+        )
     elif len(results) > 1:
-        return {
-            "found": True,
-            "multiple_matches": True,
-            "contacts": results
-        }
+        return LookupContactResult(
+            found=True,
+            multiple_matches=True,
+            contacts=results,
+        )
     else:
-        return {
-            "found": False,
-            "message": "No matching contacts found"
-        }
+        return LookupContactResult(
+            found=False,
+            message="No matching contacts found",
+        )
 
 
 # Tool creation

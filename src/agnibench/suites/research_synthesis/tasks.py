@@ -722,4 +722,313 @@ def get_research_tasks() -> List[Task]:
         tags=["discovery", "decision-support", "strategic"],
     ))
 
+    # ============================================================================
+    # HOTPOTQA/MUSIQUE-INSPIRED TASKS
+    # Multi-hop reasoning tasks inspired by real QA benchmarks
+    # Focus on: bridging facts across documents, compositional reasoning, evidence chains
+    # ============================================================================
+
+    tasks.append(Task(
+        id="research_hotpot_01",
+        name="Two-Hop Fact Bridge",
+        prompt="""Answer this question using information from our documents:
+
+"What is the market position of the company whose AI acquisition TechCorp is trying to compete with?"
+
+This requires:
+1. Finding which company TechCorp is competing with (from competitive intel)
+2. Finding that company's market position (from market analysis)
+
+Provide the complete reasoning chain showing how you connected the facts.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["search_documents", "read_document", "read_document", "extract_facts"],
+        expected_answer=["market position", "#3", "TechCorp", "competing"],
+        verifier_config={
+            "answer": ["market", "position", "TechCorp", "compet"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents"],
+                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
+                "min_calls": 3,
+                "max_calls": 10
+            }
+        },
+        description="HotpotQA-style: Two-hop bridge reasoning",
+        min_tool_calls=3,
+        max_tool_calls=10,
+        tags=["hotpotqa", "two-hop", "bridge", "reasoning-chain"],
+    ))
+
+    tasks.append(Task(
+        id="research_hotpot_02",
+        name="Comparison Multi-Hop",
+        prompt="""Answer this comparison question:
+
+"Does our revenue growth rate exceed or fall below the growth rate that our customers expect from enterprise solutions?"
+
+This requires:
+1. Finding our revenue growth rate (from financial report)
+2. Finding what growth customers expect (from customer survey or market analysis)
+3. Comparing the two values
+
+State your answer with supporting evidence from both sources.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["search_documents", "read_document", "extract_facts", "read_document", "compare_sources"],
+        expected_answer=["15%", "growth", "exceed", "fall below", "comparison"],
+        verifier_config={
+            "answer": ["growth", "revenue", "compar", "%"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents", "compare_sources"],
+                "optional": ["read_document", "extract_facts", "take_notes"],
+                "min_calls": 3,
+                "max_calls": 10
+            }
+        },
+        description="HotpotQA-style: Comparison requiring multi-source evidence",
+        min_tool_calls=3,
+        max_tool_calls=10,
+        tags=["hotpotqa", "comparison", "multi-source"],
+    ))
+
+    tasks.append(Task(
+        id="research_musique_01",
+        name="Three-Hop Reasoning Chain",
+        prompt="""Answer this complex question:
+
+"What features are planned to address the concerns of customers in the region that has the highest churn risk?"
+
+This requires:
+1. Finding which region has highest churn risk (market analysis)
+2. Finding what specific concerns customers in that region have (customer survey)
+3. Finding what features address those concerns (product roadmap)
+
+Show your complete 3-hop reasoning chain.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_state_tracking=True,
+        ),
+        expected_tool_calls=["search_documents", "read_document", "extract_facts", "read_document", "extract_facts", "read_document", "take_notes"],
+        expected_answer=["churn", "region", "features", "address", "concerns"],
+        verifier_config={
+            "answer": ["churn", "feature", "concern", "roadmap"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents", "extract_facts"],
+                "optional": ["read_document", "compare_sources", "take_notes", "generate_summary"],
+                "min_calls": 4,
+                "max_calls": 15
+            }
+        },
+        description="MuSiQue-style: Three-hop compositional reasoning",
+        min_tool_calls=4,
+        max_tool_calls=15,
+        tags=["musique", "three-hop", "compositional", "chain"],
+    ))
+
+    tasks.append(Task(
+        id="research_musique_02",
+        name="Decomposed Sub-Questions",
+        prompt="""Answer the following compound question by decomposing it into sub-questions:
+
+"How does our product strategy compare to TechCorp's, and are we addressing the same customer pain points they are likely targeting with their AI acquisition?"
+
+Decompose this into:
+- Q1: What is our product strategy? (roadmap)
+- Q2: What is TechCorp's strategy/acquisition focus? (competitive intel)
+- Q3: What are the main customer pain points? (customer survey)
+- Q4: Do our strategies address those pain points?
+
+Answer each sub-question then synthesize a final answer.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_state_tracking=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["search_documents", "extract_facts", "extract_facts", "extract_facts", "compare_sources", "generate_summary"],
+        expected_answer=["strategy", "TechCorp", "pain points", "comparison", "synthesis"],
+        verifier_config={
+            "answer": ["strategy", "TechCorp", "customer", "pain"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents", "extract_facts", "generate_summary"],
+                "optional": ["read_document", "compare_sources", "take_notes"],
+                "min_calls": 5,
+                "max_calls": 18
+            }
+        },
+        description="MuSiQue-style: Decomposed compound question answering",
+        min_tool_calls=5,
+        max_tool_calls=18,
+        tags=["musique", "decomposition", "compound", "synthesis"],
+    ))
+
+    tasks.append(Task(
+        id="research_hotpot_03",
+        name="Yes/No with Evidence Bridge",
+        prompt="""Answer this yes/no question with supporting evidence:
+
+"Is the feature that customers rated lowest in the survey included in our Q1 roadmap priorities?"
+
+Requirements:
+1. Find the lowest-rated feature area from customer survey
+2. Check if it appears in Q1 roadmap priorities
+3. Answer YES or NO
+4. Provide specific evidence supporting your answer""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+        ),
+        expected_tool_calls=["search_documents", "extract_facts", "read_document", "extract_facts"],
+        expected_answer=["yes", "no", "evidence", "lowest", "roadmap"],
+        verifier_config={
+            "answer": ["yes", "no", "evidence", "survey", "roadmap"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents", "extract_facts"],
+                "optional": ["read_document", "compare_sources", "take_notes"],
+                "min_calls": 3,
+                "max_calls": 10
+            }
+        },
+        description="HotpotQA-style: Yes/No question with evidence bridging",
+        min_tool_calls=3,
+        max_tool_calls=10,
+        tags=["hotpotqa", "yes-no", "evidence", "bridge"],
+    ))
+
+    # ============================================================================
+    # COMPOUND TASKS
+    # Tasks that combine multiple independent problems - test context switching
+    # and state management across different objectives
+    # ============================================================================
+
+    tasks.append(Task(
+        id="research_compound_01",
+        name="Multi-Stakeholder Briefing",
+        prompt="""Prepare separate briefings for three different stakeholders from the same document set:
+
+BRIEFING 1 - For the CEO:
+- Focus on financial performance and market position
+- Key metrics: revenue, growth, market share
+- Extract relevant facts and generate a summary
+
+BRIEFING 2 - For the CTO:
+- Focus on product roadmap and competitive technology
+- Key metrics: feature gaps, AI capabilities
+- Extract relevant facts and generate a summary
+
+BRIEFING 3 - For the Sales VP:
+- Focus on customer satisfaction and competitive positioning
+- Key metrics: NPS, churn risk, competitive threats
+- Extract relevant facts and generate a summary
+
+Take notes throughout to track what information goes to which stakeholder.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["search_documents"] + ["read_document"] * 5 + ["extract_facts"] * 6 + ["take_notes"] * 3 + ["generate_summary"] * 3,
+        expected_answer=["CEO", "CTO", "Sales", "briefing", "summary"],
+        verifier_config={
+            "answer": ["briefing", "CEO", "CTO", "Sales", "summary"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents", "extract_facts", "generate_summary"],
+                "optional": ["read_document", "take_notes", "compare_sources"],
+                "min_calls": 10,
+                "max_calls": 30
+            }
+        },
+        description="Compound: Prepare three tailored briefings from same sources",
+        min_tool_calls=10,
+        max_tool_calls=30,
+        tags=["compound", "briefings", "stakeholders", "tailored"],
+    ))
+
+    tasks.append(Task(
+        id="research_compound_02",
+        name="Competitive Analysis Suite",
+        prompt="""Conduct a comprehensive competitive analysis covering:
+
+ANALYSIS 1 - Market Position Comparison:
+- Extract our market share and position
+- Find TechCorp's market position
+- Compare and note the gap
+
+ANALYSIS 2 - Product Capability Gap:
+- Extract our roadmap features
+- Find competitors' AI capabilities
+- Identify where we're ahead and behind
+
+ANALYSIS 3 - Customer Perception:
+- Extract our NPS and satisfaction scores
+- Compare with any industry benchmarks mentioned
+- Identify customer sentiment about competitors
+
+SYNTHESIS:
+- Compare all findings across the three analyses
+- Generate a SWOT-style summary
+- Take notes on strategic recommendations""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["search_documents"] * 2 + ["read_document"] * 4 + ["extract_facts"] * 6 + ["compare_sources"] * 3 + ["take_notes"] * 4 + ["generate_summary"],
+        expected_answer=["market", "product", "customer", "SWOT", "competitive"],
+        verifier_config={
+            "answer": ["market", "competitive", "product", "customer", "summary"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_documents", "extract_facts", "compare_sources", "generate_summary"],
+                "optional": ["read_document", "take_notes", "search_web"],
+                "min_calls": 12,
+                "max_calls": 30
+            }
+        },
+        description="Compound: Three-part competitive analysis with synthesis",
+        min_tool_calls=12,
+        max_tool_calls=30,
+        tags=["compound", "competitive", "swot", "multi-analysis"],
+    ))
+
     return tasks

@@ -1061,4 +1061,95 @@ Store each term as you calculate it.""",
         tags=["math-competition", "sequence", "recursion"],
     ))
 
+    # ============================================================================
+    # COMPOUND TASKS
+    # Tasks that combine multiple independent problems - test context switching
+    # and state management across different mathematical domains
+    # ============================================================================
+
+    tasks.append(Task(
+        id="math_compound_01",
+        name="Multi-Domain Math Session",
+        prompt="""Solve the following three independent problems in a single session:
+
+PROBLEM 1 - GEOMETRY:
+A circular garden has diameter 20 meters. Calculate its area and circumference.
+Convert both to feet.
+
+PROBLEM 2 - FINANCE:
+Calculate the monthly payment for a $200,000 mortgage at 6% annual interest for 30 years.
+Formula: M = P * (r(1+r)^n) / ((1+r)^n - 1) where r = annual rate / 12, n = years * 12
+
+PROBLEM 3 - ALGEBRA:
+Solve the system of equations:
+2x + 3y = 13
+4x - y = 5
+
+Store all intermediate results in the scratchpad. Verify your answers where possible.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_FULL,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_prompt=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["calculator"] * 8 + ["unit_converter"] * 2 + ["equation_solver"] + ["scratchpad"] * 3,
+        expected_answer=["314", "1033", "1199", "x = 2", "y = 3"],
+        verifier_config={
+            "answer": ["area", "mortgage", "solution", "x", "y"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["calculator", "unit_converter", "equation_solver"],
+                "optional": ["formula_lookup", "scratchpad"],
+                "min_calls": 8,
+                "max_calls": 20
+            }
+        },
+        description="Compound: Three independent math problems across domains",
+        min_tool_calls=8,
+        max_tool_calls=20,
+        tags=["compound", "multi-domain", "geometry", "finance", "algebra"],
+    ))
+
+    tasks.append(Task(
+        id="math_compound_02",
+        name="Unit Conversion Chain Challenge",
+        prompt="""Perform the following five independent unit conversions and calculations:
+
+CONVERSION 1: A room is 15 feet × 12 feet. Calculate the area in square meters.
+CONVERSION 2: A tank holds 500 gallons. Convert to liters.
+CONVERSION 3: A car travels 100 km at 60 km/h. How long in minutes?
+CONVERSION 4: A recipe needs 2.5 cups of flour. Convert to grams (1 cup = 125g).
+CONVERSION 5: Temperature is 98.6°F. Convert to Celsius, then to Kelvin.
+
+Sum up all the numeric results (area + liters + minutes + grams + Kelvin) for a final checksum.
+Store each conversion result in the scratchpad.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_FULL,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_prompt=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["calculator"] * 5 + ["unit_converter"] * 5 + ["scratchpad"] * 5,
+        expected_answer=["16.7", "1893", "100", "312.5", "310.15"],
+        verifier_config={
+            "answer": ["square meters", "liters", "minutes", "grams", "Kelvin"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["calculator", "unit_converter"],
+                "optional": ["scratchpad"],
+                "min_calls": 8,
+                "max_calls": 20
+            }
+        },
+        description="Compound: Five independent unit conversions with checksum",
+        min_tool_calls=8,
+        max_tool_calls=20,
+        tags=["compound", "conversions", "multi-unit", "checksum"],
+    ))
+
     return tasks

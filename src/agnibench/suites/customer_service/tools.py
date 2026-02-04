@@ -92,9 +92,115 @@ class SendResponseParams(BaseModel):
     resolution_type: Optional[str] = Field(default=None, description="Type: answer, solution, follow_up, escalation_notice")
 
 
+# Pydantic result models
+
+class TicketSummary(BaseModel):
+    """Summary of a ticket in search results."""
+    id: Optional[str] = None
+    customer_id: Optional[str] = None
+    subject: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    issue_type: Optional[str] = None
+    created_at: Optional[str] = None
+    preview: Optional[str] = None
+
+
+class SearchTicketsResult(BaseModel):
+    """Result of searching tickets."""
+    results: List[TicketSummary]
+    count: int
+
+
+class GetTicketResult(BaseModel):
+    """Result of getting a ticket."""
+    found: bool
+    ticket: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class UpdateTicketResult(BaseModel):
+    """Result of updating a ticket."""
+    success: bool
+    message: Optional[str] = None
+    changes: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class KBArticleSummary(BaseModel):
+    """Summary of a knowledge base article."""
+    id: Optional[str] = None
+    title: Optional[str] = None
+    category: Optional[str] = None
+    preview: Optional[str] = None
+    relevance: Optional[str] = None
+
+
+class SearchKBResult(BaseModel):
+    """Result of searching the knowledge base."""
+    query: str
+    results: List[KBArticleSummary]
+    count: int
+
+
+class CustomerTicketSummary(BaseModel):
+    """Summary of a customer's ticket."""
+    id: str
+    subject: str
+    status: str
+
+
+class GetCustomerResult(BaseModel):
+    """Result of getting customer info."""
+    found: bool
+    customer: Optional[Dict[str, Any]] = None
+    recent_tickets: Optional[List[CustomerTicketSummary]] = None
+    total_tickets: Optional[int] = None
+    error: Optional[str] = None
+
+
+class GeneralServiceStatus(BaseModel):
+    """General service status when no specific product is found."""
+    all_services: str
+    last_incident: str
+    scheduled_maintenance: Optional[str] = None
+
+
+class CheckProductResult(BaseModel):
+    """Result of checking a product."""
+    found: bool
+    product: Optional[Dict[str, Any]] = None
+    general_status: Optional[GeneralServiceStatus] = None
+
+
+class EscalationDetails(BaseModel):
+    """Details of an escalation."""
+    ticket_id: str
+    reason: str
+    specialist_team: str
+    escalated_at: str
+    previous_status: Optional[str] = None
+
+
+class EscalateTicketResult(BaseModel):
+    """Result of escalating a ticket."""
+    success: bool
+    message: Optional[str] = None
+    escalation: Optional[EscalationDetails] = None
+    error: Optional[str] = None
+
+
+class SendResponseResult(BaseModel):
+    """Result of sending a response."""
+    success: bool
+    message: Optional[str] = None
+    response_type: Optional[str] = None
+    error: Optional[str] = None
+
+
 # Tool implementations
 
-def search_tickets(params: SearchTicketsParams) -> Dict[str, Any]:
+def search_tickets(params: SearchTicketsParams) -> SearchTicketsResult:
     """Search support tickets."""
     tickets = _service_data.get("tickets", [])
     results = []
@@ -123,44 +229,44 @@ def search_tickets(params: SearchTicketsParams) -> Dict[str, Any]:
             if ticket.get("issue_type", "").lower() != params.issue_type.lower():
                 continue
 
-        results.append({
-            "id": ticket.get("id"),
-            "customer_id": ticket.get("customer_id"),
-            "subject": ticket.get("subject"),
-            "status": ticket.get("status"),
-            "priority": ticket.get("priority"),
-            "issue_type": ticket.get("issue_type"),
-            "created_at": ticket.get("created_at"),
-            "preview": ticket.get("description", "")[:100],
-        })
+        results.append(TicketSummary(
+            id=ticket.get("id"),
+            customer_id=ticket.get("customer_id"),
+            subject=ticket.get("subject"),
+            status=ticket.get("status"),
+            priority=ticket.get("priority"),
+            issue_type=ticket.get("issue_type"),
+            created_at=ticket.get("created_at"),
+            preview=ticket.get("description", "")[:100],
+        ))
 
         if len(results) >= params.limit:
             break
 
-    return {
-        "results": results,
-        "count": len(results),
-    }
+    return SearchTicketsResult(
+        results=results,
+        count=len(results),
+    )
 
 
-def get_ticket(params: GetTicketParams) -> Dict[str, Any]:
+def get_ticket(params: GetTicketParams) -> GetTicketResult:
     """Get detailed ticket information."""
     tickets = _service_data.get("tickets", [])
 
     for ticket in tickets:
         if ticket.get("id") == params.ticket_id:
-            return {
-                "found": True,
-                "ticket": ticket,
-            }
+            return GetTicketResult(
+                found=True,
+                ticket=ticket,
+            )
 
-    return {
-        "found": False,
-        "error": f"Ticket '{params.ticket_id}' not found",
-    }
+    return GetTicketResult(
+        found=False,
+        error=f"Ticket '{params.ticket_id}' not found",
+    )
 
 
-def update_ticket(params: UpdateTicketParams) -> Dict[str, Any]:
+def update_ticket(params: UpdateTicketParams) -> UpdateTicketResult:
     """Update a ticket's status, priority, or add notes."""
     tickets = _service_data.get("tickets", [])
 
@@ -197,19 +303,19 @@ def update_ticket(params: UpdateTicketParams) -> Dict[str, Any]:
                 _service_data["ticket_updates"] = []
             _service_data["ticket_updates"].append(update)
 
-            return {
-                "success": True,
-                "message": f"Ticket {params.ticket_id} updated",
-                "changes": update["changes"],
-            }
+            return UpdateTicketResult(
+                success=True,
+                message=f"Ticket {params.ticket_id} updated",
+                changes=update["changes"],
+            )
 
-    return {
-        "success": False,
-        "error": f"Ticket '{params.ticket_id}' not found",
-    }
+    return UpdateTicketResult(
+        success=False,
+        error=f"Ticket '{params.ticket_id}' not found",
+    )
 
 
-def search_kb(params: SearchKBParams) -> Dict[str, Any]:
+def search_kb(params: SearchKBParams) -> SearchKBResult:
     """Search knowledge base for solutions."""
     kb_articles = _service_data.get("knowledge_base", [])
     results = []
@@ -227,25 +333,25 @@ def search_kb(params: SearchKBParams) -> Dict[str, Any]:
                 if article.get("category", "").lower() != params.category.lower():
                     continue
 
-            results.append({
-                "id": article.get("id"),
-                "title": article.get("title"),
-                "category": article.get("category"),
-                "preview": article.get("content", "")[:200],
-                "relevance": "high" if title_match else "medium",
-            })
+            results.append(KBArticleSummary(
+                id=article.get("id"),
+                title=article.get("title"),
+                category=article.get("category"),
+                preview=article.get("content", "")[:200],
+                relevance="high" if title_match else "medium",
+            ))
 
             if len(results) >= params.limit:
                 break
 
-    return {
-        "query": params.query,
-        "results": results,
-        "count": len(results),
-    }
+    return SearchKBResult(
+        query=params.query,
+        results=results,
+        count=len(results),
+    )
 
 
-def get_customer(params: GetCustomerParams) -> Dict[str, Any]:
+def get_customer(params: GetCustomerParams) -> GetCustomerResult:
     """Get customer profile and history."""
     customers = _service_data.get("customers", [])
 
@@ -254,85 +360,86 @@ def get_customer(params: GetCustomerParams) -> Dict[str, Any]:
             # Get customer's ticket history
             tickets = _service_data.get("tickets", [])
             customer_tickets = [
-                {"id": t["id"], "subject": t["subject"], "status": t["status"]}
+                CustomerTicketSummary(id=t["id"], subject=t["subject"], status=t["status"])
                 for t in tickets
                 if t.get("customer_id") == params.customer_id
             ]
 
-            return {
-                "found": True,
-                "customer": customer,
-                "recent_tickets": customer_tickets[:5],
-                "total_tickets": len(customer_tickets),
-            }
+            return GetCustomerResult(
+                found=True,
+                customer=customer,
+                recent_tickets=customer_tickets[:5],
+                total_tickets=len(customer_tickets),
+            )
 
-    return {
-        "found": False,
-        "error": f"Customer '{params.customer_id}' not found",
-    }
+    return GetCustomerResult(
+        found=False,
+        error=f"Customer '{params.customer_id}' not found",
+    )
 
 
-def check_product(params: CheckProductParams) -> Dict[str, Any]:
+def check_product(params: CheckProductParams) -> CheckProductResult:
     """Check product or service status."""
     products = _service_data.get("products", [])
 
     for product in products:
         if params.product_id and product.get("id") == params.product_id:
-            return {
-                "found": True,
-                "product": product,
-            }
+            return CheckProductResult(
+                found=True,
+                product=product,
+            )
         if params.service_name and params.service_name.lower() in product.get("name", "").lower():
-            return {
-                "found": True,
-                "product": product,
-            }
+            return CheckProductResult(
+                found=True,
+                product=product,
+            )
 
     # Return general service status if no specific product found
-    return {
-        "found": False,
-        "general_status": {
-            "all_services": "operational",
-            "last_incident": "2024-01-10",
-            "scheduled_maintenance": None,
-        },
-    }
+    return CheckProductResult(
+        found=False,
+        general_status=GeneralServiceStatus(
+            all_services="operational",
+            last_incident="2024-01-10",
+            scheduled_maintenance=None,
+        ),
+    )
 
 
-def escalate_ticket(params: EscalateTicketParams) -> Dict[str, Any]:
+def escalate_ticket(params: EscalateTicketParams) -> EscalateTicketResult:
     """Escalate a ticket to a specialist team."""
     tickets = _service_data.get("tickets", [])
 
     for ticket in tickets:
         if ticket.get("id") == params.ticket_id:
-            escalation = {
-                "ticket_id": params.ticket_id,
-                "reason": params.reason,
-                "specialist_team": params.specialist_team or "tier2_support",
-                "escalated_at": datetime.now().isoformat(),
-                "previous_status": ticket.get("status"),
-            }
+            specialist_team = params.specialist_team or "tier2_support"
+            escalation = EscalationDetails(
+                ticket_id=params.ticket_id,
+                reason=params.reason,
+                specialist_team=specialist_team,
+                escalated_at=datetime.now().isoformat(),
+                previous_status=ticket.get("status"),
+            )
 
             ticket["status"] = "escalated"
-            ticket["escalated_to"] = params.specialist_team or "tier2_support"
+            ticket["escalated_to"] = specialist_team
 
             if "escalations" not in _service_data:
                 _service_data["escalations"] = []
-            _service_data["escalations"].append(escalation)
+            _service_data["escalations"].append(escalation.model_dump())
 
-            return {
-                "success": True,
-                "message": f"Ticket {params.ticket_id} escalated to {params.specialist_team or 'tier2_support'}",
-                "escalation": escalation,
-            }
+            return EscalateTicketResult(
+                success=True,
+                message=f"Ticket {params.ticket_id} escalated to {specialist_team}",
+                escalation=escalation,
+            )
 
-    return {
-        "success": False,
-        "error": f"Ticket '{params.ticket_id}' not found",
-    }
+    return EscalateTicketResult(
+        success=False,
+        error=f"Ticket '{params.ticket_id}' not found",
+    )
 
 
-def send_response(params: SendResponseParams) -> Dict[str, Any]:
+def send_response(params: SendResponseParams) -> SendResponseResult:
     """Send a response to the customer."""
     tickets = _service_data.get("tickets", [])
 
@@ -353,16 +460,16 @@ def send_response(params: SendResponseParams) -> Dict[str, Any]:
             if params.resolution_type == "solution":
                 ticket["status"] = "resolved"
 
-            return {
-                "success": True,
-                "message": f"Response sent to customer for ticket {params.ticket_id}",
-                "response_type": params.resolution_type,
-            }
+            return SendResponseResult(
+                success=True,
+                message=f"Response sent to customer for ticket {params.ticket_id}",
+                response_type=params.resolution_type,
+            )
 
-    return {
-        "success": False,
-        "error": f"Ticket '{params.ticket_id}' not found",
-    }
+    return SendResponseResult(
+        success=False,
+        error=f"Ticket '{params.ticket_id}' not found",
+    )
 
 
 # Tool creation

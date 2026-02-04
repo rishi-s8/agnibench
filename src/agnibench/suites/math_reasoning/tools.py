@@ -61,9 +61,65 @@ class ScratchpadParams(BaseModel):
     )
 
 
+# Pydantic result models
+
+class CalculatorResult(BaseModel):
+    """Result of calculator evaluation."""
+    result: Optional[Any] = None
+    expression: Optional[str] = None
+    error: Optional[str] = None
+
+
+class UnitConverterResult(BaseModel):
+    """Result of unit conversion."""
+    original_value: Optional[float] = None
+    from_unit: Optional[str] = None
+    to_unit: Optional[str] = None
+    converted_value: Optional[float] = None
+    error: Optional[str] = None
+    supported_conversions: Optional[List[tuple]] = None
+
+
+class FormulaLookupResult(BaseModel):
+    """Result of formula lookup."""
+    formula_name: Optional[str] = None
+    formula: Optional[str] = None
+    variables: Optional[Dict[str, str]] = None
+    description: Optional[str] = None
+    example: Optional[str] = None
+    error: Optional[str] = None
+    suggestions: Optional[List[str]] = None
+    available_formulas: Optional[List[str]] = None
+
+
+class EquationSolverResult(BaseModel):
+    """Result of solving an equation."""
+    equation: Optional[str] = None
+    variable: Optional[str] = None
+    solutions: Optional[List[float]] = None
+    steps: Optional[List[str]] = None
+    note: Optional[str] = None
+    error: Optional[str] = None
+
+
+class ScratchpadResult(BaseModel):
+    """Result of scratchpad operation."""
+    operation: Optional[str] = None
+    key: Optional[str] = None
+    value: Optional[str] = None
+    success: Optional[bool] = None
+    found: Optional[bool] = None
+    available_keys: Optional[List[str]] = None
+    entries: Optional[Dict[str, str]] = None
+    count: Optional[int] = None
+    cleared_count: Optional[int] = None
+    error: Optional[str] = None
+    valid_operations: Optional[List[str]] = None
+
+
 # Tool implementation functions
 
-def calculator(params: CalculatorParams) -> Dict[str, Any]:
+def calculator(params: CalculatorParams) -> CalculatorResult:
     """
     Evaluate a mathematical expression.
 
@@ -74,7 +130,7 @@ def calculator(params: CalculatorParams) -> Dict[str, Any]:
     # Safety check - only allow math-related characters
     allowed_pattern = r'^[\d\s\+\-\*\/\^\(\)\.\,a-zA-Z_]+$'
     if not re.match(allowed_pattern, expression):
-        return {"error": "Invalid characters in expression", "result": None}
+        return CalculatorResult(error="Invalid characters in expression", result=None)
 
     # Replace common notation
     expression = expression.replace('^', '**')
@@ -102,12 +158,12 @@ def calculator(params: CalculatorParams) -> Dict[str, Any]:
         # Round to reasonable precision
         if isinstance(result, float):
             result = round(result, 10)
-        return {"result": result, "expression": params.expression}
+        return CalculatorResult(result=result, expression=params.expression)
     except Exception as e:
-        return {"error": str(e), "result": None}
+        return CalculatorResult(error=str(e), result=None)
 
 
-def unit_converter(params: UnitConverterParams) -> Dict[str, Any]:
+def unit_converter(params: UnitConverterParams) -> UnitConverterResult:
     """
     Convert between different units.
 
@@ -166,30 +222,30 @@ def unit_converter(params: UnitConverterParams) -> Dict[str, Any]:
 
     # Same unit
     if from_unit == to_unit:
-        return {
-            "original_value": params.value,
-            "from_unit": from_unit,
-            "to_unit": to_unit,
-            "converted_value": params.value
-        }
+        return UnitConverterResult(
+            original_value=params.value,
+            from_unit=from_unit,
+            to_unit=to_unit,
+            converted_value=params.value,
+        )
 
     key = (from_unit, to_unit)
     if key in conversions:
         converted = round(conversions[key](params.value), 6)
-        return {
-            "original_value": params.value,
-            "from_unit": from_unit,
-            "to_unit": to_unit,
-            "converted_value": converted
-        }
+        return UnitConverterResult(
+            original_value=params.value,
+            from_unit=from_unit,
+            to_unit=to_unit,
+            converted_value=converted,
+        )
 
-    return {
-        "error": f"Conversion from '{from_unit}' to '{to_unit}' not supported",
-        "supported_conversions": list(conversions.keys())
-    }
+    return UnitConverterResult(
+        error=f"Conversion from '{from_unit}' to '{to_unit}' not supported",
+        supported_conversions=list(conversions.keys()),
+    )
 
 
-def formula_lookup(params: FormulaLookupParams) -> Dict[str, Any]:
+def formula_lookup(params: FormulaLookupParams) -> FormulaLookupResult:
     """
     Look up a mathematical formula by name.
 
@@ -288,26 +344,30 @@ def formula_lookup(params: FormulaLookupParams) -> Dict[str, Any]:
     name = params.formula_name.lower().replace(" ", "_")
 
     if name in formulas:
-        return {
-            "formula_name": name,
-            **formulas[name]
-        }
+        f = formulas[name]
+        return FormulaLookupResult(
+            formula_name=name,
+            formula=f["formula"],
+            variables=f["variables"],
+            description=f["description"],
+            example=f["example"],
+        )
 
     # Try partial match
     matches = [k for k in formulas.keys() if name in k or k in name]
     if matches:
-        return {
-            "error": f"Formula '{params.formula_name}' not found. Did you mean one of these?",
-            "suggestions": matches
-        }
+        return FormulaLookupResult(
+            error=f"Formula '{params.formula_name}' not found. Did you mean one of these?",
+            suggestions=matches,
+        )
 
-    return {
-        "error": f"Formula '{params.formula_name}' not found",
-        "available_formulas": list(formulas.keys())
-    }
+    return FormulaLookupResult(
+        error=f"Formula '{params.formula_name}' not found",
+        available_formulas=list(formulas.keys()),
+    )
 
 
-def equation_solver(params: EquationSolverParams) -> Dict[str, Any]:
+def equation_solver(params: EquationSolverParams) -> EquationSolverResult:
     """
     Solve simple algebraic equations.
 
@@ -319,7 +379,7 @@ def equation_solver(params: EquationSolverParams) -> Dict[str, Any]:
     try:
         # Split by equals sign
         if "=" not in equation:
-            return {"error": "Equation must contain '='", "solutions": None}
+            return EquationSolverResult(error="Equation must contain '='", solutions=None)
 
         left, right = equation.split("=")
 
@@ -344,16 +404,16 @@ def equation_solver(params: EquationSolverParams) -> Dict[str, Any]:
 
             # ax + const = rhs => x = (rhs - const) / a
             solution = (rhs - const) / coef
-            return {
-                "equation": params.equation,
-                "variable": var,
-                "solutions": [round(solution, 6)],
-                "steps": [
+            return EquationSolverResult(
+                equation=params.equation,
+                variable=var,
+                solutions=[round(solution, 6)],
+                steps=[
                     f"Original: {coef}{var} + {const} = {rhs}",
                     f"Subtract {const}: {coef}{var} = {rhs - const}",
                     f"Divide by {coef}: {var} = {solution}"
-                ]
-            }
+                ],
+            )
 
         # Simple form: ax = b
         simple_pattern = rf'(-?\d*\.?\d*){var}\s*=\s*(-?\d+\.?\d*)'
@@ -362,11 +422,11 @@ def equation_solver(params: EquationSolverParams) -> Dict[str, Any]:
             coef = float(match.group(1)) if match.group(1) not in ['', '-'] else (1 if match.group(1) == '' else -1)
             rhs = float(match.group(2))
             solution = rhs / coef
-            return {
-                "equation": params.equation,
-                "variable": var,
-                "solutions": [round(solution, 6)]
-            }
+            return EquationSolverResult(
+                equation=params.equation,
+                variable=var,
+                solutions=[round(solution, 6)],
+            )
 
         # Quadratic: ax^2 + bx + c = 0
         quad_pattern = rf'(-?\d*\.?\d*){var}\^2\s*([\+\-])\s*(\d*\.?\d*){var}\s*([\+\-])\s*(\d+\.?\d*)\s*=\s*0'
@@ -380,42 +440,42 @@ def equation_solver(params: EquationSolverParams) -> Dict[str, Any]:
 
             discriminant = b**2 - 4*a*c
             if discriminant < 0:
-                return {
-                    "equation": params.equation,
-                    "variable": var,
-                    "solutions": [],
-                    "note": "No real solutions (discriminant < 0)"
-                }
+                return EquationSolverResult(
+                    equation=params.equation,
+                    variable=var,
+                    solutions=[],
+                    note="No real solutions (discriminant < 0)",
+                )
             elif discriminant == 0:
                 x = -b / (2*a)
-                return {
-                    "equation": params.equation,
-                    "variable": var,
-                    "solutions": [round(x, 6)]
-                }
+                return EquationSolverResult(
+                    equation=params.equation,
+                    variable=var,
+                    solutions=[round(x, 6)],
+                )
             else:
                 x1 = (-b + math.sqrt(discriminant)) / (2*a)
                 x2 = (-b - math.sqrt(discriminant)) / (2*a)
-                return {
-                    "equation": params.equation,
-                    "variable": var,
-                    "solutions": [round(x1, 6), round(x2, 6)]
-                }
+                return EquationSolverResult(
+                    equation=params.equation,
+                    variable=var,
+                    solutions=[round(x1, 6), round(x2, 6)],
+                )
 
-        return {
-            "error": "Could not parse equation. Supported formats: 'ax + b = c', 'ax^2 + bx + c = 0'",
-            "equation": params.equation
-        }
+        return EquationSolverResult(
+            error="Could not parse equation. Supported formats: 'ax + b = c', 'ax^2 + bx + c = 0'",
+            equation=params.equation,
+        )
 
     except Exception as e:
-        return {"error": str(e), "solutions": None}
+        return EquationSolverResult(error=str(e), solutions=None)
 
 
 # Global scratchpad storage (reset per environment)
 _scratchpad: Dict[str, str] = {}
 
 
-def scratchpad(params: ScratchpadParams) -> Dict[str, Any]:
+def scratchpad(params: ScratchpadParams) -> ScratchpadResult:
     """
     Store and retrieve intermediate values.
 
@@ -427,56 +487,56 @@ def scratchpad(params: ScratchpadParams) -> Dict[str, Any]:
 
     if operation == "store":
         if not params.key:
-            return {"error": "Key is required for store operation"}
+            return ScratchpadResult(error="Key is required for store operation")
         if params.value is None:
-            return {"error": "Value is required for store operation"}
+            return ScratchpadResult(error="Value is required for store operation")
         _scratchpad[params.key] = params.value
-        return {
-            "operation": "store",
-            "key": params.key,
-            "value": params.value,
-            "success": True
-        }
+        return ScratchpadResult(
+            operation="store",
+            key=params.key,
+            value=params.value,
+            success=True,
+        )
 
     elif operation == "retrieve":
         if not params.key:
-            return {"error": "Key is required for retrieve operation"}
+            return ScratchpadResult(error="Key is required for retrieve operation")
         if params.key in _scratchpad:
-            return {
-                "operation": "retrieve",
-                "key": params.key,
-                "value": _scratchpad[params.key],
-                "found": True
-            }
+            return ScratchpadResult(
+                operation="retrieve",
+                key=params.key,
+                value=_scratchpad[params.key],
+                found=True,
+            )
         else:
-            return {
-                "operation": "retrieve",
-                "key": params.key,
-                "found": False,
-                "available_keys": list(_scratchpad.keys())
-            }
+            return ScratchpadResult(
+                operation="retrieve",
+                key=params.key,
+                found=False,
+                available_keys=list(_scratchpad.keys()),
+            )
 
     elif operation == "list":
-        return {
-            "operation": "list",
-            "entries": dict(_scratchpad),
-            "count": len(_scratchpad)
-        }
+        return ScratchpadResult(
+            operation="list",
+            entries=dict(_scratchpad),
+            count=len(_scratchpad),
+        )
 
     elif operation == "clear":
         count = len(_scratchpad)
         _scratchpad.clear()
-        return {
-            "operation": "clear",
-            "cleared_count": count,
-            "success": True
-        }
+        return ScratchpadResult(
+            operation="clear",
+            cleared_count=count,
+            success=True,
+        )
 
     else:
-        return {
-            "error": f"Unknown operation: {operation}",
-            "valid_operations": ["store", "retrieve", "list", "clear"]
-        }
+        return ScratchpadResult(
+            error=f"Unknown operation: {operation}",
+            valid_operations=["store", "retrieve", "list", "clear"],
+        )
 
 
 def reset_scratchpad():

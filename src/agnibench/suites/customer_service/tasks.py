@@ -770,4 +770,312 @@ def get_customer_service_tasks() -> List[Task]:
         tags=["discovery", "proactive", "health-check"],
     ))
 
+    # ============================================================================
+    # NATCS/TWEETSUMM-INSPIRED TASKS
+    # Multi-turn dialogue resolution tasks inspired by real customer service datasets
+    # Focus on: context maintenance, turn-taking, issue threading, resolution tracking
+    # ============================================================================
+
+    tasks.append(Task(
+        id="cs_natcs_01",
+        name="Multi-Turn Billing Dispute",
+        prompt="""A customer (cust_001) has contacted us multiple times about a billing issue:
+- First contact: Reported duplicate charge of $99.99
+- Second contact: Was told refund would process in 3-5 days
+- Current contact (now): Says it's been 7 days with no refund
+
+Review the full conversation history in their tickets, check the current status, and provide a resolution that acknowledges the entire context.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+            requires_cross_reference=True,
+        ),
+        expected_tool_calls=["get_customer", "search_tickets", "get_ticket", "search_kb", "send_response"],
+        expected_answer=["refund", "billing", "apologize", "escalate"],
+        verifier_config={
+            "answer": ["refund", "billing", "apolog", "customer"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["get_customer", "search_tickets", "send_response"],
+                "optional": ["get_ticket", "search_kb", "escalate_ticket", "update_ticket"],
+                "min_calls": 4,
+                "max_calls": 12
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 1}}
+            }
+        },
+        description="NatCS-style: Multi-turn context tracking for billing dispute",
+        min_tool_calls=4,
+        max_tool_calls=12,
+        tags=["natcs", "multi-turn", "billing", "context-tracking"],
+    ))
+
+    tasks.append(Task(
+        id="cs_natcs_02",
+        name="Handoff Continuation",
+        prompt="""A customer was transferred to you mid-conversation. The previous agent notes say:
+"Customer frustrated - API integration failing. Verified credentials are correct. Suspect rate limiting issue. Need to check their usage logs."
+
+Customer ID: cust_003. Continue from where the previous agent left off. Check the service status for any rate limiting issues, find relevant KB articles, and provide a complete resolution.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+        ),
+        expected_tool_calls=["get_customer", "check_product", "search_kb", "search_tickets", "send_response"],
+        expected_answer=["rate limit", "API", "resolved", "response"],
+        verifier_config={
+            "answer": ["API", "rate", "response", "customer"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["check_product", "send_response"],
+                "optional": ["get_customer", "search_kb", "search_tickets", "get_ticket", "update_ticket"],
+                "min_calls": 3,
+                "max_calls": 10
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 1}}
+            }
+        },
+        description="NatCS-style: Conversation handoff with context continuation",
+        min_tool_calls=3,
+        max_tool_calls=10,
+        tags=["natcs", "handoff", "api", "continuation"],
+    ))
+
+    tasks.append(Task(
+        id="cs_tweetsumm_01",
+        name="Summarize and Resolve Thread",
+        prompt="""Ticket ticket_001 has a long conversation thread with multiple back-and-forth exchanges. The customer has provided additional details over time.
+
+Your task:
+1. Read the entire ticket thread
+2. Summarize the key issues mentioned across all messages
+3. Identify what has already been tried
+4. Provide a comprehensive resolution that addresses all outstanding concerns
+5. Update the ticket with a summary for future reference""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+            requires_cross_reference=True,
+        ),
+        expected_tool_calls=["get_ticket", "get_customer", "search_kb", "update_ticket", "send_response"],
+        expected_answer=["summary", "resolved", "thread", "comprehensive"],
+        verifier_config={
+            "answer": ["summary", "ticket", "response", "update"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["get_ticket", "update_ticket", "send_response"],
+                "optional": ["get_customer", "search_kb", "search_tickets"],
+                "min_calls": 4,
+                "max_calls": 12
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 1}},
+                "ticket_updates": {"$length": {"$gte": 1}}
+            }
+        },
+        description="TWEETSUMM-style: Thread summarization and comprehensive resolution",
+        min_tool_calls=4,
+        max_tool_calls=12,
+        tags=["tweetsumm", "summarization", "thread", "comprehensive"],
+    ))
+
+    tasks.append(Task(
+        id="cs_natcs_03",
+        name="Sentiment-Aware Response",
+        prompt="""Customer cust_002 has submitted ticket_002 and their messages have become increasingly frustrated over multiple contacts about the same issue.
+
+Review their full history to understand:
+1. The original issue and all follow-ups
+2. What promises were made previously
+3. The customer's apparent emotional state
+
+Craft a response that:
+- Acknowledges their frustration
+- Takes ownership of the delays
+- Provides a concrete resolution with specific timeline
+- Offers appropriate compensation if warranted""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["get_ticket", "get_customer", "search_tickets", "search_kb", "send_response"],
+        expected_answer=["apologize", "frustrat", "resolution", "timeline"],
+        verifier_config={
+            "answer": ["apolog", "customer", "response", "resolution"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["get_ticket", "get_customer", "send_response"],
+                "optional": ["search_tickets", "search_kb", "update_ticket", "escalate_ticket"],
+                "min_calls": 4,
+                "max_calls": 12
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 1}}
+            }
+        },
+        description="NatCS-style: Sentiment-aware customer handling",
+        min_tool_calls=4,
+        max_tool_calls=12,
+        tags=["natcs", "sentiment", "empathy", "retention"],
+    ))
+
+    tasks.append(Task(
+        id="cs_natcs_04",
+        name="Cross-Ticket Issue Pattern",
+        prompt="""We've noticed that customer cust_001 has created multiple tickets recently. Investigate whether these are related issues or symptoms of a larger underlying problem.
+
+1. Get all tickets from this customer
+2. Analyze if there's a common root cause
+3. If issues are related, consolidate them into a single resolution plan
+4. Respond to the customer with a unified approach to solve all their issues""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["get_customer", "search_tickets", "get_ticket", "get_ticket", "search_kb", "send_response"],
+        expected_answer=["pattern", "root cause", "consolidated", "unified"],
+        verifier_config={
+            "answer": ["ticket", "customer", "response", "issue"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["get_customer", "search_tickets", "send_response"],
+                "optional": ["get_ticket", "search_kb", "update_ticket", "escalate_ticket"],
+                "min_calls": 5,
+                "max_calls": 15
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 1}}
+            }
+        },
+        description="NatCS-style: Cross-ticket pattern analysis",
+        min_tool_calls=5,
+        max_tool_calls=15,
+        tags=["natcs", "pattern", "root-cause", "consolidation"],
+    ))
+
+    # ============================================================================
+    # COMPOUND TASKS
+    # Tasks that combine multiple independent problems - test context switching
+    # and state management across different objectives
+    # ============================================================================
+
+    tasks.append(Task(
+        id="cs_compound_01",
+        name="Triple Ticket Triage",
+        prompt="""Handle the following three tickets in a single session:
+
+TICKET 1 (ticket_001): Login issue for cust_001 - Find the cause and send a solution.
+TICKET 2 (ticket_002): Billing dispute for cust_002 - Investigate and determine if escalation is needed.
+TICKET 3 (ticket_003): API errors for cust_003 - Check service status and provide an update.
+
+For each ticket:
+- Investigate the issue
+- Send an appropriate response to the customer
+- Update the ticket status
+
+Provide a summary of all three resolutions at the end.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["get_ticket"] * 3 + ["get_customer"] * 3 + ["search_kb"] * 3 + ["send_response"] * 3 + ["update_ticket"] * 3,
+        expected_answer=["ticket_001", "ticket_002", "ticket_003", "resolved", "summary"],
+        verifier_config={
+            "answer": ["ticket", "resolved", "response", "login", "billing", "API"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["get_ticket", "send_response"],
+                "optional": ["get_customer", "search_kb", "update_ticket", "check_product", "escalate_ticket"],
+                "min_calls": 9,
+                "max_calls": 25
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 3}}
+            }
+        },
+        description="Compound: Handle three independent tickets in one session",
+        min_tool_calls=9,
+        max_tool_calls=25,
+        tags=["compound", "multi-ticket", "triage", "context-switching"],
+    ))
+
+    tasks.append(Task(
+        id="cs_compound_02",
+        name="Customer Portfolio Review",
+        prompt="""Perform a complete review of two enterprise customers:
+
+CUSTOMER A (cust_001 - John Smith):
+- Review all their open tickets
+- Check their product usage and tier
+- Identify any ongoing issues
+
+CUSTOMER B (cust_004 - Emily Davis):
+- Review all their open tickets
+- Check their product usage and tier
+- Identify any ongoing issues
+
+Then:
+- Compare their situations
+- Identify which customer needs more urgent attention
+- Send a proactive check-in email to the higher-priority customer
+- Update your manager (via #general Slack if available, or via internal note) about both customers""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["get_customer"] * 2 + ["search_tickets"] * 2 + ["get_ticket"] * 4 + ["send_response"],
+        expected_answer=["John Smith", "Emily Davis", "comparison", "priority", "check-in"],
+        verifier_config={
+            "answer": ["customer", "John", "Emily", "priority", "ticket"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["get_customer", "search_tickets", "send_response"],
+                "optional": ["get_ticket", "check_product", "update_ticket"],
+                "min_calls": 6,
+                "max_calls": 20
+            },
+            "state": {
+                "responses_sent": {"$length": {"$gte": 1}}
+            }
+        },
+        description="Compound: Compare and manage two customer portfolios",
+        min_tool_calls=6,
+        max_tool_calls=20,
+        tags=["compound", "portfolio", "comparison", "proactive"],
+    ))
+
     return tasks

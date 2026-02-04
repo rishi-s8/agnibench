@@ -97,9 +97,124 @@ class SaveInsightParams(BaseModel):
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
 
 
+# Pydantic result models
+
+class DatasetSummary(BaseModel):
+    """Summary of a dataset in list results."""
+    id: Optional[str] = None
+    name: Optional[str] = None
+    category: Optional[str] = None
+    num_rows: Optional[int] = None
+    num_columns: Optional[int] = None
+    description: Optional[str] = None
+    has_quality_issues: Optional[bool] = None
+    is_empty: Optional[bool] = None
+
+
+class ListDatasetsResult(BaseModel):
+    """Result of listing datasets."""
+    datasets: List[DatasetSummary]
+    count: int
+
+
+class DatasetDetails(BaseModel):
+    """Detailed dataset information."""
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    num_rows: Optional[int] = None
+    num_columns: Optional[int] = None
+    columns: Optional[List[Dict[str, Any]]] = None
+    sample_data: Optional[List[Dict[str, Any]]] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class DescribeDatasetResult(BaseModel):
+    """Result of describing a dataset."""
+    found: bool
+    dataset: Optional[DatasetDetails] = None
+    error: Optional[str] = None
+
+
+class QueryDataResult(BaseModel):
+    """Result of querying data."""
+    success: bool
+    query_id: Optional[str] = None
+    row_count: Optional[int] = None
+    data: Optional[List[Dict[str, Any]]] = None
+    error: Optional[str] = None
+
+
+class ComputeStatisticsResult(BaseModel):
+    """Result of computing statistics."""
+    success: bool
+    dataset_id: Optional[str] = None
+    column: Optional[str] = None
+    grouped_by: Optional[str] = None
+    statistic: Optional[str] = None
+    value: Optional[Any] = None
+    statistics: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class VisualizationSpec(BaseModel):
+    """Visualization specification."""
+    type: str
+    encoding: Dict[str, Any]
+
+
+class CreateVisualizationResult(BaseModel):
+    """Result of creating a visualization."""
+    success: bool
+    visualization_id: Optional[str] = None
+    chart_type: Optional[str] = None
+    message: Optional[str] = None
+    spec: Optional[VisualizationSpec] = None
+    error: Optional[str] = None
+
+
+class DetectAnomaliesResult(BaseModel):
+    """Result of detecting anomalies."""
+    success: bool
+    dataset_id: Optional[str] = None
+    column: Optional[str] = None
+    method: Optional[str] = None
+    threshold: Optional[float] = None
+    anomaly_count: Optional[int] = None
+    anomalies: Optional[List[Dict[str, Any]]] = None
+    percentage: Optional[float] = None
+    error: Optional[str] = None
+
+
+class CorrelationPair(BaseModel):
+    """A pair of correlated columns."""
+    column1: str
+    column2: str
+    correlation: float
+    strength: str
+
+
+class CorrelateColumnsResult(BaseModel):
+    """Result of correlating columns."""
+    success: bool
+    dataset_id: Optional[str] = None
+    method: Optional[str] = None
+    correlation_matrix: Optional[Dict[str, Dict[str, float]]] = None
+    strong_correlations: Optional[List[CorrelationPair]] = None
+    error: Optional[str] = None
+
+
+class SaveInsightResult(BaseModel):
+    """Result of saving an insight."""
+    success: bool
+    insight_id: Optional[str] = None
+    message: Optional[str] = None
+
+
 # Tool implementations
 
-def list_datasets(params: ListDatasetsParams) -> Dict[str, Any]:
+def list_datasets(params: ListDatasetsParams) -> ListDatasetsResult:
     """List available datasets."""
     datasets = _data_state.get("datasets", [])
     results = []
@@ -113,59 +228,59 @@ def list_datasets(params: ListDatasetsParams) -> Dict[str, Any]:
             if ds.get("category", "").lower() != params.category.lower():
                 continue
 
-        result = {
-            "id": ds.get("id"),
-            "name": ds.get("name"),
-            "category": ds.get("category"),
-            "num_rows": ds.get("num_rows"),
-            "num_columns": ds.get("num_columns"),
-            "description": ds.get("description"),
-        }
+        result = DatasetSummary(
+            id=ds.get("id"),
+            name=ds.get("name"),
+            category=ds.get("category"),
+            num_rows=ds.get("num_rows"),
+            num_columns=ds.get("num_columns"),
+            description=ds.get("description"),
+        )
 
         # Include data quality warnings if present
         if ds.get("data_quality_issues"):
-            result["has_quality_issues"] = True
+            result.has_quality_issues = True
 
         # Include empty dataset indicator
         if ds.get("num_rows", 0) == 0:
-            result["is_empty"] = True
+            result.is_empty = True
 
         results.append(result)
 
-    return {
-        "datasets": results,
-        "count": len(results),
-    }
+    return ListDatasetsResult(
+        datasets=results,
+        count=len(results),
+    )
 
 
-def describe_dataset(params: DescribeDatasetParams) -> Dict[str, Any]:
+def describe_dataset(params: DescribeDatasetParams) -> DescribeDatasetResult:
     """Get detailed dataset description including schema and statistics."""
     datasets = _data_state.get("datasets", [])
 
     for ds in datasets:
         if ds.get("id") == params.dataset_id:
-            return {
-                "found": True,
-                "dataset": {
-                    "id": ds.get("id"),
-                    "name": ds.get("name"),
-                    "description": ds.get("description"),
-                    "num_rows": ds.get("num_rows"),
-                    "num_columns": ds.get("num_columns"),
-                    "columns": ds.get("columns"),
-                    "sample_data": ds.get("sample_data", [])[:5],
-                    "created_at": ds.get("created_at"),
-                    "updated_at": ds.get("updated_at"),
-                },
-            }
+            return DescribeDatasetResult(
+                found=True,
+                dataset=DatasetDetails(
+                    id=ds.get("id"),
+                    name=ds.get("name"),
+                    description=ds.get("description"),
+                    num_rows=ds.get("num_rows"),
+                    num_columns=ds.get("num_columns"),
+                    columns=ds.get("columns"),
+                    sample_data=ds.get("sample_data", [])[:5],
+                    created_at=ds.get("created_at"),
+                    updated_at=ds.get("updated_at"),
+                ),
+            )
 
-    return {
-        "found": False,
-        "error": f"Dataset '{params.dataset_id}' not found",
-    }
+    return DescribeDatasetResult(
+        found=False,
+        error=f"Dataset '{params.dataset_id}' not found",
+    )
 
 
-def query_data(params: QueryDataParams) -> Dict[str, Any]:
+def query_data(params: QueryDataParams) -> QueryDataResult:
     """Query data from a dataset."""
     datasets = _data_state.get("datasets", [])
 
@@ -244,20 +359,20 @@ def query_data(params: QueryDataParams) -> Dict[str, Any]:
                 _data_state["query_results"] = []
             _data_state["query_results"].append(query_result)
 
-            return {
-                "success": True,
-                "query_id": query_result["query_id"],
-                "row_count": len(data),
-                "data": data,
-            }
+            return QueryDataResult(
+                success=True,
+                query_id=query_result["query_id"],
+                row_count=len(data),
+                data=data,
+            )
 
-    return {
-        "success": False,
-        "error": f"Dataset '{params.dataset_id}' not found",
-    }
+    return QueryDataResult(
+        success=False,
+        error=f"Dataset '{params.dataset_id}' not found",
+    )
 
 
-def compute_statistics(params: ComputeStatisticsParams) -> Dict[str, Any]:
+def compute_statistics(params: ComputeStatisticsParams) -> ComputeStatisticsResult:
     """Compute statistics for a column."""
     datasets = _data_state.get("datasets", [])
 
@@ -267,60 +382,69 @@ def compute_statistics(params: ComputeStatisticsParams) -> Dict[str, Any]:
             col_stats = ds.get("column_statistics", {}).get(params.column, {})
 
             if not col_stats:
-                return {
-                    "success": False,
-                    "error": f"Column '{params.column}' not found or has no statistics",
-                }
+                return ComputeStatisticsResult(
+                    success=False,
+                    error=f"Column '{params.column}' not found or has no statistics",
+                )
 
             # If group_by specified, return grouped stats
             if params.group_by:
                 grouped_stats = ds.get("grouped_statistics", {}).get(
                     f"{params.column}_by_{params.group_by}", {}
                 )
-                return {
-                    "success": True,
-                    "dataset_id": params.dataset_id,
-                    "column": params.column,
-                    "grouped_by": params.group_by,
-                    "statistics": grouped_stats,
-                }
+                return ComputeStatisticsResult(
+                    success=True,
+                    dataset_id=params.dataset_id,
+                    column=params.column,
+                    grouped_by=params.group_by,
+                    statistics=grouped_stats,
+                )
 
             # Return requested statistic type
             if params.statistic == "summary":
-                return {
-                    "success": True,
-                    "dataset_id": params.dataset_id,
-                    "column": params.column,
-                    "statistics": col_stats,
-                }
+                return ComputeStatisticsResult(
+                    success=True,
+                    dataset_id=params.dataset_id,
+                    column=params.column,
+                    statistics=col_stats,
+                )
             elif params.statistic in col_stats:
-                return {
-                    "success": True,
-                    "dataset_id": params.dataset_id,
-                    "column": params.column,
-                    "statistic": params.statistic,
-                    "value": col_stats[params.statistic],
-                }
+                return ComputeStatisticsResult(
+                    success=True,
+                    dataset_id=params.dataset_id,
+                    column=params.column,
+                    statistic=params.statistic,
+                    value=col_stats[params.statistic],
+                )
             else:
-                return {
-                    "success": True,
-                    "dataset_id": params.dataset_id,
-                    "column": params.column,
-                    "statistics": col_stats,
-                }
+                return ComputeStatisticsResult(
+                    success=True,
+                    dataset_id=params.dataset_id,
+                    column=params.column,
+                    statistics=col_stats,
+                )
 
-    return {
-        "success": False,
-        "error": f"Dataset '{params.dataset_id}' not found",
-    }
+    return ComputeStatisticsResult(
+        success=False,
+        error=f"Dataset '{params.dataset_id}' not found",
+    )
 
 
-def create_visualization(params: CreateVisualizationParams) -> Dict[str, Any]:
+def create_visualization(params: CreateVisualizationParams) -> CreateVisualizationResult:
     """Create a visualization specification."""
     datasets = _data_state.get("datasets", [])
 
     for ds in datasets:
         if ds.get("id") == params.dataset_id:
+            spec = VisualizationSpec(
+                type=params.chart_type,
+                encoding={
+                    "x": {"field": params.x_column},
+                    "y": {"field": params.y_column} if params.y_column else None,
+                    "color": {"field": params.group_by} if params.group_by else None,
+                },
+            )
+
             viz = {
                 "id": f"viz_{len(_data_state.get('visualizations', []))+1}",
                 "dataset_id": params.dataset_id,
@@ -330,35 +454,28 @@ def create_visualization(params: CreateVisualizationParams) -> Dict[str, Any]:
                 "group_by": params.group_by,
                 "title": params.title or f"{params.chart_type.title()} chart of {params.x_column}",
                 "created_at": datetime.now().isoformat(),
-                "spec": {
-                    "type": params.chart_type,
-                    "encoding": {
-                        "x": {"field": params.x_column},
-                        "y": {"field": params.y_column} if params.y_column else None,
-                        "color": {"field": params.group_by} if params.group_by else None,
-                    },
-                },
+                "spec": spec.model_dump(),
             }
 
             if "visualizations" not in _data_state:
                 _data_state["visualizations"] = []
             _data_state["visualizations"].append(viz)
 
-            return {
-                "success": True,
-                "visualization_id": viz["id"],
-                "chart_type": params.chart_type,
-                "message": f"Created {params.chart_type} visualization",
-                "spec": viz["spec"],
-            }
+            return CreateVisualizationResult(
+                success=True,
+                visualization_id=viz["id"],
+                chart_type=params.chart_type,
+                message=f"Created {params.chart_type} visualization",
+                spec=spec,
+            )
 
-    return {
-        "success": False,
-        "error": f"Dataset '{params.dataset_id}' not found",
-    }
+    return CreateVisualizationResult(
+        success=False,
+        error=f"Dataset '{params.dataset_id}' not found",
+    )
 
 
-def detect_anomalies(params: DetectAnomaliesParams) -> Dict[str, Any]:
+def detect_anomalies(params: DetectAnomaliesParams) -> DetectAnomaliesResult:
     """Detect anomalies in a column."""
     datasets = _data_state.get("datasets", [])
 
@@ -367,24 +484,24 @@ def detect_anomalies(params: DetectAnomaliesParams) -> Dict[str, Any]:
             # Get pre-computed anomalies
             anomalies = ds.get("anomalies", {}).get(params.column, [])
 
-            return {
-                "success": True,
-                "dataset_id": params.dataset_id,
-                "column": params.column,
-                "method": params.method,
-                "threshold": params.threshold,
-                "anomaly_count": len(anomalies),
-                "anomalies": anomalies[:10],  # Return top 10
-                "percentage": round(len(anomalies) / ds.get("num_rows", 1) * 100, 2),
-            }
+            return DetectAnomaliesResult(
+                success=True,
+                dataset_id=params.dataset_id,
+                column=params.column,
+                method=params.method,
+                threshold=params.threshold,
+                anomaly_count=len(anomalies),
+                anomalies=anomalies[:10],  # Return top 10
+                percentage=round(len(anomalies) / ds.get("num_rows", 1) * 100, 2),
+            )
 
-    return {
-        "success": False,
-        "error": f"Dataset '{params.dataset_id}' not found",
-    }
+    return DetectAnomaliesResult(
+        success=False,
+        error=f"Dataset '{params.dataset_id}' not found",
+    )
 
 
-def correlate_columns(params: CorrelateColumnsParams) -> Dict[str, Any]:
+def correlate_columns(params: CorrelateColumnsParams) -> CorrelateColumnsResult:
     """Compute correlations between columns."""
     datasets = _data_state.get("datasets", [])
 
@@ -409,32 +526,32 @@ def correlate_columns(params: CorrelateColumnsParams) -> Dict[str, Any]:
             for col1, corrs in correlations.items():
                 for col2, value in corrs.items():
                     if col1 < col2 and abs(value) > 0.5:
-                        strong_correlations.append({
-                            "column1": col1,
-                            "column2": col2,
-                            "correlation": value,
-                            "strength": "strong" if abs(value) > 0.7 else "moderate",
-                        })
+                        strong_correlations.append(CorrelationPair(
+                            column1=col1,
+                            column2=col2,
+                            correlation=value,
+                            strength="strong" if abs(value) > 0.7 else "moderate",
+                        ))
 
-            return {
-                "success": True,
-                "dataset_id": params.dataset_id,
-                "method": params.method,
-                "correlation_matrix": correlations,
-                "strong_correlations": sorted(
+            return CorrelateColumnsResult(
+                success=True,
+                dataset_id=params.dataset_id,
+                method=params.method,
+                correlation_matrix=correlations,
+                strong_correlations=sorted(
                     strong_correlations,
-                    key=lambda x: abs(x["correlation"]),
+                    key=lambda x: abs(x.correlation),
                     reverse=True,
                 ),
-            }
+            )
 
-    return {
-        "success": False,
-        "error": f"Dataset '{params.dataset_id}' not found",
-    }
+    return CorrelateColumnsResult(
+        success=False,
+        error=f"Dataset '{params.dataset_id}' not found",
+    )
 
 
-def save_insight(params: SaveInsightParams) -> Dict[str, Any]:
+def save_insight(params: SaveInsightParams) -> SaveInsightResult:
     """Save a data insight/finding."""
     insight = {
         "id": f"insight_{len(_data_state.get('insights', []))+1}",
@@ -450,11 +567,11 @@ def save_insight(params: SaveInsightParams) -> Dict[str, Any]:
         _data_state["insights"] = []
     _data_state["insights"].append(insight)
 
-    return {
-        "success": True,
-        "insight_id": insight["id"],
-        "message": "Insight saved successfully",
-    }
+    return SaveInsightResult(
+        success=True,
+        insight_id=insight["id"],
+        message="Insight saved successfully",
+    )
 
 
 # Tool creation

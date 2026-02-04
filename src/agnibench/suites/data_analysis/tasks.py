@@ -772,4 +772,319 @@ def get_data_analysis_tasks() -> List[Task]:
         tags=["discovery", "competitive", "swot"],
     ))
 
+    # ============================================================================
+    # MMTU/TREB/TABLEBENCH-INSPIRED TASKS
+    # Tabular reasoning tasks inspired by real data analysis benchmarks
+    # Focus on: multi-step retrieval, fact verification, numerical computation, table joins
+    # ============================================================================
+
+    tasks.append(Task(
+        id="data_mmtu_01",
+        name="Multi-Table Join Analysis",
+        prompt="""Analyze the relationship between customer behavior and product performance:
+
+1. Get the top 5 customers by lifetime_value from the customer dataset
+2. Find what product categories they purchase most frequently from the sales dataset
+3. Check if those categories have the highest or lowest stock levels in the products dataset
+4. Compute the correlation between customer lifetime_value and average transaction amount
+
+Present findings as a cross-table analysis.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["list_datasets", "query_data", "query_data", "describe_dataset", "correlate_columns", "save_insight"],
+        expected_answer=["join", "correlation", "lifetime_value", "category"],
+        verifier_config={
+            "answer": ["customer", "product", "correlation", "category"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["query_data", "correlate_columns"],
+                "optional": ["list_datasets", "describe_dataset", "compute_statistics", "save_insight", "create_visualization"],
+                "min_calls": 5,
+                "max_calls": 15
+            },
+            "state": {
+                "insights": {"$length": {"$gte": 1}}
+            }
+        },
+        description="MMTU-style: Multi-table join with statistical analysis",
+        min_tool_calls=5,
+        max_tool_calls=15,
+        tags=["mmtu", "table-join", "cross-reference", "correlation"],
+    ))
+
+    tasks.append(Task(
+        id="data_treb_01",
+        name="Multi-Step Fact Verification",
+        prompt="""Verify the following business claims using data:
+
+Claim 1: "Electronics is our highest-revenue category"
+Claim 2: "The North region has the lowest churn rate"
+Claim 3: "Products priced above $500 have higher ratings than those below"
+
+For each claim:
+1. Query the relevant data
+2. Compute the necessary statistics
+3. State whether the claim is VERIFIED or REFUTED with evidence""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["compute_statistics", "query_data", "compute_statistics", "query_data", "save_insight"],
+        expected_answer=["verified", "refuted", "evidence", "claim"],
+        verifier_config={
+            "answer": ["claim", "evidence", "data"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["compute_statistics", "query_data"],
+                "optional": ["list_datasets", "describe_dataset", "correlate_columns", "save_insight"],
+                "min_calls": 5,
+                "max_calls": 15
+            }
+        },
+        description="TReB-style: Multi-claim fact verification",
+        min_tool_calls=5,
+        max_tool_calls=15,
+        tags=["treb", "fact-verification", "claims", "evidence"],
+    ))
+
+    tasks.append(Task(
+        id="data_treb_02",
+        name="Multi-Step Numerical Reasoning",
+        prompt="""Perform the following multi-step analysis on the sales dataset:
+
+Step 1: Calculate total revenue by region
+Step 2: Find the percentage each region contributes to total revenue
+Step 3: Calculate the revenue per transaction for each region
+Step 4: Identify which region has the best efficiency (revenue per transaction)
+Step 5: Compute how much more efficient the best region is compared to the worst (as a percentage)
+
+Store each intermediate result and show the full calculation chain.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["describe_dataset", "compute_statistics", "query_data", "compute_statistics", "save_insight"],
+        expected_answer=["revenue", "percentage", "efficiency", "region"],
+        verifier_config={
+            "answer": ["revenue", "region", "efficiency", "percentage"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["compute_statistics", "query_data"],
+                "optional": ["list_datasets", "describe_dataset", "save_insight", "create_visualization"],
+                "min_calls": 4,
+                "max_calls": 12
+            },
+            "state": {
+                "insights": {"$length": {"$gte": 1}}
+            }
+        },
+        description="TReB-style: Multi-step numerical computation chain",
+        min_tool_calls=4,
+        max_tool_calls=12,
+        tags=["treb", "numerical", "multi-step", "chain"],
+    ))
+
+    tasks.append(Task(
+        id="data_tablebench_01",
+        name="Complex Aggregation Pipeline",
+        prompt="""Build a data aggregation pipeline to answer:
+"What is the average lifetime value of customers who have made at least 5 purchases, grouped by their region, and how does this compare to the overall average?"
+
+This requires:
+1. Filter customers by purchase count threshold
+2. Group by region
+3. Calculate averages for filtered groups
+4. Calculate overall average for comparison
+5. Compute the difference/ratio
+
+Create a visualization showing the regional differences.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["describe_dataset", "query_data", "compute_statistics", "compute_statistics", "create_visualization", "save_insight"],
+        expected_answer=["lifetime_value", "region", "average", "comparison"],
+        verifier_config={
+            "answer": ["lifetime", "value", "region", "average"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["query_data", "compute_statistics", "create_visualization"],
+                "optional": ["list_datasets", "describe_dataset", "save_insight"],
+                "min_calls": 5,
+                "max_calls": 15
+            },
+            "state": {
+                "visualizations": {"$length": {"$gte": 1}}
+            }
+        },
+        description="TableBench-style: Complex aggregation with filtering and grouping",
+        min_tool_calls=5,
+        max_tool_calls=15,
+        tags=["tablebench", "aggregation", "pipeline", "groupby"],
+    ))
+
+    tasks.append(Task(
+        id="data_mmtu_02",
+        name="Table Structure Understanding",
+        prompt="""Without looking at the actual data, analyze the structure of all available datasets:
+
+1. List all datasets and their schemas (columns, types)
+2. Identify potential join keys between datasets
+3. Suggest which columns could be used for:
+   - Grouping/segmentation
+   - Numerical analysis
+   - Filtering
+4. Identify any potential data quality concerns based on column names/types
+5. Recommend the most interesting cross-dataset analyses that could be performed
+
+Save your structural analysis as an insight.""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_state_tracking=True,
+        ),
+        expected_tool_calls=["list_datasets", "describe_dataset", "describe_dataset", "describe_dataset", "save_insight"],
+        expected_answer=["schema", "join", "columns", "analysis"],
+        verifier_config={
+            "answer": ["column", "dataset", "join", "schema"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["list_datasets", "describe_dataset", "save_insight"],
+                "min_calls": 4,
+                "max_calls": 10
+            },
+            "state": {
+                "insights": {"$length": {"$gte": 1}}
+            }
+        },
+        description="MMTU-style: Schema understanding and join analysis",
+        min_tool_calls=4,
+        max_tool_calls=10,
+        tags=["mmtu", "schema", "structure", "metadata"],
+    ))
+
+    # ============================================================================
+    # COMPOUND TASKS
+    # Tasks that combine multiple independent problems - test context switching
+    # and state management across different objectives
+    # ============================================================================
+
+    tasks.append(Task(
+        id="data_compound_01",
+        name="Multi-Domain Analysis Session",
+        prompt="""Perform analyses on three different business domains in a single session:
+
+DOMAIN 1 - SALES PERFORMANCE:
+- Calculate total revenue by category
+- Find the top-performing region
+- Save an insight about sales trends
+
+DOMAIN 2 - CUSTOMER HEALTH:
+- Analyze churn risk distribution
+- Correlate churn with lifetime value
+- Identify at-risk customer segments
+
+DOMAIN 3 - INVENTORY STATUS:
+- Find products with stock below 50
+- Check if any high-value products are low on stock
+- Identify potential stockout risks
+
+Create a unified executive summary insight that synthesizes findings from all three domains.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["describe_dataset"] * 3 + ["compute_statistics"] * 4 + ["query_data"] * 2 + ["correlate_columns"] + ["save_insight"] * 4,
+        expected_answer=["sales", "customer", "inventory", "summary", "insight"],
+        verifier_config={
+            "answer": ["sales", "customer", "stock", "insight"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["compute_statistics", "query_data", "save_insight"],
+                "optional": ["list_datasets", "describe_dataset", "correlate_columns", "detect_anomalies", "create_visualization"],
+                "min_calls": 10,
+                "max_calls": 30
+            },
+            "state": {
+                "insights": {"$length": {"$gte": 3}}
+            }
+        },
+        description="Compound: Analyze three business domains in one session",
+        min_tool_calls=10,
+        max_tool_calls=30,
+        tags=["compound", "multi-domain", "synthesis", "executive"],
+    ))
+
+    tasks.append(Task(
+        id="data_compound_02",
+        name="Hypothesis Testing Battery",
+        prompt="""Test the following five independent hypotheses using data:
+
+H1: "The average sale amount in the East region exceeds $400"
+H2: "Customer lifetime value correlates with purchase count (r > 0.5)"
+H3: "Electronics products have higher margins than other categories"
+H4: "At least 10% of products have stock below 50 units"
+H5: "There are anomalies in the sales amount data"
+
+For each hypothesis:
+- Perform the relevant analysis
+- State CONFIRMED or REJECTED with the specific evidence
+
+Then create a summary visualization showing hypothesis results.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["compute_statistics"] * 3 + ["correlate_columns"] + ["query_data"] * 2 + ["detect_anomalies"] + ["save_insight"] * 5 + ["create_visualization"],
+        expected_answer=["H1", "H2", "H3", "H4", "H5", "confirmed", "rejected"],
+        verifier_config={
+            "answer": ["hypothesis", "confirmed", "rejected", "evidence"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["compute_statistics", "correlate_columns", "detect_anomalies"],
+                "optional": ["list_datasets", "describe_dataset", "query_data", "save_insight", "create_visualization"],
+                "min_calls": 8,
+                "max_calls": 25
+            }
+        },
+        description="Compound: Test five independent hypotheses in one session",
+        min_tool_calls=8,
+        max_tool_calls=25,
+        tags=["compound", "hypothesis", "testing", "battery"],
+    ))
+
     return tasks

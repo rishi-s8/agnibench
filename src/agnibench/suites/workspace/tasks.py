@@ -814,4 +814,332 @@ def get_workspace_tasks() -> List[Task]:
         tags=["discovery", "triage", "backlog", "branching"],
     ))
 
+    # ============================================================================
+    # WORKBENCH-INSPIRED TASKS
+    # Realistic workplace tasks inspired by the WorkBench dataset
+    # Focus on: cross-tool coordination, multi-step workflows, state persistence
+    # ============================================================================
+
+    tasks.append(Task(
+        id="workspace_workbench_01",
+        name="Meeting Follow-Up Workflow",
+        prompt="""After yesterday's Product Review meeting with Bob, complete the following workflow:
+
+1. Find the meeting on the calendar and identify all attendees
+2. Search emails for any pre-meeting materials or context that was shared
+3. Look up contact information for each attendee
+4. Send a follow-up email to all attendees summarizing action items: "Review Q1 priorities by Friday"
+5. Post a summary to the #product Slack channel""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["search_calendar", "search_emails", "lookup_contact", "send_email", "send_slack"],
+        expected_answer=["follow-up", "sent", "email", "slack", "attendees"],
+        verifier_config={
+            "answer": ["sent", "email", "follow", "action"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_calendar", "send_email"],
+                "optional": ["search_emails", "read_email", "lookup_contact", "send_slack"],
+                "min_calls": 4,
+                "max_calls": 12
+            },
+            "state": {
+                "sent_emails": {"$length": {"$gte": 1}}
+            }
+        },
+        description="WorkBench-style: Post-meeting follow-up workflow",
+        min_tool_calls=4,
+        max_tool_calls=12,
+        tags=["workbench", "meeting", "follow-up", "workflow"],
+    ))
+
+    tasks.append(Task(
+        id="workspace_workbench_02",
+        name="Information Gathering Pipeline",
+        prompt="""Prepare a brief on Alice Johnson for an upcoming 1:1 meeting:
+
+1. Look up Alice's contact information and department
+2. Find all recent emails from/to Alice (past week)
+3. Check what meetings you've had with Alice recently
+4. Search Slack for any discussions involving Alice
+5. Compile this information and send yourself (to your own email) a preparation brief""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["lookup_contact", "search_emails", "search_calendar", "search_slack", "send_email"],
+        expected_answer=["brief", "Alice", "compiled", "sent"],
+        verifier_config={
+            "answer": ["Alice", "email", "brief", "sent"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["lookup_contact", "search_emails", "send_email"],
+                "optional": ["read_email", "search_calendar", "search_slack"],
+                "min_calls": 4,
+                "max_calls": 12
+            },
+            "state": {
+                "sent_emails": {"$length": {"$gte": 1}}
+            }
+        },
+        description="WorkBench-style: Cross-channel information aggregation",
+        min_tool_calls=4,
+        max_tool_calls=12,
+        tags=["workbench", "aggregation", "preparation", "brief"],
+    ))
+
+    tasks.append(Task(
+        id="workspace_workbench_03",
+        name="Cascade Notification",
+        prompt="""An important update needs to reach the entire team through multiple channels:
+
+Message: "Sprint planning moved to Thursday 2 PM. Please review backlog items beforehand."
+
+1. Create a calendar event for Thursday 2 PM for a 1-hour Sprint Planning meeting
+2. Add Alice Johnson, Bob Smith, and Carol Williams as attendees
+3. Send an email to all three with the announcement
+4. Post the announcement to #engineering Slack channel
+5. Send a separate Slack DM to David Brown (manager) confirming the change was communicated""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_multi_constraint=True,
+            requires_long_reasoning_chain=True,
+        ),
+        expected_tool_calls=["lookup_contact", "create_event", "send_email", "send_slack", "send_slack"],
+        expected_answer=["created", "sent", "notified", "sprint planning"],
+        verifier_config={
+            "answer": ["created", "sent", "sprint", "planning"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["create_event", "send_email", "send_slack"],
+                "optional": ["lookup_contact", "check_availability"],
+                "min_calls": 4,
+                "max_calls": 15
+            },
+            "state": {
+                "created_events": {"$length": {"$gte": 1}},
+                "sent_emails": {"$length": {"$gte": 1}},
+                "sent_slack": {"$length": {"$gte": 1}}
+            }
+        },
+        description="WorkBench-style: Multi-channel cascade notification",
+        min_tool_calls=4,
+        max_tool_calls=15,
+        tags=["workbench", "notification", "cascade", "multi-channel"],
+    ))
+
+    tasks.append(Task(
+        id="workspace_workbench_04",
+        name="Request Fulfillment Chain",
+        prompt="""Process the following request from Carol's email about needing documentation:
+
+1. Find Carol's email about documentation (search for emails from Carol about "docs" or "documentation")
+2. Understand what specific documentation she needs
+3. Check if there's related discussion in Slack about this
+4. Find the relevant documentation or information
+5. Reply to Carol's email with the requested information
+6. Update the #general Slack with a note that the documentation request was fulfilled""",
+        difficulty=DifficultyLevel.HARD,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_state_tracking=True,
+        ),
+        expected_tool_calls=["search_emails", "read_email", "search_slack", "send_email", "send_slack"],
+        expected_answer=["documentation", "sent", "fulfilled", "Carol"],
+        verifier_config={
+            "answer": ["Carol", "document", "sent", "email"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_emails", "send_email"],
+                "optional": ["read_email", "search_slack", "send_slack", "lookup_contact"],
+                "min_calls": 3,
+                "max_calls": 10
+            },
+            "state": {
+                "sent_emails": {"$length": {"$gte": 1}}
+            }
+        },
+        description="WorkBench-style: Request identification and fulfillment",
+        min_tool_calls=3,
+        max_tool_calls=10,
+        tags=["workbench", "request", "fulfillment", "chain"],
+    ))
+
+    tasks.append(Task(
+        id="workspace_workbench_05",
+        name="Weekly Planning Automation",
+        prompt="""Automate weekly planning by:
+
+1. Search calendar for all meetings in the next 5 days
+2. For each meeting, look up the attendees' contact info
+3. Check emails for any preparation materials or agendas sent for these meetings
+4. Compile a weekly overview email listing:
+   - Each meeting with time, attendees, and any preparation needed
+5. Send this overview to yourself
+6. Post a summary count to #general ("You have X meetings this week")""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_cross_reference=True,
+            requires_state_tracking=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["search_calendar", "lookup_contact", "search_emails", "send_email", "send_slack"],
+        expected_answer=["overview", "meetings", "week", "sent"],
+        verifier_config={
+            "answer": ["meeting", "week", "sent", "overview"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_calendar", "send_email", "send_slack"],
+                "optional": ["lookup_contact", "search_emails", "read_email"],
+                "min_calls": 4,
+                "max_calls": 18
+            },
+            "state": {
+                "sent_emails": {"$length": {"$gte": 1}},
+                "sent_slack": {"$length": {"$gte": 1}}
+            }
+        },
+        description="WorkBench-style: Automated weekly planning compilation",
+        min_tool_calls=4,
+        max_tool_calls=18,
+        tags=["workbench", "automation", "planning", "weekly"],
+    ))
+
+    # ============================================================================
+    # COMPOUND TASKS
+    # Tasks that combine multiple independent problems - test context switching
+    # and state management across different objectives
+    # ============================================================================
+
+    tasks.append(Task(
+        id="workspace_compound_01",
+        name="Multi-Person Coordination",
+        prompt="""Coordinate with three different people on three separate matters in a single session:
+
+PERSON 1 - Alice Johnson (Engineering):
+- Find her email about the Q4 planning
+- Reply confirming your attendance at the meeting she mentioned
+- Look up her calendar availability for a follow-up next week
+
+PERSON 2 - Bob Smith (Product):
+- Check Slack for any recent messages from Bob
+- Send him an email asking for the latest product specs
+- Check if you have any meetings scheduled with him
+
+PERSON 3 - Carol Williams (Design):
+- Look up Carol's contact info
+- Check your emails for any pending requests from her
+- Send her a Slack message asking about design review status
+
+Summarize all the interactions you completed.""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["search_emails"] * 3 + ["lookup_contact"] * 3 + ["send_email"] * 2 + ["send_slack"] + ["search_slack"] + ["check_availability"] + ["search_calendar"],
+        expected_answer=["Alice", "Bob", "Carol", "completed", "summary"],
+        verifier_config={
+            "answer": ["Alice", "Bob", "Carol", "email", "slack"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_emails", "send_email", "send_slack"],
+                "optional": ["lookup_contact", "read_email", "search_slack", "check_availability", "search_calendar"],
+                "min_calls": 8,
+                "max_calls": 25
+            },
+            "state": {
+                "sent_emails": {"$length": {"$gte": 2}}
+            }
+        },
+        description="Compound: Coordinate with three people on separate matters",
+        min_tool_calls=8,
+        max_tool_calls=25,
+        tags=["compound", "multi-person", "coordination", "parallel"],
+    ))
+
+    tasks.append(Task(
+        id="workspace_compound_02",
+        name="Cross-Channel Sync and Report",
+        prompt="""Perform a comprehensive communication audit and sync:
+
+TASK 1 - Email Audit:
+- Find all unread emails
+- Identify any that require action
+- Reply to at least one urgent email
+
+TASK 2 - Slack Audit:
+- Check #engineering channel for any important updates
+- Check #general for any announcements
+- Post a status update to #general about your progress
+
+TASK 3 - Calendar Audit:
+- List all meetings for tomorrow
+- Identify any conflicts or double-bookings
+- For each meeting, check if there's related email correspondence
+
+FINAL REPORT:
+- Send an email to David Brown summarizing:
+  * Number of pending emails
+  * Key Slack highlights
+  * Tomorrow's meeting count and any conflicts""",
+        difficulty=DifficultyLevel.EXPERT,
+        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+        characteristics=TaskCharacteristics(
+            control_flow_from_prompt=True,
+            data_flow_from_tools=True,
+            requires_state_tracking=True,
+            requires_cross_reference=True,
+            requires_long_reasoning_chain=True,
+            requires_multi_constraint=True,
+        ),
+        expected_tool_calls=["search_emails", "read_email", "send_email", "search_slack", "search_slack", "send_slack", "search_calendar", "send_email"],
+        expected_answer=["audit", "email", "slack", "calendar", "report", "David"],
+        verifier_config={
+            "answer": ["email", "slack", "calendar", "David", "report"],
+            "match_mode": "contains",
+            "tools": {
+                "required": ["search_emails", "search_slack", "search_calendar", "send_email"],
+                "optional": ["read_email", "send_slack", "lookup_contact"],
+                "min_calls": 7,
+                "max_calls": 25
+            },
+            "state": {
+                "sent_emails": {"$length": {"$gte": 2}}
+            }
+        },
+        description="Compound: Full communication audit across all channels",
+        min_tool_calls=7,
+        max_tool_calls=25,
+        tags=["compound", "audit", "cross-channel", "report"],
+    ))
+
     return tasks
