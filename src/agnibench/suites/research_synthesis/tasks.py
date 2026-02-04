@@ -5,12 +5,9 @@ Contains 16 tasks distributed across difficulty levels and information flows.
 """
 
 from typing import List
-from agnibench.core.abstractions import (
-    Task,
-    TaskCharacteristics,
-    DifficultyLevel,
-    InformationFlow,
-)
+
+from agnibench.core.abstractions import (DifficultyLevel, InformationFlow,
+                                         Task, TaskCharacteristics)
 
 
 def get_research_tasks() -> List[Task]:
@@ -21,398 +18,472 @@ def get_research_tasks() -> List[Task]:
     # SIMPLE TASKS (4 tasks, 2-3 tool calls)
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_simple_01",
-        name="Find Financial Report",
-        prompt="Find the Q4 financial performance report and tell me what the revenue growth was.",
-        difficulty=DifficultyLevel.SIMPLE,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document"],
-        expected_answer="15%",
-        verifier_config={
-            "answer": ["15%", "15 percent", "$45.2M"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document"],
-                "min_calls": 1,
-                "max_calls": 3
-            }
-        },
-        description="Simple document search and fact retrieval",
-        min_tool_calls=1,
-        max_tool_calls=3,
-        tags=["search", "financial"],
-    ))
+    tasks.append(
+        Task(
+            id="research_simple_01",
+            name="Find Financial Report",
+            prompt="Find the Q4 financial performance report and tell me what the revenue growth was.",
+            difficulty=DifficultyLevel.SIMPLE,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document"],
+            expected_answer="15%",
+            verifier_config={
+                "answer": ["15%", "15 percent", "$45.2M"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": ["read_document"],
+                    "min_calls": 1,
+                    "max_calls": 3,
+                },
+            },
+            description="Simple document search and fact retrieval",
+            min_tool_calls=1,
+            max_tool_calls=3,
+            tags=["search", "financial"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_simple_02",
-        name="Extract Customer Satisfaction Score",
-        prompt="What is the current NPS score according to the customer survey?",
-        difficulty=DifficultyLevel.SIMPLE,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document"],
-        expected_answer="42",
-        verifier_config={
-            "answer": ["42", "NPS", "up from 38"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts"],
-                "min_calls": 1,
-                "max_calls": 3
-            }
-        },
-        description="Find specific metric in document",
-        min_tool_calls=1,
-        max_tool_calls=3,
-        tags=["search", "customer"],
-    ))
+    tasks.append(
+        Task(
+            id="research_simple_02",
+            name="Extract Customer Satisfaction Score",
+            prompt="What is the current NPS score according to the customer survey?",
+            difficulty=DifficultyLevel.SIMPLE,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document"],
+            expected_answer="42",
+            verifier_config={
+                "answer": ["42", "NPS", "up from 38"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 1,
+                    "max_calls": 3,
+                },
+            },
+            description="Find specific metric in document",
+            min_tool_calls=1,
+            max_tool_calls=3,
+            tags=["search", "customer"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_simple_03",
-        name="Check Security Certification",
-        prompt="What security certifications does the company have?",
-        difficulty=DifficultyLevel.SIMPLE,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document"],
-        expected_answer=["SOC 2", "ISO 27001"],
-        verifier_config={
-            "answer": ["SOC 2", "ISO 27001", "GDPR", "HIPAA"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts"],
-                "min_calls": 1,
-                "max_calls": 3
-            }
-        },
-        description="Find security information",
-        min_tool_calls=1,
-        max_tool_calls=3,
-        tags=["search", "security"],
-    ))
+    tasks.append(
+        Task(
+            id="research_simple_03",
+            name="Check Security Certification",
+            prompt="What security certifications does the company have?",
+            difficulty=DifficultyLevel.SIMPLE,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document"],
+            expected_answer=["SOC 2", "ISO 27001"],
+            verifier_config={
+                "answer": ["SOC 2", "ISO 27001", "GDPR", "HIPAA"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 1,
+                    "max_calls": 3,
+                },
+            },
+            description="Find security information",
+            min_tool_calls=1,
+            max_tool_calls=3,
+            tags=["search", "security"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_simple_04",
-        name="Find Market Share",
-        prompt="What is our current market share and market position?",
-        difficulty=DifficultyLevel.SIMPLE,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document"],
-        expected_answer=["12%", "#3"],
-        verifier_config={
-            "answer": ["12%", "#3", "third", "market share"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts"],
-                "min_calls": 1,
-                "max_calls": 3
-            }
-        },
-        description="Find market position information",
-        min_tool_calls=1,
-        max_tool_calls=3,
-        tags=["search", "market"],
-    ))
+    tasks.append(
+        Task(
+            id="research_simple_04",
+            name="Find Market Share",
+            prompt="What is our current market share and market position?",
+            difficulty=DifficultyLevel.SIMPLE,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document"],
+            expected_answer=["12%", "#3"],
+            verifier_config={
+                "answer": ["12%", "#3", "third", "market share"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 1,
+                    "max_calls": 3,
+                },
+            },
+            description="Find market position information",
+            min_tool_calls=1,
+            max_tool_calls=3,
+            tags=["search", "market"],
+        )
+    )
 
     # ============================================================================
     # MEDIUM TASKS (5 tasks, 4-6 tool calls)
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_medium_01",
-        name="Extract Key Facts from Report",
-        prompt="Extract the key financial metrics from the Q4 report and take notes on the most important findings.",
-        difficulty=DifficultyLevel.MEDIUM,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_state_tracking=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "extract_facts", "take_notes"],
-        expected_answer=["revenue", "margin", "growth"],
-        verifier_config={
-            "answer": ["$45.2M", "15%", "22%", "operating margin"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts"],
-                "optional": ["read_document", "take_notes"],
-                "min_calls": 2,
-                "max_calls": 6
-            }
-        },
-        description="Extract and record key facts",
-        min_tool_calls=2,
-        max_tool_calls=6,
-        tags=["extract", "notes", "financial"],
-    ))
+    tasks.append(
+        Task(
+            id="research_medium_01",
+            name="Extract Key Facts from Report",
+            prompt="Extract the key financial metrics from the Q4 report and take notes on the most important findings.",
+            difficulty=DifficultyLevel.MEDIUM,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "extract_facts",
+                "take_notes",
+            ],
+            expected_answer=["revenue", "margin", "growth"],
+            verifier_config={
+                "answer": ["$45.2M", "15%", "22%", "operating margin"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "extract_facts"],
+                    "optional": ["read_document", "take_notes"],
+                    "min_calls": 2,
+                    "max_calls": 6,
+                },
+            },
+            description="Extract and record key facts",
+            min_tool_calls=2,
+            max_tool_calls=6,
+            tags=["extract", "notes", "financial"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_medium_02",
-        name="Research Product Priorities",
-        prompt="What are the Q1 product priorities according to the roadmap? List the main features being developed.",
-        difficulty=DifficultyLevel.MEDIUM,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "extract_facts"],
-        expected_answer=["AI Assistant", "dashboard", "mobile app"],
-        verifier_config={
-            "answer": ["AI Assistant", "dashboard", "mobile app", "performance"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts"],
-                "min_calls": 1,
-                "max_calls": 5
-            }
-        },
-        description="Find and list product priorities",
-        min_tool_calls=1,
-        max_tool_calls=5,
-        tags=["product", "roadmap"],
-    ))
+    tasks.append(
+        Task(
+            id="research_medium_02",
+            name="Research Product Priorities",
+            prompt="What are the Q1 product priorities according to the roadmap? List the main features being developed.",
+            difficulty=DifficultyLevel.MEDIUM,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document", "extract_facts"],
+            expected_answer=["AI Assistant", "dashboard", "mobile app"],
+            verifier_config={
+                "answer": ["AI Assistant", "dashboard", "mobile app", "performance"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 1,
+                    "max_calls": 5,
+                },
+            },
+            description="Find and list product priorities",
+            min_tool_calls=1,
+            max_tool_calls=5,
+            tags=["product", "roadmap"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_medium_03",
-        name="Compare Two Documents",
-        prompt="Compare the market analysis with the competitive intelligence report. What are the common themes?",
-        difficulty=DifficultyLevel.MEDIUM,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-        ),
-        expected_tool_calls=["search_documents", "compare_sources"],
-        expected_answer=["AI", "competitive", "market share"],
-        verifier_config={
-            "answer": ["AI", "competitive", "TechCorp", "market"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["compare_sources"],
-                "optional": ["search_documents", "read_document"],
-                "min_calls": 1,
-                "max_calls": 5
-            }
-        },
-        description="Compare two related documents",
-        min_tool_calls=1,
-        max_tool_calls=5,
-        tags=["compare", "analysis"],
-    ))
+    tasks.append(
+        Task(
+            id="research_medium_03",
+            name="Compare Two Documents",
+            prompt="Compare the market analysis with the competitive intelligence report. What are the common themes?",
+            difficulty=DifficultyLevel.MEDIUM,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+            ),
+            expected_tool_calls=["search_documents", "compare_sources"],
+            expected_answer=["AI", "competitive", "market share"],
+            verifier_config={
+                "answer": ["AI", "competitive", "TechCorp", "market"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["compare_sources"],
+                    "optional": ["search_documents", "read_document"],
+                    "min_calls": 1,
+                    "max_calls": 5,
+                },
+            },
+            description="Compare two related documents",
+            min_tool_calls=1,
+            max_tool_calls=5,
+            tags=["compare", "analysis"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_medium_04",
-        name="Find Customer Pain Points",
-        prompt="Based on the customer survey, what are the top 3 areas that need improvement?",
-        difficulty=DifficultyLevel.MEDIUM,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "extract_facts"],
-        expected_answer=["mobile", "documentation", "onboarding"],
-        verifier_config={
-            "answer": ["mobile", "documentation", "onboarding", "3.2", "3.5", "3.6"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts"],
-                "min_calls": 1,
-                "max_calls": 5
-            }
-        },
-        description="Identify customer concerns",
-        min_tool_calls=1,
-        max_tool_calls=5,
-        tags=["customer", "improvement"],
-    ))
+    tasks.append(
+        Task(
+            id="research_medium_04",
+            name="Find Customer Pain Points",
+            prompt="Based on the customer survey, what are the top 3 areas that need improvement?",
+            difficulty=DifficultyLevel.MEDIUM,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document", "extract_facts"],
+            expected_answer=["mobile", "documentation", "onboarding"],
+            verifier_config={
+                "answer": [
+                    "mobile",
+                    "documentation",
+                    "onboarding",
+                    "3.2",
+                    "3.5",
+                    "3.6",
+                ],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 1,
+                    "max_calls": 5,
+                },
+            },
+            description="Identify customer concerns",
+            min_tool_calls=1,
+            max_tool_calls=5,
+            tags=["customer", "improvement"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_medium_05",
-        name="Research with Web Supplement",
-        prompt="Find information about AI trends in our market analysis, and supplement with a web search for the latest AI developments.",
-        difficulty=DifficultyLevel.MEDIUM,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "search_web"],
-        expected_answer=["AI", "78%", "enterprises"],
-        verifier_config={
-            "answer": ["AI", "78%", "enterprises", "spending"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "search_web"],
-                "optional": ["read_document", "extract_facts"],
-                "min_calls": 2,
-                "max_calls": 6
-            }
-        },
-        description="Combine internal and external research",
-        min_tool_calls=2,
-        max_tool_calls=6,
-        tags=["search", "web", "AI"],
-    ))
+    tasks.append(
+        Task(
+            id="research_medium_05",
+            name="Research with Web Supplement",
+            prompt="Find information about AI trends in our market analysis, and supplement with a web search for the latest AI developments.",
+            difficulty=DifficultyLevel.MEDIUM,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+            ),
+            expected_tool_calls=["search_documents", "read_document", "search_web"],
+            expected_answer=["AI", "78%", "enterprises"],
+            verifier_config={
+                "answer": ["AI", "78%", "enterprises", "spending"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "search_web"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 2,
+                    "max_calls": 6,
+                },
+            },
+            description="Combine internal and external research",
+            min_tool_calls=2,
+            max_tool_calls=6,
+            tags=["search", "web", "AI"],
+        )
+    )
 
     # ============================================================================
     # HARD TASKS (4 tasks, 7-10 tool calls)
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_hard_01",
-        name="Cross-Reference Multiple Sources",
-        prompt="Compare what the financial report says about enterprise performance with what the market analysis says about enterprise trends. Are they consistent? Take notes on your findings.",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_state_tracking=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "read_document", "compare_sources", "take_notes"],
-        expected_answer=["enterprise", "consistent", "growth"],
-        verifier_config={
-            "answer": ["enterprise", "20%", "growth", "consistent"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "compare_sources"],
-                "optional": ["read_document", "extract_facts", "take_notes"],
-                "min_calls": 3,
-                "max_calls": 10
-            }
-        },
-        description="Cross-reference and verify information",
-        min_tool_calls=3,
-        max_tool_calls=10,
-        tags=["cross-reference", "verification"],
-    ))
+    tasks.append(
+        Task(
+            id="research_hard_01",
+            name="Cross-Reference Multiple Sources",
+            prompt="Compare what the financial report says about enterprise performance with what the market analysis says about enterprise trends. Are they consistent? Take notes on your findings.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "read_document",
+                "compare_sources",
+                "take_notes",
+            ],
+            expected_answer=["enterprise", "consistent", "growth"],
+            verifier_config={
+                "answer": ["enterprise", "20%", "growth", "consistent"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "compare_sources"],
+                    "optional": ["read_document", "extract_facts", "take_notes"],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+            },
+            description="Cross-reference and verify information",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["cross-reference", "verification"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_hard_02",
-        name="Synthesize Strategy Recommendations",
-        prompt="Review the market analysis, competitive intelligence, and product roadmap. Identify if our product strategy aligns with market opportunities and competitive threats. Generate a summary of your findings.",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "read_document", "read_document", "extract_facts", "generate_summary"],
-        expected_answer=["AI", "alignment", "strategy"],
-        verifier_config={
-            "answer": ["AI", "strategy", "market", "competitive", "roadmap"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "generate_summary"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
-                "min_calls": 4,
-                "max_calls": 12
-            }
-        },
-        description="Multi-document strategy synthesis",
-        min_tool_calls=4,
-        max_tool_calls=12,
-        tags=["synthesis", "strategy"],
-    ))
+    tasks.append(
+        Task(
+            id="research_hard_02",
+            name="Synthesize Strategy Recommendations",
+            prompt="Review the market analysis, competitive intelligence, and product roadmap. Identify if our product strategy aligns with market opportunities and competitive threats. Generate a summary of your findings.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "read_document",
+                "read_document",
+                "extract_facts",
+                "generate_summary",
+            ],
+            expected_answer=["AI", "alignment", "strategy"],
+            verifier_config={
+                "answer": ["AI", "strategy", "market", "competitive", "roadmap"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "generate_summary"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "take_notes",
+                    ],
+                    "min_calls": 4,
+                    "max_calls": 12,
+                },
+            },
+            description="Multi-document strategy synthesis",
+            min_tool_calls=4,
+            max_tool_calls=12,
+            tags=["synthesis", "strategy"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_hard_03",
-        name="Customer-Product Alignment Analysis",
-        prompt="Analyze whether the product roadmap addresses the top customer concerns from the survey. Extract facts from both documents, compare them, and document any gaps.",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_state_tracking=True,
-        ),
-        expected_tool_calls=["search_documents", "extract_facts", "extract_facts", "compare_sources", "take_notes"],
-        expected_answer=["mobile", "analytics", "addressed"],
-        verifier_config={
-            "answer": ["mobile", "analytics", "roadmap", "customer", "survey"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["extract_facts", "compare_sources"],
-                "optional": ["search_documents", "read_document", "take_notes"],
-                "min_calls": 4,
-                "max_calls": 10
-            }
-        },
-        description="Alignment analysis between customer needs and product plans",
-        min_tool_calls=4,
-        max_tool_calls=10,
-        tags=["alignment", "customer", "product"],
-    ))
+    tasks.append(
+        Task(
+            id="research_hard_03",
+            name="Customer-Product Alignment Analysis",
+            prompt="Analyze whether the product roadmap addresses the top customer concerns from the survey. Extract facts from both documents, compare them, and document any gaps.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "extract_facts",
+                "extract_facts",
+                "compare_sources",
+                "take_notes",
+            ],
+            expected_answer=["mobile", "analytics", "addressed"],
+            verifier_config={
+                "answer": ["mobile", "analytics", "roadmap", "customer", "survey"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["extract_facts", "compare_sources"],
+                    "optional": ["search_documents", "read_document", "take_notes"],
+                    "min_calls": 4,
+                    "max_calls": 10,
+                },
+            },
+            description="Alignment analysis between customer needs and product plans",
+            min_tool_calls=4,
+            max_tool_calls=10,
+            tags=["alignment", "customer", "product"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_hard_04",
-        name="Competitive Threat Assessment",
-        prompt="Using the competitive intelligence and market analysis reports, assess the threat level from TechCorp's recent AI acquisition. How should we respond based on our roadmap?",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,  # FIXED: Prompt specifies which documents to read
-            control_flow_from_tools=False,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_conditional_logic=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "read_document", "extract_facts", "take_notes"],
-        expected_answer=["TechCorp", "AI", "acquisition", "accelerate"],
-        verifier_config={
-            "answer": ["TechCorp", "AI", "$200M", "accelerate", "threat"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
-                "min_calls": 3,
-                "max_calls": 10
-            }
-        },
-        description="Competitive threat analysis and response recommendation",
-        min_tool_calls=3,
-        max_tool_calls=10,
-        tags=["competitive", "threat", "strategy"],
-    ))
+    tasks.append(
+        Task(
+            id="research_hard_04",
+            name="Competitive Threat Assessment",
+            prompt="Using the competitive intelligence and market analysis reports, assess the threat level from TechCorp's recent AI acquisition. How should we respond based on our roadmap?",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,  # FIXED: Prompt specifies which documents to read
+                control_flow_from_tools=False,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_conditional_logic=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "read_document",
+                "extract_facts",
+                "take_notes",
+            ],
+            expected_answer=["TechCorp", "AI", "acquisition", "accelerate"],
+            verifier_config={
+                "answer": ["TechCorp", "AI", "$200M", "accelerate", "threat"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "take_notes",
+                    ],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+            },
+            description="Competitive threat analysis and response recommendation",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["competitive", "threat", "strategy"],
+        )
+    )
 
     # ============================================================================
     # EXPERT TASKS (3 tasks, 11+ tool calls)
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_expert_01",
-        name="Comprehensive Market Position Analysis",
-        prompt="""Conduct a comprehensive analysis of our market position by:
+    tasks.append(
+        Task(
+            id="research_expert_01",
+            name="Comprehensive Market Position Analysis",
+            prompt="""Conduct a comprehensive analysis of our market position by:
         1. Reviewing financial performance data
         2. Analyzing market trends and our market share
         3. Understanding competitive landscape
@@ -420,37 +491,47 @@ def get_research_tasks() -> List[Task]:
         5. Reviewing our product roadmap alignment
 
         Generate a comprehensive summary with key insights and recommendations.""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_state_tracking=True,
-        ),
-        expected_tool_calls=["search_documents"] + ["read_document"] * 4 + ["extract_facts"] * 3 + ["take_notes", "generate_summary"],
-        expected_answer=["market position", "recommendations", "summary"],
-        verifier_config={
-            "answer": ["market", "competitive", "customer", "roadmap", "financial"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "generate_summary"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
-                "min_calls": 6,
-                "max_calls": 15
-            }
-        },
-        description="Comprehensive multi-source market analysis",
-        min_tool_calls=6,
-        max_tool_calls=15,
-        tags=["comprehensive", "market", "analysis"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=["search_documents"]
+            + ["read_document"] * 4
+            + ["extract_facts"] * 3
+            + ["take_notes", "generate_summary"],
+            expected_answer=["market position", "recommendations", "summary"],
+            verifier_config={
+                "answer": ["market", "competitive", "customer", "roadmap", "financial"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "generate_summary"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "take_notes",
+                    ],
+                    "min_calls": 6,
+                    "max_calls": 15,
+                },
+            },
+            description="Comprehensive multi-source market analysis",
+            min_tool_calls=6,
+            max_tool_calls=15,
+            tags=["comprehensive", "market", "analysis"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_expert_02",
-        name="Strategic Gap Analysis",
-        prompt="""Perform a strategic gap analysis by:
+    tasks.append(
+        Task(
+            id="research_expert_02",
+            name="Strategic Gap Analysis",
+            prompt="""Perform a strategic gap analysis by:
         1. Identifying what customers want (from survey)
         2. Understanding market trends (from market analysis)
         3. Assessing competitor capabilities (from competitive intel)
@@ -458,38 +539,49 @@ def get_research_tasks() -> List[Task]:
         5. Finding gaps between market needs and our plans
         6. Documenting all findings with detailed notes
         7. Generating a prioritized summary of gaps to address""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_state_tracking=True,
-            requires_multi_constraint=True,
-        ),
-        expected_tool_calls=["search_documents"] + ["read_document"] * 4 + ["extract_facts"] * 4 + ["compare_sources"] * 2 + ["take_notes"] * 3 + ["generate_summary"],
-        expected_answer=["gaps", "priorities", "recommendations"],
-        verifier_config={
-            "answer": ["gap", "customer", "market", "competitor", "roadmap"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts", "generate_summary"],
-                "optional": ["read_document", "compare_sources", "take_notes"],
-                "min_calls": 8,
-                "max_calls": 20
-            }
-        },
-        description="Multi-dimensional strategic gap analysis",
-        min_tool_calls=8,
-        max_tool_calls=20,
-        tags=["gap-analysis", "strategy", "comprehensive"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+                requires_multi_constraint=True,
+            ),
+            expected_tool_calls=["search_documents"]
+            + ["read_document"] * 4
+            + ["extract_facts"] * 4
+            + ["compare_sources"] * 2
+            + ["take_notes"] * 3
+            + ["generate_summary"],
+            expected_answer=["gaps", "priorities", "recommendations"],
+            verifier_config={
+                "answer": ["gap", "customer", "market", "competitor", "roadmap"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": [
+                        "search_documents",
+                        "extract_facts",
+                        "generate_summary",
+                    ],
+                    "optional": ["read_document", "compare_sources", "take_notes"],
+                    "min_calls": 8,
+                    "max_calls": 20,
+                },
+            },
+            description="Multi-dimensional strategic gap analysis",
+            min_tool_calls=8,
+            max_tool_calls=20,
+            tags=["gap-analysis", "strategy", "comprehensive"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_expert_03",
-        name="Executive Briefing Preparation",
-        prompt="""Prepare an executive briefing by researching and synthesizing information from all available documents:
+    tasks.append(
+        Task(
+            id="research_expert_03",
+            name="Executive Briefing Preparation",
+            prompt="""Prepare an executive briefing by researching and synthesizing information from all available documents:
         1. Search and identify all relevant documents
         2. Extract key facts from each document
         3. Cross-reference information across sources for consistency
@@ -499,228 +591,302 @@ def get_research_tasks() -> List[Task]:
         7. Generate a comprehensive executive summary
 
         The briefing should cover: financial health, market position, competitive threats, customer satisfaction, and strategic priorities.""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,  # FIXED: Explicit 7-step recipe provided
-            control_flow_from_tools=False,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_state_tracking=True,
-            requires_plan_adaptation=True,
-        ),
-        expected_tool_calls=["search_documents"] + ["read_document"] * 5 + ["extract_facts"] * 5 + ["compare_sources"] * 2 + ["take_notes"] * 3 + ["search_web", "generate_summary"],
-        expected_answer=["executive", "summary", "briefing"],
-        verifier_config={
-            "answer": ["financial", "market", "competitive", "customer", "strategy"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts", "generate_summary"],
-                "optional": ["read_document", "compare_sources", "take_notes", "search_web"],
-                "min_calls": 10,
-                "max_calls": 25
-            }
-        },
-        description="Comprehensive executive briefing preparation",
-        min_tool_calls=10,
-        max_tool_calls=25,
-        tags=["executive", "briefing", "comprehensive"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,  # FIXED: Explicit 7-step recipe provided
+                control_flow_from_tools=False,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+                requires_plan_adaptation=True,
+            ),
+            expected_tool_calls=["search_documents"]
+            + ["read_document"] * 5
+            + ["extract_facts"] * 5
+            + ["compare_sources"] * 2
+            + ["take_notes"] * 3
+            + ["search_web", "generate_summary"],
+            expected_answer=["executive", "summary", "briefing"],
+            verifier_config={
+                "answer": [
+                    "financial",
+                    "market",
+                    "competitive",
+                    "customer",
+                    "strategy",
+                ],
+                "match_mode": "contains",
+                "tools": {
+                    "required": [
+                        "search_documents",
+                        "extract_facts",
+                        "generate_summary",
+                    ],
+                    "optional": [
+                        "read_document",
+                        "compare_sources",
+                        "take_notes",
+                        "search_web",
+                    ],
+                    "min_calls": 10,
+                    "max_calls": 25,
+                },
+            },
+            description="Comprehensive executive briefing preparation",
+            min_tool_calls=10,
+            max_tool_calls=25,
+            tags=["executive", "briefing", "comprehensive"],
+        )
+    )
 
     # ============================================================================
     # TRUE TOOL-DRIVEN CONTROL FLOW TASKS
     # These tasks require discovering what to do from tool responses
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_discovery_01",
-        name="Answer Ad-Hoc Question",
-        prompt="The board wants to know: 'Are we on track?' Find relevant information to answer this question.",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.TOOL_DISCOVERY,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=False,
-            control_flow_from_tools=True,  # TRUE: Must discover WHAT documents exist before knowing how to answer
-            data_flow_from_tools=True,
-            requires_conditional_logic=True,
-            requires_cross_reference=True,
-            requires_disambiguation=True,
-        ),
-        expected_tool_calls=["search_documents"],  # Document availability determines answer approach
-        expected_answer=["track", "progress", "assessment"],
-        verifier_config={
-            "answer": ["track", "progress", "status"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "generate_summary", "take_notes"],
-                "min_calls": 2,
-                "max_calls": 12
-            }
-        },
-        description="TRUE tool-driven: vague question requires document discovery",
-        min_tool_calls=2,
-        max_tool_calls=12,
-        tags=["discovery", "ad-hoc", "ambiguous"],
-    ))
+    tasks.append(
+        Task(
+            id="research_discovery_01",
+            name="Answer Ad-Hoc Question",
+            prompt="The board wants to know: 'Are we on track?' Find relevant information to answer this question.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: Must discover WHAT documents exist before knowing how to answer
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_disambiguation=True,
+            ),
+            expected_tool_calls=[
+                "search_documents"
+            ],  # Document availability determines answer approach
+            expected_answer=["track", "progress", "assessment"],
+            verifier_config={
+                "answer": ["track", "progress", "status"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "generate_summary",
+                        "take_notes",
+                    ],
+                    "min_calls": 2,
+                    "max_calls": 12,
+                },
+            },
+            description="TRUE tool-driven: vague question requires document discovery",
+            min_tool_calls=2,
+            max_tool_calls=12,
+            tags=["discovery", "ad-hoc", "ambiguous"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_discovery_02",
-        name="Find Supporting Evidence",
-        prompt="Someone claimed our AI strategy is weak. Find evidence to either support or refute this claim.",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.TOOL_DISCOVERY,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=False,
-            control_flow_from_tools=True,  # TRUE: Must discover what documents say about AI before concluding
-            data_flow_from_tools=True,
-            requires_conditional_logic=True,
-            requires_cross_reference=True,
-        ),
-        expected_tool_calls=["search_documents"],  # Document content determines conclusion
-        expected_answer=["evidence", "AI", "strategy"],
-        verifier_config={
-            "answer": ["AI", "strategy", "evidence"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
-                "min_calls": 2,
-                "max_calls": 10
-            }
-        },
-        description="TRUE tool-driven: evidence determines support/refute conclusion",
-        min_tool_calls=2,
-        max_tool_calls=10,
-        tags=["discovery", "evidence", "verification"],
-    ))
+    tasks.append(
+        Task(
+            id="research_discovery_02",
+            name="Find Supporting Evidence",
+            prompt="Someone claimed our AI strategy is weak. Find evidence to either support or refute this claim.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: Must discover what documents say about AI before concluding
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+            ),
+            expected_tool_calls=[
+                "search_documents"
+            ],  # Document content determines conclusion
+            expected_answer=["evidence", "AI", "strategy"],
+            verifier_config={
+                "answer": ["AI", "strategy", "evidence"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "take_notes",
+                    ],
+                    "min_calls": 2,
+                    "max_calls": 10,
+                },
+            },
+            description="TRUE tool-driven: evidence determines support/refute conclusion",
+            min_tool_calls=2,
+            max_tool_calls=10,
+            tags=["discovery", "evidence", "verification"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_discovery_03",
-        name="Prepare for Unknown Meeting",
-        prompt="I have an important meeting in an hour but forgot what it's about. Search our documents to figure out what topics I should be prepared to discuss.",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.TOOL_DISCOVERY,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=False,
-            control_flow_from_tools=True,  # TRUE: Must discover meeting context before knowing what to prepare
-            data_flow_from_tools=True,
-            requires_conditional_logic=True,
-            requires_state_tracking=True,
-        ),
-        expected_tool_calls=["search_documents"],  # Document search reveals meeting context
-        expected_answer=["meeting", "prepared", "topics"],
-        verifier_config={
-            "answer": ["meeting", "topic", "prepared"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "take_notes", "generate_summary"],
-                "min_calls": 2,
-                "max_calls": 10
-            }
-        },
-        description="TRUE tool-driven: discovered context determines preparation topics",
-        min_tool_calls=2,
-        max_tool_calls=10,
-        tags=["discovery", "meeting", "preparation"],
-    ))
+    tasks.append(
+        Task(
+            id="research_discovery_03",
+            name="Prepare for Unknown Meeting",
+            prompt="I have an important meeting in an hour but forgot what it's about. Search our documents to figure out what topics I should be prepared to discuss.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: Must discover meeting context before knowing what to prepare
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents"
+            ],  # Document search reveals meeting context
+            expected_answer=["meeting", "prepared", "topics"],
+            verifier_config={
+                "answer": ["meeting", "topic", "prepared"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "take_notes",
+                        "generate_summary",
+                    ],
+                    "min_calls": 2,
+                    "max_calls": 10,
+                },
+            },
+            description="TRUE tool-driven: discovered context determines preparation topics",
+            min_tool_calls=2,
+            max_tool_calls=10,
+            tags=["discovery", "meeting", "preparation"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_discovery_04",
-        name="Identify Knowledge Gaps",
-        prompt="Review our documentation and identify any significant gaps in our knowledge or missing information that we should address.",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.TOOL_DISCOVERY,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=False,
-            control_flow_from_tools=True,  # TRUE: Must discover document landscape to identify gaps
-            data_flow_from_tools=True,
-            requires_conditional_logic=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-        ),
-        expected_tool_calls=["search_documents"],  # Document inventory reveals gaps
-        expected_answer=["gap", "missing", "knowledge"],
-        verifier_config={
-            "answer": ["gap", "missing", "information"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
-                "min_calls": 3,
-                "max_calls": 15
-            }
-        },
-        description="TRUE tool-driven: document inventory determines gap analysis",
-        min_tool_calls=3,
-        max_tool_calls=15,
-        tags=["discovery", "gaps", "audit"],
-    ))
+    tasks.append(
+        Task(
+            id="research_discovery_04",
+            name="Identify Knowledge Gaps",
+            prompt="Review our documentation and identify any significant gaps in our knowledge or missing information that we should address.",
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: Must discover document landscape to identify gaps
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+            ),
+            expected_tool_calls=["search_documents"],  # Document inventory reveals gaps
+            expected_answer=["gap", "missing", "knowledge"],
+            verifier_config={
+                "answer": ["gap", "missing", "information"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "take_notes",
+                    ],
+                    "min_calls": 3,
+                    "max_calls": 15,
+                },
+            },
+            description="TRUE tool-driven: document inventory determines gap analysis",
+            min_tool_calls=3,
+            max_tool_calls=15,
+            tags=["discovery", "gaps", "audit"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_discovery_05",
-        name="Resolve Contradictory Information",
-        prompt="I've heard conflicting information about our market position. Search our documents, identify any contradictions, and determine the most accurate picture.",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.TOOL_DISCOVERY,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=False,
-            control_flow_from_tools=True,  # TRUE: Must discover what different documents say to find contradictions
-            data_flow_from_tools=True,
-            requires_conditional_logic=True,
-            requires_cross_reference=True,
-            requires_disambiguation=True,
-        ),
-        expected_tool_calls=["search_documents"],  # Document comparison reveals contradictions
-        expected_answer=["contradiction", "resolved", "market"],
-        verifier_config={
-            "answer": ["market", "position", "contradiction"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "compare_sources"],
-                "optional": ["read_document", "extract_facts", "take_notes", "generate_summary"],
-                "min_calls": 3,
-                "max_calls": 12
-            }
-        },
-        description="TRUE tool-driven: document content determines contradictions to resolve",
-        min_tool_calls=3,
-        max_tool_calls=12,
-        tags=["discovery", "contradiction", "resolution"],
-    ))
+    tasks.append(
+        Task(
+            id="research_discovery_05",
+            name="Resolve Contradictory Information",
+            prompt="I've heard conflicting information about our market position. Search our documents, identify any contradictions, and determine the most accurate picture.",
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: Must discover what different documents say to find contradictions
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_disambiguation=True,
+            ),
+            expected_tool_calls=[
+                "search_documents"
+            ],  # Document comparison reveals contradictions
+            expected_answer=["contradiction", "resolved", "market"],
+            verifier_config={
+                "answer": ["market", "position", "contradiction"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "compare_sources"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "take_notes",
+                        "generate_summary",
+                    ],
+                    "min_calls": 3,
+                    "max_calls": 12,
+                },
+            },
+            description="TRUE tool-driven: document content determines contradictions to resolve",
+            min_tool_calls=3,
+            max_tool_calls=12,
+            tags=["discovery", "contradiction", "resolution"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_discovery_06",
-        name="Quick Research for Decision",
-        prompt="I need to make a decision about whether to expand internationally. What does our available documentation say that could inform this decision?",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.TOOL_DISCOVERY,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=False,
-            control_flow_from_tools=True,  # TRUE: Must discover what relevant info exists before synthesizing
-            data_flow_from_tools=True,
-            requires_conditional_logic=True,
-            requires_cross_reference=True,
-        ),
-        expected_tool_calls=["search_documents"],  # Available information determines recommendation depth
-        expected_answer=["international", "decision", "expansion"],
-        verifier_config={
-            "answer": ["international", "decision", "expand"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "generate_summary", "take_notes"],
-                "min_calls": 2,
-                "max_calls": 10
-            }
-        },
-        description="TRUE tool-driven: available information determines recommendation",
-        min_tool_calls=2,
-        max_tool_calls=10,
-        tags=["discovery", "decision-support", "strategic"],
-    ))
+    tasks.append(
+        Task(
+            id="research_discovery_06",
+            name="Quick Research for Decision",
+            prompt="I need to make a decision about whether to expand internationally. What does our available documentation say that could inform this decision?",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: Must discover what relevant info exists before synthesizing
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+            ),
+            expected_tool_calls=[
+                "search_documents"
+            ],  # Available information determines recommendation depth
+            expected_answer=["international", "decision", "expansion"],
+            verifier_config={
+                "answer": ["international", "decision", "expand"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "generate_summary",
+                        "take_notes",
+                    ],
+                    "min_calls": 2,
+                    "max_calls": 10,
+                },
+            },
+            description="TRUE tool-driven: available information determines recommendation",
+            min_tool_calls=2,
+            max_tool_calls=10,
+            tags=["discovery", "decision-support", "strategic"],
+        )
+    )
 
     # ============================================================================
     # HOTPOTQA/MUSIQUE-INSPIRED TASKS
@@ -728,10 +894,11 @@ def get_research_tasks() -> List[Task]:
     # Focus on: bridging facts across documents, compositional reasoning, evidence chains
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_hotpot_01",
-        name="Two-Hop Fact Bridge",
-        prompt="""Answer this question using information from our documents:
+    tasks.append(
+        Task(
+            id="research_hotpot_01",
+            name="Two-Hop Fact Bridge",
+            prompt="""Answer this question using information from our documents:
 
 "What is the market position of the company whose AI acquisition TechCorp is trying to compete with?"
 
@@ -740,36 +907,48 @@ This requires:
 2. Finding that company's market position (from market analysis)
 
 Provide the complete reasoning chain showing how you connected the facts.""",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "read_document", "extract_facts"],
-        expected_answer=["market position", "#3", "TechCorp", "competing"],
-        verifier_config={
-            "answer": ["market", "position", "TechCorp", "compet"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents"],
-                "optional": ["read_document", "extract_facts", "compare_sources", "take_notes"],
-                "min_calls": 3,
-                "max_calls": 10
-            }
-        },
-        description="HotpotQA-style: Two-hop bridge reasoning",
-        min_tool_calls=3,
-        max_tool_calls=10,
-        tags=["hotpotqa", "two-hop", "bridge", "reasoning-chain"],
-    ))
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "read_document",
+                "extract_facts",
+            ],
+            expected_answer=["market position", "#3", "TechCorp", "competing"],
+            verifier_config={
+                "answer": ["market", "position", "TechCorp", "compet"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents"],
+                    "optional": [
+                        "read_document",
+                        "extract_facts",
+                        "compare_sources",
+                        "take_notes",
+                    ],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+            },
+            description="HotpotQA-style: Two-hop bridge reasoning",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["hotpotqa", "two-hop", "bridge", "reasoning-chain"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_hotpot_02",
-        name="Comparison Multi-Hop",
-        prompt="""Answer this comparison question:
+    tasks.append(
+        Task(
+            id="research_hotpot_02",
+            name="Comparison Multi-Hop",
+            prompt="""Answer this comparison question:
 
 "Does our revenue growth rate exceed or fall below the growth rate that our customers expect from enterprise solutions?"
 
@@ -779,36 +958,44 @@ This requires:
 3. Comparing the two values
 
 State your answer with supporting evidence from both sources.""",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "extract_facts", "read_document", "compare_sources"],
-        expected_answer=["15%", "growth", "exceed", "fall below", "comparison"],
-        verifier_config={
-            "answer": ["growth", "revenue", "compar", "%"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "compare_sources"],
-                "optional": ["read_document", "extract_facts", "take_notes"],
-                "min_calls": 3,
-                "max_calls": 10
-            }
-        },
-        description="HotpotQA-style: Comparison requiring multi-source evidence",
-        min_tool_calls=3,
-        max_tool_calls=10,
-        tags=["hotpotqa", "comparison", "multi-source"],
-    ))
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "extract_facts",
+                "read_document",
+                "compare_sources",
+            ],
+            expected_answer=["15%", "growth", "exceed", "fall below", "comparison"],
+            verifier_config={
+                "answer": ["growth", "revenue", "compar", "%"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "compare_sources"],
+                    "optional": ["read_document", "extract_facts", "take_notes"],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+            },
+            description="HotpotQA-style: Comparison requiring multi-source evidence",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["hotpotqa", "comparison", "multi-source"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_musique_01",
-        name="Three-Hop Reasoning Chain",
-        prompt="""Answer this complex question:
+    tasks.append(
+        Task(
+            id="research_musique_01",
+            name="Three-Hop Reasoning Chain",
+            prompt="""Answer this complex question:
 
 "What features are planned to address the concerns of customers in the region that has the highest churn risk?"
 
@@ -818,37 +1005,52 @@ This requires:
 3. Finding what features address those concerns (product roadmap)
 
 Show your complete 3-hop reasoning chain.""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_state_tracking=True,
-        ),
-        expected_tool_calls=["search_documents", "read_document", "extract_facts", "read_document", "extract_facts", "read_document", "take_notes"],
-        expected_answer=["churn", "region", "features", "address", "concerns"],
-        verifier_config={
-            "answer": ["churn", "feature", "concern", "roadmap"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts"],
-                "optional": ["read_document", "compare_sources", "take_notes", "generate_summary"],
-                "min_calls": 4,
-                "max_calls": 15
-            }
-        },
-        description="MuSiQue-style: Three-hop compositional reasoning",
-        min_tool_calls=4,
-        max_tool_calls=15,
-        tags=["musique", "three-hop", "compositional", "chain"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "extract_facts",
+                "read_document",
+                "extract_facts",
+                "read_document",
+                "take_notes",
+            ],
+            expected_answer=["churn", "region", "features", "address", "concerns"],
+            verifier_config={
+                "answer": ["churn", "feature", "concern", "roadmap"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "extract_facts"],
+                    "optional": [
+                        "read_document",
+                        "compare_sources",
+                        "take_notes",
+                        "generate_summary",
+                    ],
+                    "min_calls": 4,
+                    "max_calls": 15,
+                },
+            },
+            description="MuSiQue-style: Three-hop compositional reasoning",
+            min_tool_calls=4,
+            max_tool_calls=15,
+            tags=["musique", "three-hop", "compositional", "chain"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_musique_02",
-        name="Decomposed Sub-Questions",
-        prompt="""Answer the following compound question by decomposing it into sub-questions:
+    tasks.append(
+        Task(
+            id="research_musique_02",
+            name="Decomposed Sub-Questions",
+            prompt="""Answer the following compound question by decomposing it into sub-questions:
 
 "How does our product strategy compare to TechCorp's, and are we addressing the same customer pain points they are likely targeting with their AI acquisition?"
 
@@ -859,38 +1061,57 @@ Decompose this into:
 - Q4: Do our strategies address those pain points?
 
 Answer each sub-question then synthesize a final answer.""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_state_tracking=True,
-            requires_multi_constraint=True,
-        ),
-        expected_tool_calls=["search_documents", "extract_facts", "extract_facts", "extract_facts", "compare_sources", "generate_summary"],
-        expected_answer=["strategy", "TechCorp", "pain points", "comparison", "synthesis"],
-        verifier_config={
-            "answer": ["strategy", "TechCorp", "customer", "pain"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts", "generate_summary"],
-                "optional": ["read_document", "compare_sources", "take_notes"],
-                "min_calls": 5,
-                "max_calls": 18
-            }
-        },
-        description="MuSiQue-style: Decomposed compound question answering",
-        min_tool_calls=5,
-        max_tool_calls=18,
-        tags=["musique", "decomposition", "compound", "synthesis"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+                requires_multi_constraint=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "extract_facts",
+                "extract_facts",
+                "extract_facts",
+                "compare_sources",
+                "generate_summary",
+            ],
+            expected_answer=[
+                "strategy",
+                "TechCorp",
+                "pain points",
+                "comparison",
+                "synthesis",
+            ],
+            verifier_config={
+                "answer": ["strategy", "TechCorp", "customer", "pain"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": [
+                        "search_documents",
+                        "extract_facts",
+                        "generate_summary",
+                    ],
+                    "optional": ["read_document", "compare_sources", "take_notes"],
+                    "min_calls": 5,
+                    "max_calls": 18,
+                },
+            },
+            description="MuSiQue-style: Decomposed compound question answering",
+            min_tool_calls=5,
+            max_tool_calls=18,
+            tags=["musique", "decomposition", "compound", "synthesis"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_hotpot_03",
-        name="Yes/No with Evidence Bridge",
-        prompt="""Answer this yes/no question with supporting evidence:
+    tasks.append(
+        Task(
+            id="research_hotpot_03",
+            name="Yes/No with Evidence Bridge",
+            prompt="""Answer this yes/no question with supporting evidence:
 
 "Is the feature that customers rated lowest in the survey included in our Q1 roadmap priorities?"
 
@@ -899,30 +1120,36 @@ Requirements:
 2. Check if it appears in Q1 roadmap priorities
 3. Answer YES or NO
 4. Provide specific evidence supporting your answer""",
-        difficulty=DifficultyLevel.HARD,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_cross_reference=True,
-        ),
-        expected_tool_calls=["search_documents", "extract_facts", "read_document", "extract_facts"],
-        expected_answer=["yes", "no", "evidence", "lowest", "roadmap"],
-        verifier_config={
-            "answer": ["yes", "no", "evidence", "survey", "roadmap"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts"],
-                "optional": ["read_document", "compare_sources", "take_notes"],
-                "min_calls": 3,
-                "max_calls": 10
-            }
-        },
-        description="HotpotQA-style: Yes/No question with evidence bridging",
-        min_tool_calls=3,
-        max_tool_calls=10,
-        tags=["hotpotqa", "yes-no", "evidence", "bridge"],
-    ))
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "extract_facts",
+                "read_document",
+                "extract_facts",
+            ],
+            expected_answer=["yes", "no", "evidence", "lowest", "roadmap"],
+            verifier_config={
+                "answer": ["yes", "no", "evidence", "survey", "roadmap"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "extract_facts"],
+                    "optional": ["read_document", "compare_sources", "take_notes"],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+            },
+            description="HotpotQA-style: Yes/No question with evidence bridging",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["hotpotqa", "yes-no", "evidence", "bridge"],
+        )
+    )
 
     # ============================================================================
     # COMPOUND TASKS
@@ -930,10 +1157,11 @@ Requirements:
     # and state management across different objectives
     # ============================================================================
 
-    tasks.append(Task(
-        id="research_compound_01",
-        name="Multi-Stakeholder Briefing",
-        prompt="""Prepare separate briefings for three different stakeholders from the same document set:
+    tasks.append(
+        Task(
+            id="research_compound_01",
+            name="Multi-Stakeholder Briefing",
+            prompt="""Prepare separate briefings for three different stakeholders from the same document set:
 
 BRIEFING 1 - For the CEO:
 - Focus on financial performance and market position
@@ -951,38 +1179,48 @@ BRIEFING 3 - For the Sales VP:
 - Extract relevant facts and generate a summary
 
 Take notes throughout to track what information goes to which stakeholder.""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_state_tracking=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_multi_constraint=True,
-        ),
-        expected_tool_calls=["search_documents"] + ["read_document"] * 5 + ["extract_facts"] * 6 + ["take_notes"] * 3 + ["generate_summary"] * 3,
-        expected_answer=["CEO", "CTO", "Sales", "briefing", "summary"],
-        verifier_config={
-            "answer": ["briefing", "CEO", "CTO", "Sales", "summary"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts", "generate_summary"],
-                "optional": ["read_document", "take_notes", "compare_sources"],
-                "min_calls": 10,
-                "max_calls": 30
-            }
-        },
-        description="Compound: Prepare three tailored briefings from same sources",
-        min_tool_calls=10,
-        max_tool_calls=30,
-        tags=["compound", "briefings", "stakeholders", "tailored"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_state_tracking=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_multi_constraint=True,
+            ),
+            expected_tool_calls=["search_documents"]
+            + ["read_document"] * 5
+            + ["extract_facts"] * 6
+            + ["take_notes"] * 3
+            + ["generate_summary"] * 3,
+            expected_answer=["CEO", "CTO", "Sales", "briefing", "summary"],
+            verifier_config={
+                "answer": ["briefing", "CEO", "CTO", "Sales", "summary"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": [
+                        "search_documents",
+                        "extract_facts",
+                        "generate_summary",
+                    ],
+                    "optional": ["read_document", "take_notes", "compare_sources"],
+                    "min_calls": 10,
+                    "max_calls": 30,
+                },
+            },
+            description="Compound: Prepare three tailored briefings from same sources",
+            min_tool_calls=10,
+            max_tool_calls=30,
+            tags=["compound", "briefings", "stakeholders", "tailored"],
+        )
+    )
 
-    tasks.append(Task(
-        id="research_compound_02",
-        name="Competitive Analysis Suite",
-        prompt="""Conduct a comprehensive competitive analysis covering:
+    tasks.append(
+        Task(
+            id="research_compound_02",
+            name="Competitive Analysis Suite",
+            prompt="""Conduct a comprehensive competitive analysis covering:
 
 ANALYSIS 1 - Market Position Comparison:
 - Extract our market share and position
@@ -1003,32 +1241,43 @@ SYNTHESIS:
 - Compare all findings across the three analyses
 - Generate a SWOT-style summary
 - Take notes on strategic recommendations""",
-        difficulty=DifficultyLevel.EXPERT,
-        information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
-        characteristics=TaskCharacteristics(
-            control_flow_from_prompt=True,
-            data_flow_from_tools=True,
-            requires_state_tracking=True,
-            requires_cross_reference=True,
-            requires_long_reasoning_chain=True,
-            requires_multi_constraint=True,
-        ),
-        expected_tool_calls=["search_documents"] * 2 + ["read_document"] * 4 + ["extract_facts"] * 6 + ["compare_sources"] * 3 + ["take_notes"] * 4 + ["generate_summary"],
-        expected_answer=["market", "product", "customer", "SWOT", "competitive"],
-        verifier_config={
-            "answer": ["market", "competitive", "product", "customer", "summary"],
-            "match_mode": "contains",
-            "tools": {
-                "required": ["search_documents", "extract_facts", "compare_sources", "generate_summary"],
-                "optional": ["read_document", "take_notes", "search_web"],
-                "min_calls": 12,
-                "max_calls": 30
-            }
-        },
-        description="Compound: Three-part competitive analysis with synthesis",
-        min_tool_calls=12,
-        max_tool_calls=30,
-        tags=["compound", "competitive", "swot", "multi-analysis"],
-    ))
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_state_tracking=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_multi_constraint=True,
+            ),
+            expected_tool_calls=["search_documents"] * 2
+            + ["read_document"] * 4
+            + ["extract_facts"] * 6
+            + ["compare_sources"] * 3
+            + ["take_notes"] * 4
+            + ["generate_summary"],
+            expected_answer=["market", "product", "customer", "SWOT", "competitive"],
+            verifier_config={
+                "answer": ["market", "competitive", "product", "customer", "summary"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": [
+                        "search_documents",
+                        "extract_facts",
+                        "compare_sources",
+                        "generate_summary",
+                    ],
+                    "optional": ["read_document", "take_notes", "search_web"],
+                    "min_calls": 12,
+                    "max_calls": 30,
+                },
+            },
+            description="Compound: Three-part competitive analysis with synthesis",
+            min_tool_calls=12,
+            max_tool_calls=30,
+            tags=["compound", "competitive", "swot", "multi-analysis"],
+        )
+    )
 
     return tasks

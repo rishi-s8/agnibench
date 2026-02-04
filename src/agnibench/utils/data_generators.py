@@ -6,9 +6,9 @@ Generates realistic test data for various benchmark scenarios.
 
 import random
 import string
+import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-import uuid
 
 
 def random_id(prefix: str = "") -> str:
@@ -18,8 +18,30 @@ def random_id(prefix: str = "") -> str:
 
 def random_name() -> str:
     """Generate a random name."""
-    first_names = ["Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Henry", "Ivy", "Jack"]
-    last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Martinez", "Wilson"]
+    first_names = [
+        "Alice",
+        "Bob",
+        "Carol",
+        "David",
+        "Eve",
+        "Frank",
+        "Grace",
+        "Henry",
+        "Ivy",
+        "Jack",
+    ]
+    last_names = [
+        "Smith",
+        "Johnson",
+        "Williams",
+        "Brown",
+        "Jones",
+        "Garcia",
+        "Miller",
+        "Davis",
+        "Martinez",
+        "Wilson",
+    ]
     return f"{random.choice(first_names)} {random.choice(last_names)}"
 
 
@@ -91,7 +113,9 @@ def generate_random_email(
         "body": (body or random.choice(bodies)).format(sender=sender_name),
         "timestamp": random_date(start_days_ago=14, end_days_ahead=0).isoformat(),
         "read": random.choice([True, False]),
-        "labels": random.sample(["inbox", "important", "work", "personal"], k=random.randint(1, 2)),
+        "labels": random.sample(
+            ["inbox", "important", "work", "personal"], k=random.randint(1, 2)
+        ),
     }
 
 
@@ -144,7 +168,9 @@ def generate_random_calendar_event(
         "end_time": end.isoformat(),
         "duration_minutes": duration,
         "attendees": attendees,
-        "location": random.choice(["Conference Room A", "Conference Room B", "Virtual", "Office 301", ""]),
+        "location": random.choice(
+            ["Conference Room A", "Conference Room B", "Virtual", "Office 301", ""]
+        ),
         "description": f"Meeting with {', '.join(attendees[:2])}",
         "organizer": random_name(),
         "status": random.choice(["confirmed", "tentative", "cancelled"]),
@@ -185,7 +211,9 @@ def generate_random_customer(
         "support_tickets_count": random.randint(0, 20),
         "last_contact": random_date(start_days_ago=30, end_days_ahead=0).isoformat(),
         "satisfaction_score": round(random.uniform(1, 5), 1),
-        "company": f"{customer_name.split()[1]} Corp" if random.random() > 0.5 else None,
+        "company": (
+            f"{customer_name.split()[1]} Corp" if random.random() > 0.5 else None
+        ),
     }
 
 
@@ -240,8 +268,15 @@ def generate_random_ticket(
         "created_at": random_date(start_days_ago=7, end_days_ahead=0).isoformat(),
         "updated_at": random_date(start_days_ago=2, end_days_ahead=0).isoformat(),
         "assigned_to": random_name() if random.random() > 0.3 else None,
-        "tags": random.sample(["urgent", "vip", "escalated", "first_contact", "recurring"], k=random.randint(0, 2)),
-        "resolution": None if random.random() > 0.3 else "Issue resolved by updating configuration",
+        "tags": random.sample(
+            ["urgent", "vip", "escalated", "first_contact", "recurring"],
+            k=random.randint(0, 2),
+        ),
+        "resolution": (
+            None
+            if random.random() > 0.3
+            else "Issue resolved by updating configuration"
+        ),
     }
 
 
@@ -343,7 +378,10 @@ def generate_random_document(
         "author": random_name(),
         "created_at": random_date(start_days_ago=180, end_days_ahead=0).isoformat(),
         "updated_at": random_date(start_days_ago=30, end_days_ahead=0).isoformat(),
-        "tags": random.sample(["internal", "confidential", "public", "draft", "final"], k=random.randint(1, 3)),
+        "tags": random.sample(
+            ["internal", "confidential", "public", "draft", "final"],
+            k=random.randint(1, 3),
+        ),
         "word_count": random.randint(500, 5000),
         "version": f"{random.randint(1, 5)}.{random.randint(0, 9)}",
     }
@@ -356,7 +394,14 @@ def generate_slack_message(
     content: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Generate a random Slack message."""
-    channels = ["#general", "#engineering", "#sales", "#support", "#random", "#announcements"]
+    channels = [
+        "#general",
+        "#engineering",
+        "#sales",
+        "#support",
+        "#random",
+        "#announcements",
+    ]
 
     messages = [
         "Hey team, quick update on the project status",
@@ -375,7 +420,9 @@ def generate_slack_message(
         "sender": sender_name,
         "content": content or random.choice(messages),
         "timestamp": random_date(start_days_ago=7, end_days_ahead=0).isoformat(),
-        "reactions": random.sample(["thumbsup", "heart", "eyes", "rocket", "tada"], k=random.randint(0, 3)),
+        "reactions": random.sample(
+            ["thumbsup", "heart", "eyes", "rocket", "tada"], k=random.randint(0, 3)
+        ),
         "thread_count": random.randint(0, 10),
     }
 
@@ -386,7 +433,15 @@ def generate_contact(
 ) -> Dict[str, Any]:
     """Generate a random contact."""
     contact_name = name or random_name()
-    departments = ["Engineering", "Sales", "Marketing", "Support", "Product", "HR", "Finance"]
+    departments = [
+        "Engineering",
+        "Sales",
+        "Marketing",
+        "Support",
+        "Product",
+        "HR",
+        "Finance",
+    ]
 
     return {
         "id": contact_id or random_id("contact_"),
@@ -394,7 +449,11 @@ def generate_contact(
         "email": random_email_address(contact_name),
         "phone": f"+1-555-{random.randint(100, 999)}-{random.randint(1000, 9999)}",
         "department": random.choice(departments),
-        "title": random.choice(["Manager", "Director", "Engineer", "Analyst", "Specialist", "Lead"]),
-        "location": random.choice(["San Francisco", "New York", "London", "Remote", "Austin"]),
+        "title": random.choice(
+            ["Manager", "Director", "Engineer", "Analyst", "Specialist", "Lead"]
+        ),
+        "location": random.choice(
+            ["San Francisco", "New York", "London", "Remote", "Austin"]
+        ),
         "timezone": random.choice(["PST", "EST", "GMT", "CET"]),
     }

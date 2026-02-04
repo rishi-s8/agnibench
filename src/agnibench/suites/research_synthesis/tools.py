@@ -6,10 +6,9 @@ Provides 7 tools for document search, analysis, and synthesis.
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
 
 from agentbuilder.Tools.base import Tool
-
+from pydantic import BaseModel, Field
 
 # Storage for simulated data (populated by environment)
 _research_data: Dict[str, Any] = {
@@ -32,55 +31,82 @@ def get_research_data() -> Dict[str, Any]:
 
 # Pydantic models for tool parameters
 
+
 class SearchDocumentsParams(BaseModel):
     """Parameters for searching documents."""
+
     query: str = Field(description="Search query for document content")
-    doc_type: Optional[str] = Field(default=None, description="Filter by document type (report, documentation, policy, analysis)")
+    doc_type: Optional[str] = Field(
+        default=None,
+        description="Filter by document type (report, documentation, policy, analysis)",
+    )
     limit: int = Field(default=5, description="Maximum results to return")
 
 
 class ReadDocumentParams(BaseModel):
     """Parameters for reading a document."""
+
     document_id: str = Field(description="ID of the document to read")
 
 
 class ExtractFactsParams(BaseModel):
     """Parameters for extracting facts from text."""
+
     document_id: str = Field(description="ID of the document to extract facts from")
-    focus_area: Optional[str] = Field(default=None, description="Specific topic to focus on")
+    focus_area: Optional[str] = Field(
+        default=None, description="Specific topic to focus on"
+    )
 
 
 class CompareSourcesParams(BaseModel):
     """Parameters for comparing two documents."""
+
     document_id_1: str = Field(description="First document ID")
     document_id_2: str = Field(description="Second document ID")
-    comparison_aspect: Optional[str] = Field(default=None, description="Specific aspect to compare")
+    comparison_aspect: Optional[str] = Field(
+        default=None, description="Specific aspect to compare"
+    )
 
 
 class TakeNotesParams(BaseModel):
     """Parameters for taking research notes."""
+
     note: str = Field(description="The note content to store")
-    source_document: Optional[str] = Field(default=None, description="Document ID this note is based on")
-    tags: List[str] = Field(default_factory=list, description="Tags for organizing notes")
+    source_document: Optional[str] = Field(
+        default=None, description="Document ID this note is based on"
+    )
+    tags: List[str] = Field(
+        default_factory=list, description="Tags for organizing notes"
+    )
 
 
 class SearchWebParams(BaseModel):
     """Parameters for web search."""
+
     query: str = Field(description="Search query")
     limit: int = Field(default=5, description="Maximum results")
 
 
 class GenerateSummaryParams(BaseModel):
     """Parameters for generating a summary."""
-    document_ids: List[str] = Field(default_factory=list, description="Document IDs to summarize")
-    include_notes: bool = Field(default=True, description="Include research notes in summary")
-    focus_topic: Optional[str] = Field(default=None, description="Topic to focus the summary on")
+
+    document_ids: List[str] = Field(
+        default_factory=list, description="Document IDs to summarize"
+    )
+    include_notes: bool = Field(
+        default=True, description="Include research notes in summary"
+    )
+    focus_topic: Optional[str] = Field(
+        default=None, description="Topic to focus the summary on"
+    )
 
 
 # Pydantic result models
 
+
 class DocumentSearchResult(BaseModel):
     """A single document search result."""
+
     id: Optional[str] = None
     title: Optional[str] = None
     type: Optional[str] = None
@@ -92,6 +118,7 @@ class DocumentSearchResult(BaseModel):
 
 class SearchDocumentsResult(BaseModel):
     """Result of searching documents."""
+
     query: str
     results: List[DocumentSearchResult]
     count: int
@@ -99,6 +126,7 @@ class SearchDocumentsResult(BaseModel):
 
 class ReadDocumentResult(BaseModel):
     """Result of reading a document."""
+
     found: bool
     document: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -106,6 +134,7 @@ class ReadDocumentResult(BaseModel):
 
 class ExtractFactsResult(BaseModel):
     """Result of extracting facts."""
+
     document_id: Optional[str] = None
     document_title: Optional[str] = None
     facts: List[str]
@@ -115,12 +144,14 @@ class ExtractFactsResult(BaseModel):
 
 class DocumentReference(BaseModel):
     """A reference to a document in comparison."""
+
     id: str
     title: Optional[str] = None
 
 
 class CompareSourcesResult(BaseModel):
     """Result of comparing sources."""
+
     documents: Optional[List[DocumentReference]] = None
     comparison_aspect: Optional[str] = None
     similarities: Optional[List[str]] = None
@@ -131,6 +162,7 @@ class CompareSourcesResult(BaseModel):
 
 class TakeNotesResult(BaseModel):
     """Result of taking notes."""
+
     success: bool
     note_id: Optional[str] = None
     message: Optional[str] = None
@@ -138,6 +170,7 @@ class TakeNotesResult(BaseModel):
 
 class WebSearchItem(BaseModel):
     """A web search result item."""
+
     title: str
     url: str
     snippet: str
@@ -146,6 +179,7 @@ class WebSearchItem(BaseModel):
 
 class SearchWebResult(BaseModel):
     """Result of web search."""
+
     query: str
     results: List[WebSearchItem]
     count: int
@@ -153,12 +187,14 @@ class SearchWebResult(BaseModel):
 
 class DocumentKeyPoints(BaseModel):
     """Key points from a document."""
+
     title: Optional[str] = None
     key_points: List[str]
 
 
 class SummaryDetails(BaseModel):
     """Details of a generated summary."""
+
     id: str
     document_count: int
     note_count: int
@@ -170,12 +206,14 @@ class SummaryDetails(BaseModel):
 
 class GenerateSummaryResult(BaseModel):
     """Result of generating a summary."""
+
     summary_id: Optional[str] = None
     summary: Optional[SummaryDetails] = None
     success: bool
 
 
 # Tool implementation functions
+
 
 def search_documents(params: SearchDocumentsParams) -> SearchDocumentsResult:
     """Search the document corpus."""
@@ -196,15 +234,21 @@ def search_documents(params: SearchDocumentsParams) -> SearchDocumentsResult:
                 if doc.get("type", "").lower() != params.doc_type.lower():
                     continue
 
-            results.append(DocumentSearchResult(
-                id=doc.get("id"),
-                title=doc.get("title"),
-                type=doc.get("type"),
-                author=doc.get("author"),
-                created_at=doc.get("created_at"),
-                preview=doc.get("content", "")[:200] + "..." if len(doc.get("content", "")) > 200 else doc.get("content", ""),
-                relevance="high" if title_match else "medium",
-            ))
+            results.append(
+                DocumentSearchResult(
+                    id=doc.get("id"),
+                    title=doc.get("title"),
+                    type=doc.get("type"),
+                    author=doc.get("author"),
+                    created_at=doc.get("created_at"),
+                    preview=(
+                        doc.get("content", "")[:200] + "..."
+                        if len(doc.get("content", "")) > 200
+                        else doc.get("content", "")
+                    ),
+                    relevance="high" if title_match else "medium",
+                )
+            )
 
             if len(results) >= params.limit:
                 break
@@ -275,9 +319,13 @@ def compare_sources(params: CompareSourcesParams) -> CompareSourcesResult:
             doc2 = doc
 
     if not doc1:
-        return CompareSourcesResult(error=f"Document '{params.document_id_1}' not found")
+        return CompareSourcesResult(
+            error=f"Document '{params.document_id_1}' not found"
+        )
     if not doc2:
-        return CompareSourcesResult(error=f"Document '{params.document_id_2}' not found")
+        return CompareSourcesResult(
+            error=f"Document '{params.document_id_2}' not found"
+        )
 
     # Simulated comparison
     return CompareSourcesResult(
@@ -286,9 +334,15 @@ def compare_sources(params: CompareSourcesParams) -> CompareSourcesResult:
             DocumentReference(id=doc2["id"], title=doc2.get("title")),
         ],
         comparison_aspect=params.comparison_aspect,
-        similarities=doc1.get("comparisons", {}).get(doc2["id"], {}).get("similarities", []),
-        differences=doc1.get("comparisons", {}).get(doc2["id"], {}).get("differences", []),
-        contradictions=doc1.get("comparisons", {}).get(doc2["id"], {}).get("contradictions", []),
+        similarities=doc1.get("comparisons", {})
+        .get(doc2["id"], {})
+        .get("similarities", []),
+        differences=doc1.get("comparisons", {})
+        .get(doc2["id"], {})
+        .get("differences", []),
+        contradictions=doc1.get("comparisons", {})
+        .get(doc2["id"], {})
+        .get("contradictions", []),
     )
 
 
@@ -333,8 +387,8 @@ def search_web(params: SearchWebParams) -> SearchWebResult:
 
     return SearchWebResult(
         query=params.query,
-        results=simulated_results[:params.limit],
-        count=len(simulated_results[:params.limit]),
+        results=simulated_results[: params.limit],
+        count=len(simulated_results[: params.limit]),
     )
 
 
@@ -347,10 +401,12 @@ def generate_summary(params: GenerateSummaryParams) -> GenerateSummaryResult:
     doc_contents = []
     for doc in documents:
         if not params.document_ids or doc.get("id") in params.document_ids:
-            doc_contents.append(DocumentKeyPoints(
-                title=doc.get("title"),
-                key_points=doc.get("extracted_facts", [])[:3],
-            ))
+            doc_contents.append(
+                DocumentKeyPoints(
+                    title=doc.get("title"),
+                    key_points=doc.get("extracted_facts", [])[:3],
+                )
+            )
 
     # Include notes if requested
     note_contents = []
@@ -389,6 +445,7 @@ def generate_summary(params: GenerateSummaryParams) -> GenerateSummaryResult:
 
 # Tool creation
 
+
 def get_research_tools() -> List[Tool]:
     """Get all research synthesis tools."""
     return [
@@ -398,13 +455,23 @@ def get_research_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Search query for document content"},
-                    "doc_type": {"type": "string", "description": "Filter by type: report, documentation, policy, analysis"},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 5}
+                    "query": {
+                        "type": "string",
+                        "description": "Search query for document content",
+                    },
+                    "doc_type": {
+                        "type": "string",
+                        "description": "Filter by type: report, documentation, policy, analysis",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 5,
+                    },
                 },
-                "required": ["query"]
+                "required": ["query"],
             },
-            function=lambda **kwargs: search_documents(SearchDocumentsParams(**kwargs))
+            function=lambda **kwargs: search_documents(SearchDocumentsParams(**kwargs)),
         ),
         Tool(
             name="read_document",
@@ -412,11 +479,14 @@ def get_research_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "document_id": {"type": "string", "description": "ID of the document to read"}
+                    "document_id": {
+                        "type": "string",
+                        "description": "ID of the document to read",
+                    }
                 },
-                "required": ["document_id"]
+                "required": ["document_id"],
             },
-            function=lambda **kwargs: read_document(ReadDocumentParams(**kwargs))
+            function=lambda **kwargs: read_document(ReadDocumentParams(**kwargs)),
         ),
         Tool(
             name="extract_facts",
@@ -424,12 +494,18 @@ def get_research_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "document_id": {"type": "string", "description": "ID of the document"},
-                    "focus_area": {"type": "string", "description": "Specific topic to focus on"}
+                    "document_id": {
+                        "type": "string",
+                        "description": "ID of the document",
+                    },
+                    "focus_area": {
+                        "type": "string",
+                        "description": "Specific topic to focus on",
+                    },
                 },
-                "required": ["document_id"]
+                "required": ["document_id"],
             },
-            function=lambda **kwargs: extract_facts(ExtractFactsParams(**kwargs))
+            function=lambda **kwargs: extract_facts(ExtractFactsParams(**kwargs)),
         ),
         Tool(
             name="compare_sources",
@@ -437,13 +513,22 @@ def get_research_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "document_id_1": {"type": "string", "description": "First document ID"},
-                    "document_id_2": {"type": "string", "description": "Second document ID"},
-                    "comparison_aspect": {"type": "string", "description": "Specific aspect to compare"}
+                    "document_id_1": {
+                        "type": "string",
+                        "description": "First document ID",
+                    },
+                    "document_id_2": {
+                        "type": "string",
+                        "description": "Second document ID",
+                    },
+                    "comparison_aspect": {
+                        "type": "string",
+                        "description": "Specific aspect to compare",
+                    },
                 },
-                "required": ["document_id_1", "document_id_2"]
+                "required": ["document_id_1", "document_id_2"],
             },
-            function=lambda **kwargs: compare_sources(CompareSourcesParams(**kwargs))
+            function=lambda **kwargs: compare_sources(CompareSourcesParams(**kwargs)),
         ),
         Tool(
             name="take_notes",
@@ -452,12 +537,19 @@ def get_research_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "note": {"type": "string", "description": "The note content"},
-                    "source_document": {"type": "string", "description": "Document ID this note is from"},
-                    "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags for organizing"}
+                    "source_document": {
+                        "type": "string",
+                        "description": "Document ID this note is from",
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Tags for organizing",
+                    },
                 },
-                "required": ["note"]
+                "required": ["note"],
             },
-            function=lambda **kwargs: take_notes(TakeNotesParams(**kwargs))
+            function=lambda **kwargs: take_notes(TakeNotesParams(**kwargs)),
         ),
         Tool(
             name="search_web",
@@ -466,11 +558,15 @@ def get_research_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Search query"},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 5}
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 5,
+                    },
                 },
-                "required": ["query"]
+                "required": ["query"],
             },
-            function=lambda **kwargs: search_web(SearchWebParams(**kwargs))
+            function=lambda **kwargs: search_web(SearchWebParams(**kwargs)),
         ),
         Tool(
             name="generate_summary",
@@ -478,12 +574,23 @@ def get_research_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "document_ids": {"type": "array", "items": {"type": "string"}, "description": "Document IDs to include"},
-                    "include_notes": {"type": "boolean", "description": "Include research notes", "default": True},
-                    "focus_topic": {"type": "string", "description": "Topic to focus the summary on"}
+                    "document_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Document IDs to include",
+                    },
+                    "include_notes": {
+                        "type": "boolean",
+                        "description": "Include research notes",
+                        "default": True,
+                    },
+                    "focus_topic": {
+                        "type": "string",
+                        "description": "Topic to focus the summary on",
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: generate_summary(GenerateSummaryParams(**kwargs))
+            function=lambda **kwargs: generate_summary(GenerateSummaryParams(**kwargs)),
         ),
     ]

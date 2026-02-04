@@ -4,13 +4,12 @@ Tools for the data analysis benchmark suite.
 Provides 8 tools for data exploration, querying, and insight generation.
 """
 
+import random
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
-import random
 
 from agentbuilder.Tools.base import Tool
-
+from pydantic import BaseModel, Field
 
 # Storage for simulated data
 _data_state: Dict[str, Any] = {
@@ -34,22 +33,33 @@ def get_data_state() -> Dict[str, Any]:
 
 # Pydantic models
 
+
 class ListDatasetsParams(BaseModel):
     """Parameters for listing datasets."""
+
     category: Optional[str] = Field(default=None, description="Filter by category")
-    include_archived: bool = Field(default=False, description="Include archived/deprecated datasets (default: False)")
+    include_archived: bool = Field(
+        default=False,
+        description="Include archived/deprecated datasets (default: False)",
+    )
 
 
 class DescribeDatasetParams(BaseModel):
     """Parameters for describing a dataset."""
+
     dataset_id: str = Field(description="ID of the dataset to describe")
 
 
 class QueryDataParams(BaseModel):
     """Parameters for querying data."""
+
     dataset_id: str = Field(description="ID of the dataset to query")
-    select: List[str] = Field(default_factory=lambda: ["*"], description="Columns to select")
-    where: Optional[str] = Field(default=None, description="Filter condition (e.g., 'region = North')")
+    select: List[str] = Field(
+        default_factory=lambda: ["*"], description="Columns to select"
+    )
+    where: Optional[str] = Field(
+        default=None, description="Filter condition (e.g., 'region = North')"
+    )
     group_by: Optional[str] = Field(default=None, description="Column to group by")
     order_by: Optional[str] = Field(default=None, description="Column to order by")
     limit: int = Field(default=10, description="Maximum rows to return")
@@ -57,50 +67,74 @@ class QueryDataParams(BaseModel):
 
 class ComputeStatisticsParams(BaseModel):
     """Parameters for computing statistics."""
+
     dataset_id: str = Field(description="ID of the dataset")
     column: str = Field(description="Column to compute statistics for")
-    statistic: str = Field(default="summary", description="Type: summary, mean, median, std, min, max, count, percentiles")
-    group_by: Optional[str] = Field(default=None, description="Optional grouping column")
+    statistic: str = Field(
+        default="summary",
+        description="Type: summary, mean, median, std, min, max, count, percentiles",
+    )
+    group_by: Optional[str] = Field(
+        default=None, description="Optional grouping column"
+    )
 
 
 class CreateVisualizationParams(BaseModel):
     """Parameters for creating a visualization."""
+
     dataset_id: str = Field(description="ID of the dataset")
-    chart_type: str = Field(description="Type: bar, line, scatter, pie, histogram, heatmap")
+    chart_type: str = Field(
+        description="Type: bar, line, scatter, pie, histogram, heatmap"
+    )
     x_column: str = Field(description="Column for X axis")
     y_column: Optional[str] = Field(default=None, description="Column for Y axis")
-    group_by: Optional[str] = Field(default=None, description="Column to group/color by")
+    group_by: Optional[str] = Field(
+        default=None, description="Column to group/color by"
+    )
     title: Optional[str] = Field(default=None, description="Chart title")
 
 
 class DetectAnomaliesParams(BaseModel):
     """Parameters for anomaly detection."""
+
     dataset_id: str = Field(description="ID of the dataset")
     column: str = Field(description="Column to check for anomalies")
-    method: str = Field(default="zscore", description="Method: zscore, iqr, isolation_forest")
+    method: str = Field(
+        default="zscore", description="Method: zscore, iqr, isolation_forest"
+    )
     threshold: float = Field(default=3.0, description="Threshold for anomaly detection")
 
 
 class CorrelateColumnsParams(BaseModel):
     """Parameters for correlation analysis."""
+
     dataset_id: str = Field(description="ID of the dataset")
-    columns: Optional[List[str]] = Field(default=None, description="Columns to correlate (default: all numeric)")
-    method: str = Field(default="pearson", description="Method: pearson, spearman, kendall")
+    columns: Optional[List[str]] = Field(
+        default=None, description="Columns to correlate (default: all numeric)"
+    )
+    method: str = Field(
+        default="pearson", description="Method: pearson, spearman, kendall"
+    )
 
 
 class SaveInsightParams(BaseModel):
     """Parameters for saving an insight."""
+
     title: str = Field(description="Title of the insight")
     description: str = Field(description="Detailed description of the finding")
     dataset_id: Optional[str] = Field(default=None, description="Related dataset")
-    evidence: Optional[Dict[str, Any]] = Field(default=None, description="Supporting data/metrics")
+    evidence: Optional[Dict[str, Any]] = Field(
+        default=None, description="Supporting data/metrics"
+    )
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
 
 
 # Pydantic result models
 
+
 class DatasetSummary(BaseModel):
     """Summary of a dataset in list results."""
+
     id: Optional[str] = None
     name: Optional[str] = None
     category: Optional[str] = None
@@ -113,12 +147,14 @@ class DatasetSummary(BaseModel):
 
 class ListDatasetsResult(BaseModel):
     """Result of listing datasets."""
+
     datasets: List[DatasetSummary]
     count: int
 
 
 class DatasetDetails(BaseModel):
     """Detailed dataset information."""
+
     id: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
@@ -132,6 +168,7 @@ class DatasetDetails(BaseModel):
 
 class DescribeDatasetResult(BaseModel):
     """Result of describing a dataset."""
+
     found: bool
     dataset: Optional[DatasetDetails] = None
     error: Optional[str] = None
@@ -139,6 +176,7 @@ class DescribeDatasetResult(BaseModel):
 
 class QueryDataResult(BaseModel):
     """Result of querying data."""
+
     success: bool
     query_id: Optional[str] = None
     row_count: Optional[int] = None
@@ -148,6 +186,7 @@ class QueryDataResult(BaseModel):
 
 class ComputeStatisticsResult(BaseModel):
     """Result of computing statistics."""
+
     success: bool
     dataset_id: Optional[str] = None
     column: Optional[str] = None
@@ -160,12 +199,14 @@ class ComputeStatisticsResult(BaseModel):
 
 class VisualizationSpec(BaseModel):
     """Visualization specification."""
+
     type: str
     encoding: Dict[str, Any]
 
 
 class CreateVisualizationResult(BaseModel):
     """Result of creating a visualization."""
+
     success: bool
     visualization_id: Optional[str] = None
     chart_type: Optional[str] = None
@@ -176,6 +217,7 @@ class CreateVisualizationResult(BaseModel):
 
 class DetectAnomaliesResult(BaseModel):
     """Result of detecting anomalies."""
+
     success: bool
     dataset_id: Optional[str] = None
     column: Optional[str] = None
@@ -189,6 +231,7 @@ class DetectAnomaliesResult(BaseModel):
 
 class CorrelationPair(BaseModel):
     """A pair of correlated columns."""
+
     column1: str
     column2: str
     correlation: float
@@ -197,6 +240,7 @@ class CorrelationPair(BaseModel):
 
 class CorrelateColumnsResult(BaseModel):
     """Result of correlating columns."""
+
     success: bool
     dataset_id: Optional[str] = None
     method: Optional[str] = None
@@ -207,12 +251,14 @@ class CorrelateColumnsResult(BaseModel):
 
 class SaveInsightResult(BaseModel):
     """Result of saving an insight."""
+
     success: bool
     insight_id: Optional[str] = None
     message: Optional[str] = None
 
 
 # Tool implementations
+
 
 def list_datasets(params: ListDatasetsParams) -> ListDatasetsResult:
     """List available datasets."""
@@ -328,18 +374,16 @@ def query_data(params: QueryDataParams) -> QueryDataResult:
 
                 # Aggregate (simple count)
                 data = [
-                    {params.group_by: k, "count": len(v)}
-                    for k, v in groups.items()
+                    {params.group_by: k, "count": len(v)} for k, v in groups.items()
                 ]
 
             # Apply limit
-            data = data[:params.limit]
+            data = data[: params.limit]
 
             # Select columns
             if params.select and params.select != ["*"] and data:
                 data = [
-                    {k: v for k, v in row.items() if k in params.select}
-                    for row in data
+                    {k: v for k, v in row.items() if k in params.select} for row in data
                 ]
 
             # Store query result
@@ -430,7 +474,9 @@ def compute_statistics(params: ComputeStatisticsParams) -> ComputeStatisticsResu
     )
 
 
-def create_visualization(params: CreateVisualizationParams) -> CreateVisualizationResult:
+def create_visualization(
+    params: CreateVisualizationParams,
+) -> CreateVisualizationResult:
     """Create a visualization specification."""
     datasets = _data_state.get("datasets", [])
 
@@ -452,7 +498,8 @@ def create_visualization(params: CreateVisualizationParams) -> CreateVisualizati
                 "x_column": params.x_column,
                 "y_column": params.y_column,
                 "group_by": params.group_by,
-                "title": params.title or f"{params.chart_type.title()} chart of {params.x_column}",
+                "title": params.title
+                or f"{params.chart_type.title()} chart of {params.x_column}",
                 "created_at": datetime.now().isoformat(),
                 "spec": spec.model_dump(),
             }
@@ -516,7 +563,8 @@ def correlate_columns(params: CorrelateColumnsParams) -> CorrelateColumnsResult:
                 for col1 in params.columns:
                     if col1 in correlations:
                         filtered[col1] = {
-                            k: v for k, v in correlations[col1].items()
+                            k: v
+                            for k, v in correlations[col1].items()
                             if k in params.columns
                         }
                 correlations = filtered
@@ -526,12 +574,14 @@ def correlate_columns(params: CorrelateColumnsParams) -> CorrelateColumnsResult:
             for col1, corrs in correlations.items():
                 for col2, value in corrs.items():
                     if col1 < col2 and abs(value) > 0.5:
-                        strong_correlations.append(CorrelationPair(
-                            column1=col1,
-                            column2=col2,
-                            correlation=value,
-                            strength="strong" if abs(value) > 0.7 else "moderate",
-                        ))
+                        strong_correlations.append(
+                            CorrelationPair(
+                                column1=col1,
+                                column2=col2,
+                                correlation=value,
+                                strength="strong" if abs(value) > 0.7 else "moderate",
+                            )
+                        )
 
             return CorrelateColumnsResult(
                 success=True,
@@ -576,6 +626,7 @@ def save_insight(params: SaveInsightParams) -> SaveInsightResult:
 
 # Tool creation
 
+
 def get_data_analysis_tools() -> List[Tool]:
     """Get all data analysis tools."""
     return [
@@ -586,11 +637,15 @@ def get_data_analysis_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "category": {"type": "string", "description": "Filter by category"},
-                    "include_archived": {"type": "boolean", "description": "Include archived/deprecated datasets", "default": False}
+                    "include_archived": {
+                        "type": "boolean",
+                        "description": "Include archived/deprecated datasets",
+                        "default": False,
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: list_datasets(ListDatasetsParams(**kwargs))
+            function=lambda **kwargs: list_datasets(ListDatasetsParams(**kwargs)),
         ),
         Tool(
             name="describe_dataset",
@@ -600,9 +655,9 @@ def get_data_analysis_tools() -> List[Tool]:
                 "properties": {
                     "dataset_id": {"type": "string", "description": "ID of the dataset"}
                 },
-                "required": ["dataset_id"]
+                "required": ["dataset_id"],
             },
-            function=lambda **kwargs: describe_dataset(DescribeDatasetParams(**kwargs))
+            function=lambda **kwargs: describe_dataset(DescribeDatasetParams(**kwargs)),
         ),
         Tool(
             name="query_data",
@@ -610,16 +665,30 @@ def get_data_analysis_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "dataset_id": {"type": "string", "description": "ID of the dataset"},
-                    "select": {"type": "array", "items": {"type": "string"}, "description": "Columns to select"},
-                    "where": {"type": "string", "description": "Filter condition (e.g., 'region = North')"},
+                    "dataset_id": {
+                        "type": "string",
+                        "description": "ID of the dataset",
+                    },
+                    "select": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Columns to select",
+                    },
+                    "where": {
+                        "type": "string",
+                        "description": "Filter condition (e.g., 'region = North')",
+                    },
                     "group_by": {"type": "string", "description": "Column to group by"},
                     "order_by": {"type": "string", "description": "Column to order by"},
-                    "limit": {"type": "integer", "description": "Maximum rows", "default": 10}
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum rows",
+                        "default": 10,
+                    },
                 },
-                "required": ["dataset_id"]
+                "required": ["dataset_id"],
             },
-            function=lambda **kwargs: query_data(QueryDataParams(**kwargs))
+            function=lambda **kwargs: query_data(QueryDataParams(**kwargs)),
         ),
         Tool(
             name="compute_statistics",
@@ -627,14 +696,35 @@ def get_data_analysis_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "dataset_id": {"type": "string", "description": "ID of the dataset"},
+                    "dataset_id": {
+                        "type": "string",
+                        "description": "ID of the dataset",
+                    },
                     "column": {"type": "string", "description": "Column to analyze"},
-                    "statistic": {"type": "string", "enum": ["summary", "mean", "median", "std", "min", "max", "count", "percentiles"], "description": "Statistic type"},
-                    "group_by": {"type": "string", "description": "Optional grouping column"}
+                    "statistic": {
+                        "type": "string",
+                        "enum": [
+                            "summary",
+                            "mean",
+                            "median",
+                            "std",
+                            "min",
+                            "max",
+                            "count",
+                            "percentiles",
+                        ],
+                        "description": "Statistic type",
+                    },
+                    "group_by": {
+                        "type": "string",
+                        "description": "Optional grouping column",
+                    },
                 },
-                "required": ["dataset_id", "column"]
+                "required": ["dataset_id", "column"],
             },
-            function=lambda **kwargs: compute_statistics(ComputeStatisticsParams(**kwargs))
+            function=lambda **kwargs: compute_statistics(
+                ComputeStatisticsParams(**kwargs)
+            ),
         ),
         Tool(
             name="create_visualization",
@@ -642,16 +732,35 @@ def get_data_analysis_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "dataset_id": {"type": "string", "description": "ID of the dataset"},
-                    "chart_type": {"type": "string", "enum": ["bar", "line", "scatter", "pie", "histogram", "heatmap"], "description": "Chart type"},
+                    "dataset_id": {
+                        "type": "string",
+                        "description": "ID of the dataset",
+                    },
+                    "chart_type": {
+                        "type": "string",
+                        "enum": [
+                            "bar",
+                            "line",
+                            "scatter",
+                            "pie",
+                            "histogram",
+                            "heatmap",
+                        ],
+                        "description": "Chart type",
+                    },
                     "x_column": {"type": "string", "description": "Column for X axis"},
                     "y_column": {"type": "string", "description": "Column for Y axis"},
-                    "group_by": {"type": "string", "description": "Column to group/color by"},
-                    "title": {"type": "string", "description": "Chart title"}
+                    "group_by": {
+                        "type": "string",
+                        "description": "Column to group/color by",
+                    },
+                    "title": {"type": "string", "description": "Chart title"},
                 },
-                "required": ["dataset_id", "chart_type", "x_column"]
+                "required": ["dataset_id", "chart_type", "x_column"],
             },
-            function=lambda **kwargs: create_visualization(CreateVisualizationParams(**kwargs))
+            function=lambda **kwargs: create_visualization(
+                CreateVisualizationParams(**kwargs)
+            ),
         ),
         Tool(
             name="detect_anomalies",
@@ -659,14 +768,25 @@ def get_data_analysis_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "dataset_id": {"type": "string", "description": "ID of the dataset"},
+                    "dataset_id": {
+                        "type": "string",
+                        "description": "ID of the dataset",
+                    },
                     "column": {"type": "string", "description": "Column to check"},
-                    "method": {"type": "string", "enum": ["zscore", "iqr", "isolation_forest"], "description": "Detection method"},
-                    "threshold": {"type": "number", "description": "Anomaly threshold", "default": 3.0}
+                    "method": {
+                        "type": "string",
+                        "enum": ["zscore", "iqr", "isolation_forest"],
+                        "description": "Detection method",
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "description": "Anomaly threshold",
+                        "default": 3.0,
+                    },
                 },
-                "required": ["dataset_id", "column"]
+                "required": ["dataset_id", "column"],
             },
-            function=lambda **kwargs: detect_anomalies(DetectAnomaliesParams(**kwargs))
+            function=lambda **kwargs: detect_anomalies(DetectAnomaliesParams(**kwargs)),
         ),
         Tool(
             name="correlate_columns",
@@ -674,13 +794,26 @@ def get_data_analysis_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "dataset_id": {"type": "string", "description": "ID of the dataset"},
-                    "columns": {"type": "array", "items": {"type": "string"}, "description": "Columns to correlate"},
-                    "method": {"type": "string", "enum": ["pearson", "spearman", "kendall"], "description": "Correlation method"}
+                    "dataset_id": {
+                        "type": "string",
+                        "description": "ID of the dataset",
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Columns to correlate",
+                    },
+                    "method": {
+                        "type": "string",
+                        "enum": ["pearson", "spearman", "kendall"],
+                        "description": "Correlation method",
+                    },
                 },
-                "required": ["dataset_id"]
+                "required": ["dataset_id"],
             },
-            function=lambda **kwargs: correlate_columns(CorrelateColumnsParams(**kwargs))
+            function=lambda **kwargs: correlate_columns(
+                CorrelateColumnsParams(**kwargs)
+            ),
         ),
         Tool(
             name="save_insight",
@@ -689,13 +822,20 @@ def get_data_analysis_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "title": {"type": "string", "description": "Insight title"},
-                    "description": {"type": "string", "description": "Detailed description"},
+                    "description": {
+                        "type": "string",
+                        "description": "Detailed description",
+                    },
                     "dataset_id": {"type": "string", "description": "Related dataset"},
                     "evidence": {"type": "object", "description": "Supporting metrics"},
-                    "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags"}
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Tags",
+                    },
                 },
-                "required": ["title", "description"]
+                "required": ["title", "description"],
             },
-            function=lambda **kwargs: save_insight(SaveInsightParams(**kwargs))
+            function=lambda **kwargs: save_insight(SaveInsightParams(**kwargs)),
         ),
     ]

@@ -6,9 +6,9 @@ Selected for testing context integration and multi-source synthesis.
 """
 
 from agnibench.core.abstractions import BenchmarkSuite
-from agnibench.suites.research_synthesis.tools import get_research_tools
 from agnibench.suites.research_synthesis.environment import ResearchEnvironment
 from agnibench.suites.research_synthesis.tasks import get_research_tasks
+from agnibench.suites.research_synthesis.tools import get_research_tools
 
 
 def ResearchSynthesisSuite() -> BenchmarkSuite:
@@ -24,4 +24,9 @@ def ResearchSynthesisSuite() -> BenchmarkSuite:
     )
 
 
-__all__ = ["ResearchSynthesisSuite", "ResearchEnvironment", "get_research_tools", "get_research_tasks"]
+__all__ = [
+    "ResearchSynthesisSuite",
+    "ResearchEnvironment",
+    "get_research_tools",
+    "get_research_tasks",
+]

@@ -3,17 +3,15 @@ Custom verifiers for the math reasoning benchmark suite.
 """
 
 from typing import Any, Dict, List
+
 from agnibench.core.abstractions import TaskResult, VerificationResult
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import (
-    Verifier,
-    ExactMatchVerifier,
-    EnvironmentStateVerifier,
-    ToolCallSequenceVerifier,
-    CompositeVerifier,
-    CustomFunctionVerifier,
-    create_multi_layer_verifier,
-)
+from agnibench.core.evaluation import (CompositeVerifier,
+                                       CustomFunctionVerifier,
+                                       EnvironmentStateVerifier,
+                                       ExactMatchVerifier,
+                                       ToolCallSequenceVerifier, Verifier,
+                                       create_multi_layer_verifier)
 
 
 class NumericToleranceVerifier(Verifier):
@@ -51,7 +49,7 @@ class NumericToleranceVerifier(Verifier):
         details = {"response": response, "expected": expected}
 
         # Extract numbers from response
-        numbers = re.findall(r'-?\d+\.?\d*', response.replace(',', ''))
+        numbers = re.findall(r"-?\d+\.?\d*", response.replace(",", ""))
         numbers = [float(n) for n in numbers]
 
         if not numbers:
@@ -89,7 +87,9 @@ class NumericToleranceVerifier(Verifier):
                         matches.append((exp, num, abs_diff))
 
         if matches:
-            score = len(matches) / len([e for e in expected if isinstance(e, (int, float))])
+            score = len(matches) / len(
+                [e for e in expected if isinstance(e, (int, float))]
+            )
             return VerificationResult(
                 passed=True,
                 score=min(1.0, score),
@@ -99,7 +99,11 @@ class NumericToleranceVerifier(Verifier):
         return VerificationResult(
             passed=False,
             score=0.0,
-            details={**details, "numbers_found": numbers, "error": "No matching values"},
+            details={
+                **details,
+                "numbers_found": numbers,
+                "error": "No matching values",
+            },
         )
 
 
@@ -153,7 +157,10 @@ class CalculationChainVerifier(Verifier):
         return VerificationResult(
             passed=False,
             score=0.5,
-            details={**details, "warning": "Calculations made but no results extracted"},
+            details={
+                **details,
+                "warning": "Calculations made but no results extracted",
+            },
         )
 
 
@@ -180,8 +187,7 @@ class ScratchpadUsageVerifier(Verifier):
         ]
 
         store_calls = [
-            tc for tc in scratchpad_calls
-            if tc.arguments.get("operation") == "store"
+            tc for tc in scratchpad_calls if tc.arguments.get("operation") == "store"
         ]
 
         stored_keys = [tc.arguments.get("key") for tc in store_calls]
@@ -198,7 +204,10 @@ class ScratchpadUsageVerifier(Verifier):
             return VerificationResult(
                 passed=False,
                 score=len(store_calls) / self.min_entries if self.min_entries else 0,
-                details={**details, "error": f"Expected at least {self.min_entries} stored values"},
+                details={
+                    **details,
+                    "error": f"Expected at least {self.min_entries} stored values",
+                },
             )
 
         # Check required keys
@@ -207,7 +216,8 @@ class ScratchpadUsageVerifier(Verifier):
             if missing:
                 return VerificationResult(
                     passed=False,
-                    score=(len(self.required_keys) - len(missing)) / len(self.required_keys),
+                    score=(len(self.required_keys) - len(missing))
+                    / len(self.required_keys),
                     details={**details, "missing_keys": missing},
                 )
 
@@ -238,8 +248,7 @@ class FormulaApplicationVerifier(Verifier):
         ]
 
         looked_up = [
-            tc.arguments.get("formula_name", "").lower()
-            for tc in formula_calls
+            tc.arguments.get("formula_name", "").lower() for tc in formula_calls
         ]
 
         details = {

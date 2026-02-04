@@ -5,24 +5,28 @@ Defines Task, BenchmarkSuite, TaskCharacteristics, and related data structures.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
-from datetime import datetime
 
 
 class DifficultyLevel(Enum):
     """Task difficulty levels based on tool call complexity."""
-    SIMPLE = "simple"      # 2-3 tool calls, straightforward logic
-    MEDIUM = "medium"      # 4-6 tool calls, some ambiguity
-    HARD = "hard"          # 7-10 tool calls, requires planning
-    EXPERT = "expert"      # 11-15+ tool calls, complex reasoning + adaptation
+
+    SIMPLE = "simple"  # 2-3 tool calls, straightforward logic
+    MEDIUM = "medium"  # 4-6 tool calls, some ambiguity
+    HARD = "hard"  # 7-10 tool calls, requires planning
+    EXPERT = "expert"  # 11-15+ tool calls, complex reasoning + adaptation
 
 
 class InformationFlow(Enum):
     """How information flows in the task."""
-    PROMPT_FULL = "prompt_full"                     # Both control flow and data in user prompt
-    PROMPT_CONTROL_TOOL_DATA = "prompt_control_tool_data"  # Control from prompt, data via tools
-    TOOL_DISCOVERY = "tool_discovery"              # Both control and data discovered via tools
+
+    PROMPT_FULL = "prompt_full"  # Both control flow and data in user prompt
+    PROMPT_CONTROL_TOOL_DATA = (
+        "prompt_control_tool_data"  # Control from prompt, data via tools
+    )
+    TOOL_DISCOVERY = "tool_discovery"  # Both control and data discovered via tools
 
 
 @dataclass
@@ -30,20 +34,20 @@ class TaskCharacteristics:
     """Boolean flags describing task characteristics for analysis."""
 
     # Information flow flags
-    control_flow_from_prompt: bool = True      # Control flow described in user prompt
-    data_flow_from_prompt: bool = False        # Data provided directly in prompt
-    control_flow_from_tools: bool = False      # Must discover what to do via tools
-    data_flow_from_tools: bool = True          # Must discover data via tools
+    control_flow_from_prompt: bool = True  # Control flow described in user prompt
+    data_flow_from_prompt: bool = False  # Data provided directly in prompt
+    control_flow_from_tools: bool = False  # Must discover what to do via tools
+    data_flow_from_tools: bool = True  # Must discover data via tools
 
     # Capability requirement flags
-    requires_error_recovery: bool = False      # Must handle and recover from failures
-    requires_disambiguation: bool = False      # Prompt is ambiguous, needs clarification
-    requires_state_tracking: bool = False      # Must track state across multiple calls
-    requires_multi_constraint: bool = False    # Must satisfy multiple constraints
-    requires_cross_reference: bool = False     # Must combine info from multiple sources
-    requires_conditional_logic: bool = False   # Complex if/then decision making
+    requires_error_recovery: bool = False  # Must handle and recover from failures
+    requires_disambiguation: bool = False  # Prompt is ambiguous, needs clarification
+    requires_state_tracking: bool = False  # Must track state across multiple calls
+    requires_multi_constraint: bool = False  # Must satisfy multiple constraints
+    requires_cross_reference: bool = False  # Must combine info from multiple sources
+    requires_conditional_logic: bool = False  # Complex if/then decision making
     requires_long_reasoning_chain: bool = False  # 5+ step reasoning chain
-    requires_plan_adaptation: bool = False     # Must change approach mid-execution
+    requires_plan_adaptation: bool = False  # Must change approach mid-execution
 
     def to_dict(self) -> Dict[str, bool]:
         """Convert to dictionary for serialization."""
@@ -91,6 +95,7 @@ class TaskCharacteristics:
 @dataclass
 class ToolCall:
     """Record of a single tool call during execution."""
+
     tool_name: str
     arguments: Dict[str, Any]
     result: Any
@@ -106,6 +111,7 @@ class Task:
 
     Contains the prompt, expected behavior, and verification criteria.
     """
+
     id: str
     name: str
     prompt: str
@@ -146,6 +152,7 @@ class Task:
 @dataclass
 class VerificationResult:
     """Result of verifying a task execution."""
+
     passed: bool
     score: float  # 0.0 to 1.0
     details: Dict[str, Any] = field(default_factory=dict)
@@ -160,6 +167,7 @@ class TaskResult:
 
     Contains the execution trace, final response, and verification results.
     """
+
     task_id: str
     task_name: str
     success: bool
@@ -225,6 +233,7 @@ class BenchmarkSuite:
 
     Represents a thematic benchmark (e.g., math_reasoning, workspace).
     """
+
     name: str
     description: str
     tasks: List[Task]

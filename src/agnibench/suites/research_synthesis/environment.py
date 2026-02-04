@@ -4,8 +4,10 @@ Simulated environment for the research synthesis benchmark suite.
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
+
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.suites.research_synthesis.tools import set_research_data, get_research_data
+from agnibench.suites.research_synthesis.tools import (get_research_data,
+                                                       set_research_data)
 
 
 class ResearchEnvironment(SimulatedEnvironment):
@@ -59,11 +61,16 @@ Q1 is expected to show continued momentum with 12-15% projected growth.""",
                 ],
                 "comparisons": {
                     "doc_market_analysis": {
-                        "similarities": ["Both report strong enterprise growth", "Both mention competitive pressures"],
-                        "differences": ["Financial report focuses on metrics, market analysis on trends"],
+                        "similarities": [
+                            "Both report strong enterprise growth",
+                            "Both mention competitive pressures",
+                        ],
+                        "differences": [
+                            "Financial report focuses on metrics, market analysis on trends"
+                        ],
                         "contradictions": [],
                     }
-                }
+                },
             },
             {
                 "id": "doc_market_analysis",
@@ -108,16 +115,23 @@ Recommendations:
                 ],
                 "comparisons": {
                     "doc_q4_report": {
-                        "similarities": ["Both report strong enterprise growth", "Both mention competitive pressures"],
-                        "differences": ["Financial report focuses on metrics, market analysis on trends"],
+                        "similarities": [
+                            "Both report strong enterprise growth",
+                            "Both mention competitive pressures",
+                        ],
+                        "differences": [
+                            "Financial report focuses on metrics, market analysis on trends"
+                        ],
                         "contradictions": [],
                     },
                     "doc_product_roadmap": {
                         "similarities": ["Both emphasize AI importance"],
-                        "differences": ["Market analysis is external-focused, roadmap is internal"],
+                        "differences": [
+                            "Market analysis is external-focused, roadmap is internal"
+                        ],
                         "contradictions": [],
-                    }
-                }
+                    },
+                },
             },
             {
                 "id": "doc_product_roadmap",
@@ -176,10 +190,12 @@ Risks:
                 "comparisons": {
                     "doc_market_analysis": {
                         "similarities": ["Both emphasize AI importance"],
-                        "differences": ["Market analysis is external-focused, roadmap is internal"],
+                        "differences": [
+                            "Market analysis is external-focused, roadmap is internal"
+                        ],
                         "contradictions": [],
                     }
-                }
+                },
             },
             {
                 "id": "doc_customer_survey",
@@ -236,11 +252,15 @@ Comparison to Previous Quarter:
                 ],
                 "comparisons": {
                     "doc_product_roadmap": {
-                        "similarities": ["Both identify mobile and analytics as priorities"],
-                        "differences": ["Survey is customer perspective, roadmap is company perspective"],
+                        "similarities": [
+                            "Both identify mobile and analytics as priorities"
+                        ],
+                        "differences": [
+                            "Survey is customer perspective, roadmap is company perspective"
+                        ],
                         "contradictions": [],
                     }
-                }
+                },
             },
             {
                 "id": "doc_security_policy",
@@ -294,7 +314,7 @@ Recent Updates:
                     "Penetration testing done quarterly",
                     "Zero-trust architecture implemented",
                 ],
-                "comparisons": {}
+                "comparisons": {},
             },
             {
                 "id": "doc_competitor_intel",
@@ -345,11 +365,15 @@ Recommendations:
                 ],
                 "comparisons": {
                     "doc_market_analysis": {
-                        "similarities": ["Both identify competitive pressures and AI importance"],
-                        "differences": ["Intel report is competitor-focused, market analysis is broader"],
+                        "similarities": [
+                            "Both identify competitive pressures and AI importance"
+                        ],
+                        "differences": [
+                            "Intel report is competitor-focused, market analysis is broader"
+                        ],
                         "contradictions": [],
                     }
-                }
+                },
             },
         ]
 

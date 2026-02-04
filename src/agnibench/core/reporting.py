@@ -7,8 +7,8 @@ Provides comparative analysis between models.
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from agnibench.core.abstractions import DifficultyLevel, InformationFlow
 from agnibench.core.runner import SuiteResult
@@ -17,6 +17,7 @@ from agnibench.core.runner import SuiteResult
 @dataclass
 class BenchmarkReport:
     """Report for a single model's benchmark results."""
+
     model_name: str
     suite_results: Dict[str, SuiteResult]
     generated_at: datetime = field(default_factory=datetime.now)
@@ -60,8 +61,12 @@ class BenchmarkReport:
 
         # Calculate rates
         for diff, data in by_diff.items():
-            data["pass_rate"] = data["passed"] / data["total"] if data["total"] > 0 else 0
-            data["avg_score"] = sum(data["scores"]) / len(data["scores"]) if data["scores"] else 0
+            data["pass_rate"] = (
+                data["passed"] / data["total"] if data["total"] > 0 else 0
+            )
+            data["avg_score"] = (
+                sum(data["scores"]) / len(data["scores"]) if data["scores"] else 0
+            )
             del data["scores"]  # Remove raw scores from output
 
         return by_diff
@@ -113,6 +118,7 @@ class BenchmarkReport:
 @dataclass
 class ComparisonReport:
     """Comparison report between multiple models."""
+
     reports: List[BenchmarkReport]
     generated_at: datetime = field(default_factory=datetime.now)
 
@@ -197,8 +203,10 @@ class ComparisonReport:
                 continue
 
             deltas[report.model_name] = {
-                "pass_rate_delta": report.overall_pass_rate - baseline_report.overall_pass_rate,
-                "score_delta": report.overall_average_score - baseline_report.overall_average_score,
+                "pass_rate_delta": report.overall_pass_rate
+                - baseline_report.overall_pass_rate,
+                "score_delta": report.overall_average_score
+                - baseline_report.overall_average_score,
             }
 
             # Per-suite deltas
@@ -228,7 +236,9 @@ class ComparisonReport:
         lines.append("-" * 70)
 
         # Overall results
-        for report in sorted(self.reports, key=lambda r: r.overall_average_score, reverse=True):
+        for report in sorted(
+            self.reports, key=lambda r: r.overall_average_score, reverse=True
+        ):
             line = f"{report.model_name:<30} {report.overall_pass_rate:>11.1%} {report.overall_average_score:>12.3f} {report.total_tasks:>8}"
             lines.append(line)
 
@@ -243,7 +253,13 @@ class ComparisonReport:
 
         for suite_name in sorted(suite_names):
             lines.append(f"\n{suite_name}:")
-            for report in sorted(self.reports, key=lambda r: r.suite_results.get(suite_name, SuiteResult(suite_name, "", [], datetime.now())).average_score, reverse=True):
+            for report in sorted(
+                self.reports,
+                key=lambda r: r.suite_results.get(
+                    suite_name, SuiteResult(suite_name, "", [], datetime.now())
+                ).average_score,
+                reverse=True,
+            ):
                 if suite_name in report.suite_results:
                     sr = report.suite_results[suite_name]
                     line = f"  {report.model_name:<28} {sr.pass_rate:>11.1%} {sr.average_score:>12.3f}"
@@ -324,7 +340,9 @@ def format_results_markdown(report: BenchmarkReport) -> str:
     lines.append("| Difficulty | Pass Rate | Avg Score | Tasks |")
     lines.append("|------------|-----------|-----------|-------|")
     for diff, data in sorted(report.by_difficulty().items()):
-        lines.append(f"| {diff} | {data['pass_rate']:.1%} | {data['avg_score']:.3f} | {data['total']} |")
+        lines.append(
+            f"| {diff} | {data['pass_rate']:.1%} | {data['avg_score']:.3f} | {data['total']} |"
+        )
     lines.append("")
 
     lines.append("## Results by Suite")

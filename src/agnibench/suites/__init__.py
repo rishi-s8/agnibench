@@ -9,11 +9,11 @@ Phase 1 includes 5 suites selected for maximum SLM vs LLM differentiation:
 - data_analysis: Data exploration and insight generation
 """
 
-from agnibench.suites.math_reasoning import MathReasoningSuite
-from agnibench.suites.workspace import WorkspaceSuite
-from agnibench.suites.research_synthesis import ResearchSynthesisSuite
 from agnibench.suites.customer_service import CustomerServiceSuite
 from agnibench.suites.data_analysis import DataAnalysisSuite
+from agnibench.suites.math_reasoning import MathReasoningSuite
+from agnibench.suites.research_synthesis import ResearchSynthesisSuite
+from agnibench.suites.workspace import WorkspaceSuite
 
 __all__ = [
     "MathReasoningSuite",
@@ -36,7 +36,9 @@ SUITE_REGISTRY = {
 def get_suite(name: str):
     """Get a benchmark suite by name."""
     if name not in SUITE_REGISTRY:
-        raise ValueError(f"Unknown suite: {name}. Available: {list(SUITE_REGISTRY.keys())}")
+        raise ValueError(
+            f"Unknown suite: {name}. Available: {list(SUITE_REGISTRY.keys())}"
+        )
     return SUITE_REGISTRY[name]()
 
 

@@ -7,15 +7,16 @@ Provides 5 tools for mathematical calculations and state management.
 import math
 import re
 from typing import Any, Dict, List, Optional
+
+from agentbuilder.Tools.base import Response, Tool
 from pydantic import BaseModel, Field
-
-from agentbuilder.Tools.base import Tool, Response
-
 
 # Pydantic models for tool parameters
 
+
 class CalculatorParams(BaseModel):
     """Parameters for the calculator tool."""
+
     expression: str = Field(
         description="Mathematical expression to evaluate. Supports +, -, *, /, ^, parentheses, and common functions like sqrt, sin, cos, log, abs."
     )
@@ -23,13 +24,17 @@ class CalculatorParams(BaseModel):
 
 class UnitConverterParams(BaseModel):
     """Parameters for the unit converter tool."""
+
     value: float = Field(description="Numeric value to convert")
-    from_unit: str = Field(description="Source unit (e.g., 'km', 'miles', 'kg', 'lbs', 'celsius', 'fahrenheit')")
+    from_unit: str = Field(
+        description="Source unit (e.g., 'km', 'miles', 'kg', 'lbs', 'celsius', 'fahrenheit')"
+    )
     to_unit: str = Field(description="Target unit to convert to")
 
 
 class FormulaLookupParams(BaseModel):
     """Parameters for the formula lookup tool."""
+
     formula_name: str = Field(
         description="Name of the formula to look up (e.g., 'area_circle', 'pythagorean', 'compound_interest', 'distance')"
     )
@@ -37,34 +42,33 @@ class FormulaLookupParams(BaseModel):
 
 class EquationSolverParams(BaseModel):
     """Parameters for the equation solver tool."""
+
     equation: str = Field(
         description="Equation to solve (e.g., '2x + 5 = 15', 'x^2 - 4 = 0')"
     )
-    variable: str = Field(
-        default="x",
-        description="Variable to solve for"
-    )
+    variable: str = Field(default="x", description="Variable to solve for")
 
 
 class ScratchpadParams(BaseModel):
     """Parameters for the scratchpad tool."""
+
     operation: str = Field(
         description="Operation to perform: 'store', 'retrieve', 'list', or 'clear'"
     )
     key: Optional[str] = Field(
-        default=None,
-        description="Key for storing/retrieving values"
+        default=None, description="Key for storing/retrieving values"
     )
     value: Optional[str] = Field(
-        default=None,
-        description="Value to store (for 'store' operation)"
+        default=None, description="Value to store (for 'store' operation)"
     )
 
 
 # Pydantic result models
 
+
 class CalculatorResult(BaseModel):
     """Result of calculator evaluation."""
+
     result: Optional[Any] = None
     expression: Optional[str] = None
     error: Optional[str] = None
@@ -72,6 +76,7 @@ class CalculatorResult(BaseModel):
 
 class UnitConverterResult(BaseModel):
     """Result of unit conversion."""
+
     original_value: Optional[float] = None
     from_unit: Optional[str] = None
     to_unit: Optional[str] = None
@@ -82,6 +87,7 @@ class UnitConverterResult(BaseModel):
 
 class FormulaLookupResult(BaseModel):
     """Result of formula lookup."""
+
     formula_name: Optional[str] = None
     formula: Optional[str] = None
     variables: Optional[Dict[str, str]] = None
@@ -94,6 +100,7 @@ class FormulaLookupResult(BaseModel):
 
 class EquationSolverResult(BaseModel):
     """Result of solving an equation."""
+
     equation: Optional[str] = None
     variable: Optional[str] = None
     solutions: Optional[List[float]] = None
@@ -104,6 +111,7 @@ class EquationSolverResult(BaseModel):
 
 class ScratchpadResult(BaseModel):
     """Result of scratchpad operation."""
+
     operation: Optional[str] = None
     key: Optional[str] = None
     value: Optional[str] = None
@@ -119,6 +127,7 @@ class ScratchpadResult(BaseModel):
 
 # Tool implementation functions
 
+
 def calculator(params: CalculatorParams) -> CalculatorResult:
     """
     Evaluate a mathematical expression.
@@ -128,29 +137,29 @@ def calculator(params: CalculatorParams) -> CalculatorResult:
     expression = params.expression
 
     # Safety check - only allow math-related characters
-    allowed_pattern = r'^[\d\s\+\-\*\/\^\(\)\.\,a-zA-Z_]+$'
+    allowed_pattern = r"^[\d\s\+\-\*\/\^\(\)\.\,a-zA-Z_]+$"
     if not re.match(allowed_pattern, expression):
         return CalculatorResult(error="Invalid characters in expression", result=None)
 
     # Replace common notation
-    expression = expression.replace('^', '**')
+    expression = expression.replace("^", "**")
 
     # Create safe math environment
     safe_dict = {
-        'sqrt': math.sqrt,
-        'sin': math.sin,
-        'cos': math.cos,
-        'tan': math.tan,
-        'log': math.log,
-        'log10': math.log10,
-        'exp': math.exp,
-        'abs': abs,
-        'pow': pow,
-        'pi': math.pi,
-        'e': math.e,
-        'floor': math.floor,
-        'ceil': math.ceil,
-        'round': round,
+        "sqrt": math.sqrt,
+        "sin": math.sin,
+        "cos": math.cos,
+        "tan": math.tan,
+        "log": math.log,
+        "log10": math.log10,
+        "exp": math.exp,
+        "abs": abs,
+        "pow": pow,
+        "pi": math.pi,
+        "e": math.e,
+        "floor": math.floor,
+        "ceil": math.ceil,
+        "round": round,
     }
 
     try:
@@ -171,50 +180,45 @@ def unit_converter(params: UnitConverterParams) -> UnitConverterResult:
     """
     conversions = {
         # Length (to meters)
-        ('km', 'm'): lambda x: x * 1000,
-        ('m', 'km'): lambda x: x / 1000,
-        ('miles', 'km'): lambda x: x * 1.60934,
-        ('km', 'miles'): lambda x: x / 1.60934,
-        ('feet', 'm'): lambda x: x * 0.3048,
-        ('m', 'feet'): lambda x: x / 0.3048,
-        ('inches', 'cm'): lambda x: x * 2.54,
-        ('cm', 'inches'): lambda x: x / 2.54,
-        ('yards', 'm'): lambda x: x * 0.9144,
-        ('m', 'yards'): lambda x: x / 0.9144,
-
+        ("km", "m"): lambda x: x * 1000,
+        ("m", "km"): lambda x: x / 1000,
+        ("miles", "km"): lambda x: x * 1.60934,
+        ("km", "miles"): lambda x: x / 1.60934,
+        ("feet", "m"): lambda x: x * 0.3048,
+        ("m", "feet"): lambda x: x / 0.3048,
+        ("inches", "cm"): lambda x: x * 2.54,
+        ("cm", "inches"): lambda x: x / 2.54,
+        ("yards", "m"): lambda x: x * 0.9144,
+        ("m", "yards"): lambda x: x / 0.9144,
         # Weight (to kg)
-        ('kg', 'lbs'): lambda x: x * 2.20462,
-        ('lbs', 'kg'): lambda x: x / 2.20462,
-        ('g', 'kg'): lambda x: x / 1000,
-        ('kg', 'g'): lambda x: x * 1000,
-        ('oz', 'g'): lambda x: x * 28.3495,
-        ('g', 'oz'): lambda x: x / 28.3495,
-
+        ("kg", "lbs"): lambda x: x * 2.20462,
+        ("lbs", "kg"): lambda x: x / 2.20462,
+        ("g", "kg"): lambda x: x / 1000,
+        ("kg", "g"): lambda x: x * 1000,
+        ("oz", "g"): lambda x: x * 28.3495,
+        ("g", "oz"): lambda x: x / 28.3495,
         # Temperature
-        ('celsius', 'fahrenheit'): lambda x: (x * 9/5) + 32,
-        ('fahrenheit', 'celsius'): lambda x: (x - 32) * 5/9,
-        ('celsius', 'kelvin'): lambda x: x + 273.15,
-        ('kelvin', 'celsius'): lambda x: x - 273.15,
-
+        ("celsius", "fahrenheit"): lambda x: (x * 9 / 5) + 32,
+        ("fahrenheit", "celsius"): lambda x: (x - 32) * 5 / 9,
+        ("celsius", "kelvin"): lambda x: x + 273.15,
+        ("kelvin", "celsius"): lambda x: x - 273.15,
         # Time
-        ('hours', 'minutes'): lambda x: x * 60,
-        ('minutes', 'hours'): lambda x: x / 60,
-        ('days', 'hours'): lambda x: x * 24,
-        ('hours', 'days'): lambda x: x / 24,
-        ('seconds', 'minutes'): lambda x: x / 60,
-        ('minutes', 'seconds'): lambda x: x * 60,
-
+        ("hours", "minutes"): lambda x: x * 60,
+        ("minutes", "hours"): lambda x: x / 60,
+        ("days", "hours"): lambda x: x * 24,
+        ("hours", "days"): lambda x: x / 24,
+        ("seconds", "minutes"): lambda x: x / 60,
+        ("minutes", "seconds"): lambda x: x * 60,
         # Area
-        ('sqm', 'sqft'): lambda x: x * 10.7639,
-        ('sqft', 'sqm'): lambda x: x / 10.7639,
-        ('acres', 'sqm'): lambda x: x * 4046.86,
-        ('sqm', 'acres'): lambda x: x / 4046.86,
-
+        ("sqm", "sqft"): lambda x: x * 10.7639,
+        ("sqft", "sqm"): lambda x: x / 10.7639,
+        ("acres", "sqm"): lambda x: x * 4046.86,
+        ("sqm", "acres"): lambda x: x / 4046.86,
         # Volume
-        ('liters', 'gallons'): lambda x: x * 0.264172,
-        ('gallons', 'liters'): lambda x: x / 0.264172,
-        ('ml', 'liters'): lambda x: x / 1000,
-        ('liters', 'ml'): lambda x: x * 1000,
+        ("liters", "gallons"): lambda x: x * 0.264172,
+        ("gallons", "liters"): lambda x: x / 0.264172,
+        ("ml", "liters"): lambda x: x / 1000,
+        ("liters", "ml"): lambda x: x * 1000,
     }
 
     from_unit = params.from_unit.lower()
@@ -256,25 +260,25 @@ def formula_lookup(params: FormulaLookupParams) -> FormulaLookupResult:
             "formula": "A = pi * r^2",
             "variables": {"A": "area", "r": "radius"},
             "description": "Area of a circle given radius",
-            "example": "For r=5: A = pi * 5^2 = 78.54"
+            "example": "For r=5: A = pi * 5^2 = 78.54",
         },
         "area_rectangle": {
             "formula": "A = length * width",
             "variables": {"A": "area", "length": "length", "width": "width"},
             "description": "Area of a rectangle",
-            "example": "For length=10, width=5: A = 10 * 5 = 50"
+            "example": "For length=10, width=5: A = 10 * 5 = 50",
         },
         "area_triangle": {
             "formula": "A = (base * height) / 2",
             "variables": {"A": "area", "base": "base length", "height": "height"},
             "description": "Area of a triangle",
-            "example": "For base=10, height=6: A = (10 * 6) / 2 = 30"
+            "example": "For base=10, height=6: A = (10 * 6) / 2 = 30",
         },
         "pythagorean": {
             "formula": "c = sqrt(a^2 + b^2)",
             "variables": {"a": "first leg", "b": "second leg", "c": "hypotenuse"},
             "description": "Pythagorean theorem for right triangles",
-            "example": "For a=3, b=4: c = sqrt(9 + 16) = 5"
+            "example": "For a=3, b=4: c = sqrt(9 + 16) = 5",
         },
         "compound_interest": {
             "formula": "A = P * (1 + r/n)^(n*t)",
@@ -283,10 +287,10 @@ def formula_lookup(params: FormulaLookupParams) -> FormulaLookupResult:
                 "P": "principal",
                 "r": "annual interest rate (decimal)",
                 "n": "compounds per year",
-                "t": "time in years"
+                "t": "time in years",
             },
             "description": "Compound interest formula",
-            "example": "For P=1000, r=0.05, n=12, t=10: A = 1000 * (1 + 0.05/12)^(12*10) = 1647.01"
+            "example": "For P=1000, r=0.05, n=12, t=10: A = 1000 * (1 + 0.05/12)^(12*10) = 1647.01",
         },
         "simple_interest": {
             "formula": "I = P * r * t",
@@ -294,50 +298,58 @@ def formula_lookup(params: FormulaLookupParams) -> FormulaLookupResult:
                 "I": "interest earned",
                 "P": "principal",
                 "r": "annual interest rate (decimal)",
-                "t": "time in years"
+                "t": "time in years",
             },
             "description": "Simple interest formula",
-            "example": "For P=1000, r=0.05, t=3: I = 1000 * 0.05 * 3 = 150"
+            "example": "For P=1000, r=0.05, t=3: I = 1000 * 0.05 * 3 = 150",
         },
         "distance": {
             "formula": "d = sqrt((x2-x1)^2 + (y2-y1)^2)",
             "variables": {
                 "d": "distance",
                 "x1,y1": "first point coordinates",
-                "x2,y2": "second point coordinates"
+                "x2,y2": "second point coordinates",
             },
             "description": "Distance between two points in 2D",
-            "example": "For (0,0) to (3,4): d = sqrt(9 + 16) = 5"
+            "example": "For (0,0) to (3,4): d = sqrt(9 + 16) = 5",
         },
         "quadratic": {
             "formula": "x = (-b +/- sqrt(b^2 - 4ac)) / (2a)",
-            "variables": {"a": "x^2 coefficient", "b": "x coefficient", "c": "constant"},
+            "variables": {
+                "a": "x^2 coefficient",
+                "b": "x coefficient",
+                "c": "constant",
+            },
             "description": "Quadratic formula for ax^2 + bx + c = 0",
-            "example": "For x^2 - 5x + 6 = 0: x = (5 +/- sqrt(25-24)) / 2 = 2 or 3"
+            "example": "For x^2 - 5x + 6 = 0: x = (5 +/- sqrt(25-24)) / 2 = 2 or 3",
         },
         "circumference": {
             "formula": "C = 2 * pi * r",
             "variables": {"C": "circumference", "r": "radius"},
             "description": "Circumference of a circle",
-            "example": "For r=10: C = 2 * pi * 10 = 62.83"
+            "example": "For r=10: C = 2 * pi * 10 = 62.83",
         },
         "volume_sphere": {
             "formula": "V = (4/3) * pi * r^3",
             "variables": {"V": "volume", "r": "radius"},
             "description": "Volume of a sphere",
-            "example": "For r=3: V = (4/3) * pi * 27 = 113.1"
+            "example": "For r=3: V = (4/3) * pi * 27 = 113.1",
         },
         "percentage": {
             "formula": "percentage = (part / whole) * 100",
             "variables": {"part": "the portion", "whole": "the total"},
             "description": "Calculate percentage",
-            "example": "For part=25, whole=200: percentage = (25/200) * 100 = 12.5%"
+            "example": "For part=25, whole=200: percentage = (25/200) * 100 = 12.5%",
         },
         "speed": {
             "formula": "speed = distance / time",
-            "variables": {"speed": "velocity", "distance": "distance traveled", "time": "time taken"},
+            "variables": {
+                "speed": "velocity",
+                "distance": "distance traveled",
+                "time": "time taken",
+            },
             "description": "Calculate speed from distance and time",
-            "example": "For distance=100km, time=2hours: speed = 100/2 = 50 km/h"
+            "example": "For distance=100km, time=2hours: speed = 100/2 = 50 km/h",
         },
     }
 
@@ -379,7 +391,9 @@ def equation_solver(params: EquationSolverParams) -> EquationSolverResult:
     try:
         # Split by equals sign
         if "=" not in equation:
-            return EquationSolverResult(error="Equation must contain '='", solutions=None)
+            return EquationSolverResult(
+                error="Equation must contain '='", solutions=None
+            )
 
         left, right = equation.split("=")
 
@@ -393,12 +407,18 @@ def equation_solver(params: EquationSolverParams) -> EquationSolverResult:
         import re
 
         # Pattern for linear: ax + b = c or ax - b = c
-        linear_pattern = rf'(-?\d*\.?\d*){var}\s*([\+\-])\s*(\d+\.?\d*)\s*=\s*(-?\d+\.?\d*)'
+        linear_pattern = (
+            rf"(-?\d*\.?\d*){var}\s*([\+\-])\s*(\d+\.?\d*)\s*=\s*(-?\d+\.?\d*)"
+        )
         match = re.match(linear_pattern, equation)
 
         if match:
-            coef = float(match.group(1)) if match.group(1) not in ['', '-'] else (1 if match.group(1) == '' else -1)
-            sign = 1 if match.group(2) == '+' else -1
+            coef = (
+                float(match.group(1))
+                if match.group(1) not in ["", "-"]
+                else (1 if match.group(1) == "" else -1)
+            )
+            sign = 1 if match.group(2) == "+" else -1
             const = float(match.group(3)) * sign
             rhs = float(match.group(4))
 
@@ -411,15 +431,19 @@ def equation_solver(params: EquationSolverParams) -> EquationSolverResult:
                 steps=[
                     f"Original: {coef}{var} + {const} = {rhs}",
                     f"Subtract {const}: {coef}{var} = {rhs - const}",
-                    f"Divide by {coef}: {var} = {solution}"
+                    f"Divide by {coef}: {var} = {solution}",
                 ],
             )
 
         # Simple form: ax = b
-        simple_pattern = rf'(-?\d*\.?\d*){var}\s*=\s*(-?\d+\.?\d*)'
+        simple_pattern = rf"(-?\d*\.?\d*){var}\s*=\s*(-?\d+\.?\d*)"
         match = re.match(simple_pattern, equation)
         if match:
-            coef = float(match.group(1)) if match.group(1) not in ['', '-'] else (1 if match.group(1) == '' else -1)
+            coef = (
+                float(match.group(1))
+                if match.group(1) not in ["", "-"]
+                else (1 if match.group(1) == "" else -1)
+            )
             rhs = float(match.group(2))
             solution = rhs / coef
             return EquationSolverResult(
@@ -429,16 +453,20 @@ def equation_solver(params: EquationSolverParams) -> EquationSolverResult:
             )
 
         # Quadratic: ax^2 + bx + c = 0
-        quad_pattern = rf'(-?\d*\.?\d*){var}\^2\s*([\+\-])\s*(\d*\.?\d*){var}\s*([\+\-])\s*(\d+\.?\d*)\s*=\s*0'
+        quad_pattern = rf"(-?\d*\.?\d*){var}\^2\s*([\+\-])\s*(\d*\.?\d*){var}\s*([\+\-])\s*(\d+\.?\d*)\s*=\s*0"
         match = re.match(quad_pattern, equation)
         if match:
-            a = float(match.group(1)) if match.group(1) not in ['', '-'] else (1 if match.group(1) == '' else -1)
-            b_sign = 1 if match.group(2) == '+' else -1
+            a = (
+                float(match.group(1))
+                if match.group(1) not in ["", "-"]
+                else (1 if match.group(1) == "" else -1)
+            )
+            b_sign = 1 if match.group(2) == "+" else -1
             b = float(match.group(3)) * b_sign if match.group(3) else b_sign
-            c_sign = 1 if match.group(4) == '+' else -1
+            c_sign = 1 if match.group(4) == "+" else -1
             c = float(match.group(5)) * c_sign
 
-            discriminant = b**2 - 4*a*c
+            discriminant = b**2 - 4 * a * c
             if discriminant < 0:
                 return EquationSolverResult(
                     equation=params.equation,
@@ -447,15 +475,15 @@ def equation_solver(params: EquationSolverParams) -> EquationSolverResult:
                     note="No real solutions (discriminant < 0)",
                 )
             elif discriminant == 0:
-                x = -b / (2*a)
+                x = -b / (2 * a)
                 return EquationSolverResult(
                     equation=params.equation,
                     variable=var,
                     solutions=[round(x, 6)],
                 )
             else:
-                x1 = (-b + math.sqrt(discriminant)) / (2*a)
-                x2 = (-b - math.sqrt(discriminant)) / (2*a)
+                x1 = (-b + math.sqrt(discriminant)) / (2 * a)
+                x2 = (-b - math.sqrt(discriminant)) / (2 * a)
                 return EquationSolverResult(
                     equation=params.equation,
                     variable=var,
@@ -547,6 +575,7 @@ def reset_scratchpad():
 
 # Tool creation using the existing Tool class
 
+
 def get_math_tools() -> List[Tool]:
     """Get all math reasoning tools."""
     return [
@@ -558,12 +587,12 @@ def get_math_tools() -> List[Tool]:
                 "properties": {
                     "expression": {
                         "type": "string",
-                        "description": "Mathematical expression to evaluate (e.g., '2 + 3 * 4', 'sqrt(16)', 'sin(pi/2)')"
+                        "description": "Mathematical expression to evaluate (e.g., '2 + 3 * 4', 'sqrt(16)', 'sin(pi/2)')",
                     }
                 },
-                "required": ["expression"]
+                "required": ["expression"],
             },
-            function=lambda **kwargs: calculator(CalculatorParams(**kwargs))
+            function=lambda **kwargs: calculator(CalculatorParams(**kwargs)),
         ),
         Tool(
             name="unit_converter",
@@ -573,20 +602,20 @@ def get_math_tools() -> List[Tool]:
                 "properties": {
                     "value": {
                         "type": "number",
-                        "description": "Numeric value to convert"
+                        "description": "Numeric value to convert",
                     },
                     "from_unit": {
                         "type": "string",
-                        "description": "Source unit (e.g., 'km', 'miles', 'celsius')"
+                        "description": "Source unit (e.g., 'km', 'miles', 'celsius')",
                     },
                     "to_unit": {
                         "type": "string",
-                        "description": "Target unit to convert to"
-                    }
+                        "description": "Target unit to convert to",
+                    },
                 },
-                "required": ["value", "from_unit", "to_unit"]
+                "required": ["value", "from_unit", "to_unit"],
             },
-            function=lambda **kwargs: unit_converter(UnitConverterParams(**kwargs))
+            function=lambda **kwargs: unit_converter(UnitConverterParams(**kwargs)),
         ),
         Tool(
             name="formula_lookup",
@@ -596,12 +625,12 @@ def get_math_tools() -> List[Tool]:
                 "properties": {
                     "formula_name": {
                         "type": "string",
-                        "description": "Name of the formula (e.g., 'pythagorean', 'compound_interest')"
+                        "description": "Name of the formula (e.g., 'pythagorean', 'compound_interest')",
                     }
                 },
-                "required": ["formula_name"]
+                "required": ["formula_name"],
             },
-            function=lambda **kwargs: formula_lookup(FormulaLookupParams(**kwargs))
+            function=lambda **kwargs: formula_lookup(FormulaLookupParams(**kwargs)),
         ),
         Tool(
             name="equation_solver",
@@ -611,17 +640,17 @@ def get_math_tools() -> List[Tool]:
                 "properties": {
                     "equation": {
                         "type": "string",
-                        "description": "Equation to solve (e.g., '2x + 5 = 15', 'x^2 - 5x + 6 = 0')"
+                        "description": "Equation to solve (e.g., '2x + 5 = 15', 'x^2 - 5x + 6 = 0')",
                     },
                     "variable": {
                         "type": "string",
                         "description": "Variable to solve for (default: 'x')",
-                        "default": "x"
-                    }
+                        "default": "x",
+                    },
                 },
-                "required": ["equation"]
+                "required": ["equation"],
             },
-            function=lambda **kwargs: equation_solver(EquationSolverParams(**kwargs))
+            function=lambda **kwargs: equation_solver(EquationSolverParams(**kwargs)),
         ),
         Tool(
             name="scratchpad",
@@ -632,19 +661,19 @@ def get_math_tools() -> List[Tool]:
                     "operation": {
                         "type": "string",
                         "enum": ["store", "retrieve", "list", "clear"],
-                        "description": "Operation to perform"
+                        "description": "Operation to perform",
                     },
                     "key": {
                         "type": "string",
-                        "description": "Key for storing/retrieving (required for store/retrieve)"
+                        "description": "Key for storing/retrieving (required for store/retrieve)",
                     },
                     "value": {
                         "type": "string",
-                        "description": "Value to store (required for store operation)"
-                    }
+                        "description": "Value to store (required for store operation)",
+                    },
                 },
-                "required": ["operation"]
+                "required": ["operation"],
             },
-            function=lambda **kwargs: scratchpad(ScratchpadParams(**kwargs))
+            function=lambda **kwargs: scratchpad(ScratchpadParams(**kwargs)),
         ),
     ]

@@ -6,9 +6,9 @@ Selected as the most common agentic use case, testing planning abilities.
 """
 
 from agnibench.core.abstractions import BenchmarkSuite
-from agnibench.suites.workspace.tools import get_workspace_tools
 from agnibench.suites.workspace.environment import WorkspaceEnvironment
 from agnibench.suites.workspace.tasks import get_workspace_tasks
+from agnibench.suites.workspace.tools import get_workspace_tools
 
 
 def WorkspaceSuite() -> BenchmarkSuite:
@@ -24,4 +24,9 @@ def WorkspaceSuite() -> BenchmarkSuite:
     )
 
 
-__all__ = ["WorkspaceSuite", "WorkspaceEnvironment", "get_workspace_tools", "get_workspace_tasks"]
+__all__ = [
+    "WorkspaceSuite",
+    "WorkspaceEnvironment",
+    "get_workspace_tools",
+    "get_workspace_tasks",
+]

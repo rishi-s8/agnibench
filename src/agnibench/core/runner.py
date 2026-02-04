@@ -10,21 +10,17 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Type
 
-from agnibench.core.abstractions import (
-    Task,
-    TaskResult,
-    ToolCall,
-    VerificationResult,
-    BenchmarkSuite,
-    DifficultyLevel,
-)
+from agnibench.core.abstractions import (BenchmarkSuite, DifficultyLevel, Task,
+                                         TaskResult, ToolCall,
+                                         VerificationResult)
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import Verifier, CompositeVerifier
+from agnibench.core.evaluation import CompositeVerifier, Verifier
 
 
 @dataclass
 class RunConfig:
     """Configuration for a benchmark run."""
+
     model_name: str
     max_iterations: int = 15
     timeout_seconds: int = 120
@@ -37,6 +33,7 @@ class RunConfig:
 @dataclass
 class SuiteResult:
     """Results from running a complete benchmark suite."""
+
     suite_name: str
     model_name: str
     task_results: List[TaskResult]
@@ -60,20 +57,26 @@ class SuiteResult:
     def average_score(self) -> float:
         if not self.task_results:
             return 0.0
-        return sum(r.verification.score for r in self.task_results) / len(self.task_results)
+        return sum(r.verification.score for r in self.task_results) / len(
+            self.task_results
+        )
 
     @property
     def average_tool_calls(self) -> float:
         if not self.task_results:
             return 0.0
-        return sum(r.tool_call_count for r in self.task_results) / len(self.task_results)
+        return sum(r.tool_call_count for r in self.task_results) / len(
+            self.task_results
+        )
 
     def results_by_difficulty(self) -> Dict[str, Dict[str, Any]]:
         """Get pass rates and scores grouped by difficulty."""
         by_difficulty = {}
         for result in self.task_results:
             # Get difficulty from task metadata if available
-            difficulty = result.task_id.split("_")[1] if "_" in result.task_id else "unknown"
+            difficulty = (
+                result.task_id.split("_")[1] if "_" in result.task_id else "unknown"
+            )
             if difficulty not in by_difficulty:
                 by_difficulty[difficulty] = {"passed": 0, "total": 0, "scores": []}
             by_difficulty[difficulty]["total"] += 1
@@ -83,8 +86,12 @@ class SuiteResult:
 
         # Calculate rates
         for diff, data in by_difficulty.items():
-            data["pass_rate"] = data["passed"] / data["total"] if data["total"] > 0 else 0
-            data["avg_score"] = sum(data["scores"]) / len(data["scores"]) if data["scores"] else 0
+            data["pass_rate"] = (
+                data["passed"] / data["total"] if data["total"] > 0 else 0
+            )
+            data["avg_score"] = (
+                sum(data["scores"]) / len(data["scores"]) if data["scores"] else 0
+            )
 
         return by_difficulty
 
@@ -193,8 +200,8 @@ class BenchmarkRunner:
 
         # Create fresh environment for this task
         environment = suite.environment_class()
-        if hasattr(task, 'metadata') and 'initial_state' in task.metadata:
-            environment.initialize(task.metadata['initial_state'])
+        if hasattr(task, "metadata") and "initial_state" in task.metadata:
+            environment.initialize(task.metadata["initial_state"])
         else:
             environment.initialize()
 
@@ -287,7 +294,9 @@ class BenchmarkRunner:
             wrapped.append(wrapped_tool)
         return wrapped
 
-    def _create_logging_wrapper(self, tool: Any, environment: SimulatedEnvironment) -> Any:
+    def _create_logging_wrapper(
+        self, tool: Any, environment: SimulatedEnvironment
+    ) -> Any:
         """Create a wrapper that logs tool calls."""
         original_execute = tool.execute
 
@@ -296,19 +305,21 @@ class BenchmarkRunner:
             environment.log_tool_call(
                 tool_name=tool.name,
                 arguments=kwargs,
-                result=result.data if hasattr(result, 'data') else result,
-                success=result.success if hasattr(result, 'success') else True,
-                error=result.error if hasattr(result, 'error') else None,
+                result=result.data if hasattr(result, "data") else result,
+                success=result.success if hasattr(result, "success") else True,
+                error=result.error if hasattr(result, "error") else None,
             )
             # Also track in runner for error cases
-            self._current_tool_calls.append(ToolCall(
-                tool_name=tool.name,
-                arguments=kwargs,
-                result=result.data if hasattr(result, 'data') else result,
-                success=result.success if hasattr(result, 'success') else True,
-                error=result.error if hasattr(result, 'error') else None,
-                timestamp=datetime.now(),
-            ))
+            self._current_tool_calls.append(
+                ToolCall(
+                    tool_name=tool.name,
+                    arguments=kwargs,
+                    result=result.data if hasattr(result, "data") else result,
+                    success=result.success if hasattr(result, "success") else True,
+                    error=result.error if hasattr(result, "error") else None,
+                    timestamp=datetime.now(),
+                )
+            )
             return result
 
         # Create a copy-like wrapper
@@ -333,12 +344,10 @@ class BenchmarkRunner:
             return self.verifier_factory(task)
 
         # Default: create verifier from task's verifier_config
-        from agnibench.core.evaluation import (
-            ExactMatchVerifier,
-            EnvironmentStateVerifier,
-            ToolCallSequenceVerifier,
-            create_multi_layer_verifier,
-        )
+        from agnibench.core.evaluation import (EnvironmentStateVerifier,
+                                               ExactMatchVerifier,
+                                               ToolCallSequenceVerifier,
+                                               create_multi_layer_verifier)
 
         config = task.verifier_config
 
@@ -348,12 +357,20 @@ class BenchmarkRunner:
                 case_sensitive=config.get("case_sensitive", False),
                 match_mode=config.get("match_mode", "contains"),
             )
-            answer_verifier = (verifier, config.get("answer_weight", 0.4), config["answer"])
+            answer_verifier = (
+                verifier,
+                config.get("answer_weight", 0.4),
+                config["answer"],
+            )
 
         state_verifier = None
         if "state" in config:
             verifier = EnvironmentStateVerifier()
-            state_verifier = (verifier, config.get("state_weight", 0.3), config["state"])
+            state_verifier = (
+                verifier,
+                config.get("state_weight", 0.3),
+                config["state"],
+            )
 
         tool_verifier = None
         if "tools" in config:

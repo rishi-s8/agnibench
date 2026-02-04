@@ -6,10 +6,9 @@ Provides tools for code navigation, debugging, and software engineering tasks.
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from agentbuilder.Tools.base import Response, Tool
 from pydantic import BaseModel, Field
-
-from agentbuilder.Tools.base import Tool, Response
-
 
 # Storage for simulated data (populated by environment)
 _software_dev_data: Dict[str, Any] = {
@@ -37,43 +36,72 @@ def get_software_dev_data() -> Dict[str, Any]:
 
 # Pydantic models for tool parameters
 
+
 class SearchCodebaseParams(BaseModel):
     """Parameters for searching the codebase."""
-    query: Optional[str] = Field(default=None, description="Text to search in file names, content, or symbols")
-    file_pattern: Optional[str] = Field(default=None, description="File path pattern (e.g., '*.py', 'src/auth/*')")
-    symbol_type: Optional[str] = Field(default=None, description="Filter by symbol type: 'class', 'function', 'import'")
-    has_bugs: Optional[bool] = Field(default=None, description="Filter to files with known bugs")
+
+    query: Optional[str] = Field(
+        default=None, description="Text to search in file names, content, or symbols"
+    )
+    file_pattern: Optional[str] = Field(
+        default=None, description="File path pattern (e.g., '*.py', 'src/auth/*')"
+    )
+    symbol_type: Optional[str] = Field(
+        default=None, description="Filter by symbol type: 'class', 'function', 'import'"
+    )
+    has_bugs: Optional[bool] = Field(
+        default=None, description="Filter to files with known bugs"
+    )
 
 
 class ReadFileParams(BaseModel):
     """Parameters for reading a source file."""
+
     file_path: str = Field(description="Path to the file to read")
-    start_line: Optional[int] = Field(default=None, description="Start reading from this line (1-indexed)")
-    end_line: Optional[int] = Field(default=None, description="Stop reading at this line")
+    start_line: Optional[int] = Field(
+        default=None, description="Start reading from this line (1-indexed)"
+    )
+    end_line: Optional[int] = Field(
+        default=None, description="Stop reading at this line"
+    )
 
 
 class SearchLogsParams(BaseModel):
     """Parameters for searching error/debug logs."""
-    level: Optional[str] = Field(default=None, description="Log level: 'ERROR', 'WARNING', 'INFO', 'DEBUG'")
-    file_path: Optional[str] = Field(default=None, description="Filter by source file path")
-    query: Optional[str] = Field(default=None, description="Text to search in log messages")
+
+    level: Optional[str] = Field(
+        default=None, description="Log level: 'ERROR', 'WARNING', 'INFO', 'DEBUG'"
+    )
+    file_path: Optional[str] = Field(
+        default=None, description="Filter by source file path"
+    )
+    query: Optional[str] = Field(
+        default=None, description="Text to search in log messages"
+    )
     hours_back: int = Field(default=24, description="Search logs from the last N hours")
 
 
 class GetStackTraceParams(BaseModel):
     """Parameters for getting a stack trace."""
+
     log_id: str = Field(description="ID of the error log entry")
 
 
 class RunTestsParams(BaseModel):
     """Parameters for running tests."""
-    file_path: Optional[str] = Field(default=None, description="Test file to run (runs all if not specified)")
-    test_name: Optional[str] = Field(default=None, description="Specific test name to run")
+
+    file_path: Optional[str] = Field(
+        default=None, description="Test file to run (runs all if not specified)"
+    )
+    test_name: Optional[str] = Field(
+        default=None, description="Specific test name to run"
+    )
     verbose: bool = Field(default=False, description="Include detailed output")
 
 
 class GetGitHistoryParams(BaseModel):
     """Parameters for getting git history."""
+
     file_path: Optional[str] = Field(default=None, description="Filter by file path")
     author: Optional[str] = Field(default=None, description="Filter by author email")
     limit: int = Field(default=10, description="Maximum commits to return")
@@ -81,23 +109,34 @@ class GetGitHistoryParams(BaseModel):
 
 class GetFileDependenciesParams(BaseModel):
     """Parameters for getting file dependencies."""
+
     file_path: str = Field(description="Path to the file")
-    direction: str = Field(default="both", description="'imports' (what this file imports), 'imported_by' (what imports this), or 'both'")
+    direction: str = Field(
+        default="both",
+        description="'imports' (what this file imports), 'imported_by' (what imports this), or 'both'",
+    )
 
 
 class SearchDocumentationParams(BaseModel):
     """Parameters for searching documentation."""
+
     query: str = Field(description="Search query")
 
 
 class FindReferencesParams(BaseModel):
     """Parameters for finding references to a symbol."""
-    symbol_name: str = Field(description="Name of the symbol (function, class, variable)")
-    symbol_type: Optional[str] = Field(default=None, description="Type: 'function', 'class', 'variable'")
+
+    symbol_name: str = Field(
+        description="Name of the symbol (function, class, variable)"
+    )
+    symbol_type: Optional[str] = Field(
+        default=None, description="Type: 'function', 'class', 'variable'"
+    )
 
 
 class ApplyFixParams(BaseModel):
     """Parameters for applying a fix."""
+
     file_path: str = Field(description="Path to the file to fix")
     line_number: int = Field(description="Line number to modify")
     old_code: str = Field(description="Current code to replace")
@@ -107,15 +146,20 @@ class ApplyFixParams(BaseModel):
 
 class AddNoteParams(BaseModel):
     """Parameters for adding investigation notes."""
+
     title: str = Field(description="Note title")
     content: str = Field(description="Note content")
-    related_files: List[str] = Field(default_factory=list, description="Related file paths")
+    related_files: List[str] = Field(
+        default_factory=list, description="Related file paths"
+    )
 
 
 # Pydantic result models
 
+
 class FileSearchResult(BaseModel):
     """A file found in codebase search."""
+
     path: str
     language: Optional[str] = None
     lines: Optional[int] = None
@@ -127,6 +171,7 @@ class FileSearchResult(BaseModel):
 
 class SearchCodebaseResult(BaseModel):
     """Result of searching the codebase."""
+
     success: bool
     count: int
     files: List[FileSearchResult]
@@ -134,6 +179,7 @@ class SearchCodebaseResult(BaseModel):
 
 class ReadFileResult(BaseModel):
     """Result of reading a file."""
+
     success: bool
     path: Optional[str] = None
     language: Optional[str] = None
@@ -150,6 +196,7 @@ class ReadFileResult(BaseModel):
 
 class LogEntry(BaseModel):
     """A log entry in search results."""
+
     id: str
     timestamp: str
     level: str
@@ -161,6 +208,7 @@ class LogEntry(BaseModel):
 
 class SearchLogsResult(BaseModel):
     """Result of searching logs."""
+
     success: bool
     count: int
     logs: List[LogEntry]
@@ -168,6 +216,7 @@ class SearchLogsResult(BaseModel):
 
 class GetStackTraceResult(BaseModel):
     """Result of getting a stack trace."""
+
     success: bool
     log_id: Optional[str] = None
     timestamp: Optional[str] = None
@@ -182,6 +231,7 @@ class GetStackTraceResult(BaseModel):
 
 class TestResult(BaseModel):
     """A single test result."""
+
     file: str
     test_name: str
     status: str
@@ -192,6 +242,7 @@ class TestResult(BaseModel):
 
 class RunTestsResult(BaseModel):
     """Result of running tests."""
+
     success: bool
     total: int
     passed: int
@@ -201,6 +252,7 @@ class RunTestsResult(BaseModel):
 
 class GetGitHistoryResult(BaseModel):
     """Result of getting git history."""
+
     success: bool
     count: int
     commits: List[Dict[str, Any]]
@@ -208,6 +260,7 @@ class GetGitHistoryResult(BaseModel):
 
 class GetFileDependenciesResult(BaseModel):
     """Result of getting file dependencies."""
+
     success: bool
     file: Optional[str] = None
     imports: Optional[List[str]] = None
@@ -217,6 +270,7 @@ class GetFileDependenciesResult(BaseModel):
 
 class DocumentationResult(BaseModel):
     """A documentation search result."""
+
     title: str
     path: str
     last_updated: Optional[str] = None
@@ -225,6 +279,7 @@ class DocumentationResult(BaseModel):
 
 class SearchDocumentationResult(BaseModel):
     """Result of searching documentation."""
+
     success: bool
     count: int
     documents: List[DocumentationResult]
@@ -232,6 +287,7 @@ class SearchDocumentationResult(BaseModel):
 
 class SymbolReference(BaseModel):
     """A reference to a symbol in code."""
+
     file: str
     line: int
     content: str
@@ -240,6 +296,7 @@ class SymbolReference(BaseModel):
 
 class FindReferencesResult(BaseModel):
     """Result of finding references."""
+
     success: bool
     symbol: str
     count: int
@@ -248,6 +305,7 @@ class FindReferencesResult(BaseModel):
 
 class ApplyFixResult(BaseModel):
     """Result of applying a fix."""
+
     success: bool
     message: Optional[str] = None
     description: Optional[str] = None
@@ -256,12 +314,14 @@ class ApplyFixResult(BaseModel):
 
 class AddNoteResult(BaseModel):
     """Result of adding a note."""
+
     success: bool
     note_id: str
     message: str
 
 
 # Tool implementation functions
+
 
 def search_codebase(params: SearchCodebaseParams) -> SearchCodebaseResult:
     """Search the codebase for files, symbols, or content."""
@@ -274,10 +334,10 @@ def search_codebase(params: SearchCodebaseParams) -> SearchCodebaseResult:
         if params.query:
             query_lower = params.query.lower()
             content_match = (
-                query_lower in file.get("path", "").lower() or
-                query_lower in file.get("content", "").lower() or
-                any(query_lower in cls.lower() for cls in file.get("classes", [])) or
-                any(query_lower in fn.lower() for fn in file.get("functions", []))
+                query_lower in file.get("path", "").lower()
+                or query_lower in file.get("content", "").lower()
+                or any(query_lower in cls.lower() for cls in file.get("classes", []))
+                or any(query_lower in fn.lower() for fn in file.get("functions", []))
             )
             if not content_match:
                 match = False
@@ -300,15 +360,17 @@ def search_codebase(params: SearchCodebaseParams) -> SearchCodebaseResult:
                 match = False
 
         if match:
-            results.append(FileSearchResult(
-                path=file["path"],
-                language=file.get("language"),
-                lines=file.get("lines"),
-                classes=file.get("classes", []),
-                functions=file.get("functions", []),
-                has_bugs=file.get("has_bugs", False),
-                last_modified=file.get("last_modified"),
-            ))
+            results.append(
+                FileSearchResult(
+                    path=file["path"],
+                    language=file.get("language"),
+                    lines=file.get("lines"),
+                    classes=file.get("classes", []),
+                    functions=file.get("functions", []),
+                    has_bugs=file.get("has_bugs", False),
+                    last_modified=file.get("last_modified"),
+                )
+            )
 
     return SearchCodebaseResult(
         success=True,
@@ -331,8 +393,7 @@ def read_file(params: ReadFileParams) -> ReadFileResult:
 
             selected_lines = lines[start:end]
             numbered_content = "\n".join(
-                f"{i + start + 1:4d} | {line}"
-                for i, line in enumerate(selected_lines)
+                f"{i + start + 1:4d} | {line}" for i, line in enumerate(selected_lines)
             )
 
             return ReadFileResult(
@@ -346,7 +407,9 @@ def read_file(params: ReadFileParams) -> ReadFileResult:
                 classes=file.get("classes", []),
                 functions=file.get("functions", []),
                 has_bugs=file.get("has_bugs", False),
-                bug_description=file.get("bug_description") if file.get("has_bugs") else None,
+                bug_description=(
+                    file.get("bug_description") if file.get("has_bugs") else None
+                ),
             )
 
     return ReadFileResult(
@@ -375,15 +438,17 @@ def search_logs(params: SearchLogsParams) -> SearchLogsResult:
                 match = False
 
         if match:
-            results.append(LogEntry(
-                id=log["id"],
-                timestamp=log["timestamp"],
-                level=log["level"],
-                file=log.get("file"),
-                line=log.get("line"),
-                message=log["message"],
-                has_stack_trace=log.get("stack_trace") is not None,
-            ))
+            results.append(
+                LogEntry(
+                    id=log["id"],
+                    timestamp=log["timestamp"],
+                    level=log["level"],
+                    file=log.get("file"),
+                    line=log.get("line"),
+                    message=log["message"],
+                    has_stack_trace=log.get("stack_trace") is not None,
+                )
+            )
 
     return SearchLogsResult(
         success=True,
@@ -441,12 +506,14 @@ def run_tests(params: RunTestsParams) -> RunTestsResult:
         results.append(result)
 
     # Track that tests were run
-    _software_dev_data["tests_run"].append({
-        "timestamp": datetime.now().isoformat(),
-        "file_path": params.file_path,
-        "test_name": params.test_name,
-        "results_count": len(results),
-    })
+    _software_dev_data["tests_run"].append(
+        {
+            "timestamp": datetime.now().isoformat(),
+            "file_path": params.file_path,
+            "test_name": params.test_name,
+            "results_count": len(results),
+        }
+    )
 
     passed = sum(1 for r in results if r.status == "passed")
     failed = sum(1 for r in results if r.status == "failed")
@@ -489,7 +556,9 @@ def get_git_history(params: GetGitHistoryParams) -> GetGitHistoryResult:
     )
 
 
-def get_file_dependencies(params: GetFileDependenciesParams) -> GetFileDependenciesResult:
+def get_file_dependencies(
+    params: GetFileDependenciesParams,
+) -> GetFileDependenciesResult:
     """Get file dependencies (imports and importers)."""
     files = _software_dev_data.get("source_files", [])
     target_file = None
@@ -515,12 +584,17 @@ def get_file_dependencies(params: GetFileDependenciesParams) -> GetFileDependenc
     # What files import this one (simplified - check for path matches)
     if params.direction in ("imported_by", "both"):
         imported_by = []
-        target_module = params.file_path.replace("/", ".").replace(".py", "").replace("src.", "")
+        target_module = (
+            params.file_path.replace("/", ".").replace(".py", "").replace("src.", "")
+        )
 
         for file in files:
             if file["path"] != params.file_path:
                 for imp in file.get("imports", []):
-                    if target_module in imp or params.file_path.split("/")[-1].replace(".py", "") in imp:
+                    if (
+                        target_module in imp
+                        or params.file_path.split("/")[-1].replace(".py", "") in imp
+                    ):
                         imported_by.append(file["path"])
                         break
 
@@ -532,7 +606,9 @@ def get_file_dependencies(params: GetFileDependenciesParams) -> GetFileDependenc
     )
 
 
-def search_documentation(params: SearchDocumentationParams) -> SearchDocumentationResult:
+def search_documentation(
+    params: SearchDocumentationParams,
+) -> SearchDocumentationResult:
     """Search project documentation."""
     docs = _software_dev_data.get("documentation", [])
     results = []
@@ -540,14 +616,18 @@ def search_documentation(params: SearchDocumentationParams) -> SearchDocumentati
     query_lower = params.query.lower()
 
     for doc in docs:
-        if (query_lower in doc.get("title", "").lower() or
-            query_lower in doc.get("content", "").lower()):
-            results.append(DocumentationResult(
-                title=doc["title"],
-                path=doc["path"],
-                last_updated=doc.get("last_updated"),
-                snippet=doc.get("content", "")[:200] + "...",
-            ))
+        if (
+            query_lower in doc.get("title", "").lower()
+            or query_lower in doc.get("content", "").lower()
+        ):
+            results.append(
+                DocumentationResult(
+                    title=doc["title"],
+                    path=doc["path"],
+                    last_updated=doc.get("last_updated"),
+                    snippet=doc.get("content", "")[:200] + "...",
+                )
+            )
 
     return SearchDocumentationResult(
         success=True,
@@ -569,22 +649,30 @@ def find_references(params: FindReferencesParams) -> FindReferencesResult:
             if params.symbol_name in line:
                 # Check symbol type if specified
                 if params.symbol_type:
-                    if params.symbol_type == "class" and f"class {params.symbol_name}" not in line:
+                    if (
+                        params.symbol_type == "class"
+                        and f"class {params.symbol_name}" not in line
+                    ):
                         if params.symbol_name not in file.get("classes", []):
                             continue
-                    elif params.symbol_type == "function" and f"def {params.symbol_name}" not in line:
+                    elif (
+                        params.symbol_type == "function"
+                        and f"def {params.symbol_name}" not in line
+                    ):
                         if params.symbol_name not in file.get("functions", []):
                             continue
 
-                references.append(SymbolReference(
-                    file=file["path"],
-                    line=i + 1,
-                    content=line.strip(),
-                    is_definition=(
-                        f"class {params.symbol_name}" in line or
-                        f"def {params.symbol_name}" in line
-                    ),
-                ))
+                references.append(
+                    SymbolReference(
+                        file=file["path"],
+                        line=i + 1,
+                        content=line.strip(),
+                        is_definition=(
+                            f"class {params.symbol_name}" in line
+                            or f"def {params.symbol_name}" in line
+                        ),
+                    )
+                )
 
     return FindReferencesResult(
         success=True,
@@ -601,14 +689,16 @@ def apply_fix(params: ApplyFixParams) -> ApplyFixResult:
     for file in files:
         if file["path"] == params.file_path:
             # Track the fix
-            _software_dev_data["fixes_applied"].append({
-                "timestamp": datetime.now().isoformat(),
-                "file": params.file_path,
-                "line": params.line_number,
-                "old_code": params.old_code,
-                "new_code": params.new_code,
-                "description": params.description,
-            })
+            _software_dev_data["fixes_applied"].append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "file": params.file_path,
+                    "line": params.line_number,
+                    "old_code": params.old_code,
+                    "new_code": params.new_code,
+                    "description": params.description,
+                }
+            )
 
             return ApplyFixResult(
                 success=True,
@@ -642,6 +732,7 @@ def add_note(params: AddNoteParams) -> AddNoteResult:
 
 
 # Create Tool objects
+
 
 def get_software_dev_tools() -> List[Tool]:
     """Get all software development tools."""

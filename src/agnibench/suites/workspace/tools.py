@@ -6,10 +6,9 @@ Provides 10 tools for email, calendar, Slack, and contact management.
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
+
+from agentbuilder.Tools.base import Response, Tool
 from pydantic import BaseModel, Field
-
-from agentbuilder.Tools.base import Tool, Response
-
 
 # Storage for simulated data (populated by environment)
 _workspace_data: Dict[str, Any] = {
@@ -36,11 +35,19 @@ def get_workspace_data() -> Dict[str, Any]:
 
 # Pydantic models for tool parameters
 
+
 class SearchEmailsParams(BaseModel):
     """Parameters for searching emails."""
-    query: Optional[str] = Field(default=None, description="Text to search in subject/body")
-    sender: Optional[str] = Field(default=None, description="Filter by sender name or email")
-    date_from: Optional[str] = Field(default=None, description="Start date (ISO format)")
+
+    query: Optional[str] = Field(
+        default=None, description="Text to search in subject/body"
+    )
+    sender: Optional[str] = Field(
+        default=None, description="Filter by sender name or email"
+    )
+    date_from: Optional[str] = Field(
+        default=None, description="Start date (ISO format)"
+    )
     date_to: Optional[str] = Field(default=None, description="End date (ISO format)")
     unread_only: bool = Field(default=False, description="Only return unread emails")
     limit: int = Field(default=10, description="Maximum results to return")
@@ -48,38 +55,53 @@ class SearchEmailsParams(BaseModel):
 
 class ReadEmailParams(BaseModel):
     """Parameters for reading a specific email."""
+
     email_id: str = Field(description="ID of the email to read")
 
 
 class SendEmailParams(BaseModel):
     """Parameters for sending an email."""
+
     to: str = Field(description="Recipient email address")
     subject: str = Field(description="Email subject")
     body: str = Field(description="Email body content")
-    reply_to: Optional[str] = Field(default=None, description="Email ID if this is a reply")
+    reply_to: Optional[str] = Field(
+        default=None, description="Email ID if this is a reply"
+    )
 
 
 class SearchCalendarParams(BaseModel):
     """Parameters for searching calendar events."""
-    query: Optional[str] = Field(default=None, description="Text to search in title/description")
-    date_from: Optional[str] = Field(default=None, description="Start date (ISO format)")
+
+    query: Optional[str] = Field(
+        default=None, description="Text to search in title/description"
+    )
+    date_from: Optional[str] = Field(
+        default=None, description="Start date (ISO format)"
+    )
     date_to: Optional[str] = Field(default=None, description="End date (ISO format)")
     attendee: Optional[str] = Field(default=None, description="Filter by attendee name")
-    include_cancelled: bool = Field(default=False, description="Include cancelled events (default: False)")
+    include_cancelled: bool = Field(
+        default=False, description="Include cancelled events (default: False)"
+    )
 
 
 class CreateEventParams(BaseModel):
     """Parameters for creating a calendar event."""
+
     title: str = Field(description="Event title")
     start_time: str = Field(description="Start time (ISO format)")
     end_time: str = Field(description="End time (ISO format)")
-    attendees: List[str] = Field(default_factory=list, description="List of attendee emails")
+    attendees: List[str] = Field(
+        default_factory=list, description="List of attendee emails"
+    )
     location: Optional[str] = Field(default=None, description="Event location")
     description: Optional[str] = Field(default=None, description="Event description")
 
 
 class CheckAvailabilityParams(BaseModel):
     """Parameters for checking attendee availability."""
+
     attendees: List[str] = Field(description="List of attendee names or emails")
     date: str = Field(description="Date to check (ISO format, date only)")
     duration_minutes: int = Field(default=60, description="Desired meeting duration")
@@ -87,27 +109,35 @@ class CheckAvailabilityParams(BaseModel):
 
 class SearchSlackParams(BaseModel):
     """Parameters for searching Slack messages."""
+
     query: Optional[str] = Field(default=None, description="Text to search")
-    channel: Optional[str] = Field(default=None, description="Channel name (e.g., #general)")
+    channel: Optional[str] = Field(
+        default=None, description="Channel name (e.g., #general)"
+    )
     sender: Optional[str] = Field(default=None, description="Message author")
     limit: int = Field(default=10, description="Maximum results")
 
 
 class SendSlackParams(BaseModel):
     """Parameters for sending a Slack message."""
+
     channel: str = Field(description="Channel name (e.g., #general) or user for DM")
     message: str = Field(description="Message content")
-    thread_ts: Optional[str] = Field(default=None, description="Thread timestamp for replies")
+    thread_ts: Optional[str] = Field(
+        default=None, description="Thread timestamp for replies"
+    )
 
 
 class WebSearchParams(BaseModel):
     """Parameters for web search."""
+
     query: str = Field(description="Search query")
     limit: int = Field(default=5, description="Maximum results")
 
 
 class LookupContactParams(BaseModel):
     """Parameters for looking up a contact."""
+
     name: Optional[str] = Field(default=None, description="Contact name to search")
     email: Optional[str] = Field(default=None, description="Contact email to search")
     department: Optional[str] = Field(default=None, description="Filter by department")
@@ -115,8 +145,10 @@ class LookupContactParams(BaseModel):
 
 # Pydantic result models
 
+
 class EmailSummary(BaseModel):
     """Summary of an email in search results."""
+
     id: Optional[str] = None
     sender: Optional[str] = None
     subject: Optional[str] = None
@@ -127,6 +159,7 @@ class EmailSummary(BaseModel):
 
 class SearchEmailsResult(BaseModel):
     """Result of searching emails."""
+
     results: List[EmailSummary]
     count: int
     total_matches: int
@@ -134,6 +167,7 @@ class SearchEmailsResult(BaseModel):
 
 class ReadEmailResult(BaseModel):
     """Result of reading an email."""
+
     found: bool
     email: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -141,6 +175,7 @@ class ReadEmailResult(BaseModel):
 
 class SendEmailResult(BaseModel):
     """Result of sending an email."""
+
     success: bool
     email_id: Optional[str] = None
     message: Optional[str] = None
@@ -148,12 +183,14 @@ class SendEmailResult(BaseModel):
 
 class SearchCalendarResult(BaseModel):
     """Result of searching calendar."""
+
     results: List[Dict[str, Any]]
     count: int
 
 
 class CreateEventResult(BaseModel):
     """Result of creating an event."""
+
     success: bool
     event_id: Optional[str] = None
     message: Optional[str] = None
@@ -162,6 +199,7 @@ class CreateEventResult(BaseModel):
 
 class TimeSlot(BaseModel):
     """A time slot."""
+
     start: str
     end: str
     title: Optional[str] = None
@@ -169,12 +207,14 @@ class TimeSlot(BaseModel):
 
 class AttendeeAvailability(BaseModel):
     """Availability for an attendee."""
+
     busy_slots: List[TimeSlot]
     free_slots: List[TimeSlot]
 
 
 class CheckAvailabilityResult(BaseModel):
     """Result of checking availability."""
+
     date: Optional[str] = None
     attendees: Optional[List[str]] = None
     individual_availability: Optional[Dict[str, AttendeeAvailability]] = None
@@ -186,12 +226,14 @@ class CheckAvailabilityResult(BaseModel):
 
 class SearchSlackResult(BaseModel):
     """Result of searching Slack."""
+
     results: List[Dict[str, Any]]
     count: int
 
 
 class SendSlackResult(BaseModel):
     """Result of sending Slack message."""
+
     success: bool
     message_id: Optional[str] = None
     channel: Optional[str] = None
@@ -199,6 +241,7 @@ class SendSlackResult(BaseModel):
 
 class WebSearchResultItem(BaseModel):
     """A web search result item."""
+
     title: str
     url: str
     snippet: str
@@ -206,6 +249,7 @@ class WebSearchResultItem(BaseModel):
 
 class WebSearchResult(BaseModel):
     """Result of web search."""
+
     query: str
     results: List[WebSearchResultItem]
     count: int
@@ -213,6 +257,7 @@ class WebSearchResult(BaseModel):
 
 class LookupContactResult(BaseModel):
     """Result of looking up a contact."""
+
     found: bool
     contact: Optional[Dict[str, Any]] = None
     multiple_matches: Optional[bool] = None
@@ -221,6 +266,7 @@ class LookupContactResult(BaseModel):
 
 
 # Tool implementation functions
+
 
 def search_emails(params: SearchEmailsParams) -> SearchEmailsResult:
     """Search emails with various filters."""
@@ -231,14 +277,18 @@ def search_emails(params: SearchEmailsParams) -> SearchEmailsResult:
         # Apply filters
         if params.query:
             query_lower = params.query.lower()
-            if (query_lower not in email.get("subject", "").lower() and
-                query_lower not in email.get("body", "").lower()):
+            if (
+                query_lower not in email.get("subject", "").lower()
+                and query_lower not in email.get("body", "").lower()
+            ):
                 continue
 
         if params.sender:
             sender_lower = params.sender.lower()
-            if (sender_lower not in email.get("sender", "").lower() and
-                sender_lower not in email.get("sender_email", "").lower()):
+            if (
+                sender_lower not in email.get("sender", "").lower()
+                and sender_lower not in email.get("sender_email", "").lower()
+            ):
                 continue
 
         if params.unread_only and email.get("read", True):
@@ -262,14 +312,20 @@ def search_emails(params: SearchEmailsParams) -> SearchEmailsResult:
             except ValueError:
                 pass
 
-        results.append(EmailSummary(
-            id=email.get("id"),
-            sender=email.get("sender"),
-            subject=email.get("subject"),
-            timestamp=email.get("timestamp"),
-            read=email.get("read"),
-            preview=email.get("body", "")[:100] + "..." if len(email.get("body", "")) > 100 else email.get("body", ""),
-        ))
+        results.append(
+            EmailSummary(
+                id=email.get("id"),
+                sender=email.get("sender"),
+                subject=email.get("subject"),
+                timestamp=email.get("timestamp"),
+                read=email.get("read"),
+                preview=(
+                    email.get("body", "")[:100] + "..."
+                    if len(email.get("body", "")) > 100
+                    else email.get("body", "")
+                ),
+            )
+        )
 
         if len(results) >= params.limit:
             break
@@ -307,7 +363,7 @@ def send_email(params: SendEmailParams) -> SendEmailResult:
         "body": params.body,
         "reply_to": params.reply_to,
         "sent_at": datetime.now().isoformat(),
-        "status": "sent"
+        "status": "sent",
     }
 
     if "sent_emails" not in _workspace_data:
@@ -333,8 +389,10 @@ def search_calendar(params: SearchCalendarParams) -> SearchCalendarResult:
 
         if params.query:
             query_lower = params.query.lower()
-            if (query_lower not in event.get("title", "").lower() and
-                query_lower not in event.get("description", "").lower()):
+            if (
+                query_lower not in event.get("title", "").lower()
+                and query_lower not in event.get("description", "").lower()
+            ):
                 continue
 
         if params.attendee:
@@ -380,7 +438,7 @@ def create_event(params: CreateEventParams) -> CreateEventResult:
         "location": params.location,
         "description": params.description,
         "created_at": datetime.now().isoformat(),
-        "status": "confirmed"
+        "status": "confirmed",
     }
 
     if "created_events" not in _workspace_data:
@@ -416,11 +474,13 @@ def check_availability(params: CheckAvailabilityParams) -> CheckAvailabilityResu
                     start = datetime.fromisoformat(event.get("start_time", ""))
                     end = datetime.fromisoformat(event.get("end_time", ""))
                     if start.date() == check_date:
-                        busy_slots.append(TimeSlot(
-                            start=start.strftime("%H:%M"),
-                            end=end.strftime("%H:%M"),
-                            title=event.get("title"),
-                        ))
+                        busy_slots.append(
+                            TimeSlot(
+                                start=start.strftime("%H:%M"),
+                                end=end.strftime("%H:%M"),
+                                title=event.get("title"),
+                            )
+                        )
                 except ValueError:
                     continue
 
@@ -434,18 +494,22 @@ def check_availability(params: CheckAvailabilityParams) -> CheckAvailabilityResu
         for slot in busy_sorted:
             slot_start = int(slot.start.split(":")[0])
             if current_time < slot_start:
-                free_slots.append(TimeSlot(
-                    start=f"{current_time:02d}:00",
-                    end=f"{slot_start:02d}:00",
-                ))
+                free_slots.append(
+                    TimeSlot(
+                        start=f"{current_time:02d}:00",
+                        end=f"{slot_start:02d}:00",
+                    )
+                )
             slot_end = int(slot.end.split(":")[0])
             current_time = max(current_time, slot_end)
 
         if current_time < work_end:
-            free_slots.append(TimeSlot(
-                start=f"{current_time:02d}:00",
-                end=f"{work_end:02d}:00",
-            ))
+            free_slots.append(
+                TimeSlot(
+                    start=f"{current_time:02d}:00",
+                    end=f"{work_end:02d}:00",
+                )
+            )
 
         availability[attendee] = AttendeeAvailability(
             busy_slots=busy_slots,
@@ -457,16 +521,19 @@ def check_availability(params: CheckAvailabilityParams) -> CheckAvailabilityResu
         # Simplified: find overlapping free slots
         common_free = []
         first_attendee = params.attendees[0]
-        for slot in availability.get(first_attendee, AttendeeAvailability(busy_slots=[], free_slots=[])).free_slots:
+        for slot in availability.get(
+            first_attendee, AttendeeAvailability(busy_slots=[], free_slots=[])
+        ).free_slots:
             is_common = True
             for other in params.attendees[1:]:
-                other_avail = availability.get(other, AttendeeAvailability(busy_slots=[], free_slots=[]))
+                other_avail = availability.get(
+                    other, AttendeeAvailability(busy_slots=[], free_slots=[])
+                )
                 other_free = other_avail.free_slots
                 # Check if this slot overlaps with any free slot of other attendee
                 overlap = False
                 for other_slot in other_free:
-                    if (slot.start < other_slot.end and
-                        slot.end > other_slot.start):
+                    if slot.start < other_slot.end and slot.end > other_slot.start:
                         overlap = True
                         break
                 if not overlap:
@@ -554,7 +621,7 @@ def web_search(params: WebSearchParams) -> WebSearchResult:
 
     return WebSearchResult(
         query=params.query,
-        results=results[:params.limit],
+        results=results[: params.limit],
         count=len(results),
     )
 
@@ -599,6 +666,7 @@ def lookup_contact(params: LookupContactParams) -> LookupContactResult:
 
 # Tool creation
 
+
 def get_workspace_tools() -> List[Tool]:
     """Get all workspace tools."""
     return [
@@ -608,16 +676,36 @@ def get_workspace_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Text to search in subject/body"},
-                    "sender": {"type": "string", "description": "Filter by sender name or email"},
-                    "date_from": {"type": "string", "description": "Start date (ISO format)"},
-                    "date_to": {"type": "string", "description": "End date (ISO format)"},
-                    "unread_only": {"type": "boolean", "description": "Only return unread emails", "default": False},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 10}
+                    "query": {
+                        "type": "string",
+                        "description": "Text to search in subject/body",
+                    },
+                    "sender": {
+                        "type": "string",
+                        "description": "Filter by sender name or email",
+                    },
+                    "date_from": {
+                        "type": "string",
+                        "description": "Start date (ISO format)",
+                    },
+                    "date_to": {
+                        "type": "string",
+                        "description": "End date (ISO format)",
+                    },
+                    "unread_only": {
+                        "type": "boolean",
+                        "description": "Only return unread emails",
+                        "default": False,
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 10,
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: search_emails(SearchEmailsParams(**kwargs))
+            function=lambda **kwargs: search_emails(SearchEmailsParams(**kwargs)),
         ),
         Tool(
             name="read_email",
@@ -625,11 +713,14 @@ def get_workspace_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "email_id": {"type": "string", "description": "ID of the email to read"}
+                    "email_id": {
+                        "type": "string",
+                        "description": "ID of the email to read",
+                    }
                 },
-                "required": ["email_id"]
+                "required": ["email_id"],
             },
-            function=lambda **kwargs: read_email(ReadEmailParams(**kwargs))
+            function=lambda **kwargs: read_email(ReadEmailParams(**kwargs)),
         ),
         Tool(
             name="send_email",
@@ -640,11 +731,14 @@ def get_workspace_tools() -> List[Tool]:
                     "to": {"type": "string", "description": "Recipient email address"},
                     "subject": {"type": "string", "description": "Email subject"},
                     "body": {"type": "string", "description": "Email body content"},
-                    "reply_to": {"type": "string", "description": "Email ID if this is a reply"}
+                    "reply_to": {
+                        "type": "string",
+                        "description": "Email ID if this is a reply",
+                    },
                 },
-                "required": ["to", "subject", "body"]
+                "required": ["to", "subject", "body"],
             },
-            function=lambda **kwargs: send_email(SendEmailParams(**kwargs))
+            function=lambda **kwargs: send_email(SendEmailParams(**kwargs)),
         ),
         Tool(
             name="search_calendar",
@@ -652,15 +746,31 @@ def get_workspace_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Text to search in title/description"},
-                    "date_from": {"type": "string", "description": "Start date (ISO format)"},
-                    "date_to": {"type": "string", "description": "End date (ISO format)"},
-                    "attendee": {"type": "string", "description": "Filter by attendee name"},
-                    "include_cancelled": {"type": "boolean", "description": "Include cancelled events", "default": False}
+                    "query": {
+                        "type": "string",
+                        "description": "Text to search in title/description",
+                    },
+                    "date_from": {
+                        "type": "string",
+                        "description": "Start date (ISO format)",
+                    },
+                    "date_to": {
+                        "type": "string",
+                        "description": "End date (ISO format)",
+                    },
+                    "attendee": {
+                        "type": "string",
+                        "description": "Filter by attendee name",
+                    },
+                    "include_cancelled": {
+                        "type": "boolean",
+                        "description": "Include cancelled events",
+                        "default": False,
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: search_calendar(SearchCalendarParams(**kwargs))
+            function=lambda **kwargs: search_calendar(SearchCalendarParams(**kwargs)),
         ),
         Tool(
             name="create_event",
@@ -669,15 +779,28 @@ def get_workspace_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "title": {"type": "string", "description": "Event title"},
-                    "start_time": {"type": "string", "description": "Start time (ISO format)"},
-                    "end_time": {"type": "string", "description": "End time (ISO format)"},
-                    "attendees": {"type": "array", "items": {"type": "string"}, "description": "List of attendee emails"},
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time (ISO format)",
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time (ISO format)",
+                    },
+                    "attendees": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of attendee emails",
+                    },
                     "location": {"type": "string", "description": "Event location"},
-                    "description": {"type": "string", "description": "Event description"}
+                    "description": {
+                        "type": "string",
+                        "description": "Event description",
+                    },
                 },
-                "required": ["title", "start_time", "end_time"]
+                "required": ["title", "start_time", "end_time"],
             },
-            function=lambda **kwargs: create_event(CreateEventParams(**kwargs))
+            function=lambda **kwargs: create_event(CreateEventParams(**kwargs)),
         ),
         Tool(
             name="check_availability",
@@ -685,13 +808,26 @@ def get_workspace_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "attendees": {"type": "array", "items": {"type": "string"}, "description": "List of attendee names or emails"},
-                    "date": {"type": "string", "description": "Date to check (ISO format, date only)"},
-                    "duration_minutes": {"type": "integer", "description": "Desired meeting duration", "default": 60}
+                    "attendees": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of attendee names or emails",
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "Date to check (ISO format, date only)",
+                    },
+                    "duration_minutes": {
+                        "type": "integer",
+                        "description": "Desired meeting duration",
+                        "default": 60,
+                    },
                 },
-                "required": ["attendees", "date"]
+                "required": ["attendees", "date"],
             },
-            function=lambda **kwargs: check_availability(CheckAvailabilityParams(**kwargs))
+            function=lambda **kwargs: check_availability(
+                CheckAvailabilityParams(**kwargs)
+            ),
         ),
         Tool(
             name="search_slack",
@@ -700,13 +836,20 @@ def get_workspace_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Text to search"},
-                    "channel": {"type": "string", "description": "Channel name (e.g., #general)"},
+                    "channel": {
+                        "type": "string",
+                        "description": "Channel name (e.g., #general)",
+                    },
                     "sender": {"type": "string", "description": "Message author"},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 10}
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 10,
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: search_slack(SearchSlackParams(**kwargs))
+            function=lambda **kwargs: search_slack(SearchSlackParams(**kwargs)),
         ),
         Tool(
             name="send_slack",
@@ -714,13 +857,19 @@ def get_workspace_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "channel": {"type": "string", "description": "Channel name (e.g., #general) or username for DM"},
+                    "channel": {
+                        "type": "string",
+                        "description": "Channel name (e.g., #general) or username for DM",
+                    },
                     "message": {"type": "string", "description": "Message content"},
-                    "thread_ts": {"type": "string", "description": "Thread timestamp for replies"}
+                    "thread_ts": {
+                        "type": "string",
+                        "description": "Thread timestamp for replies",
+                    },
                 },
-                "required": ["channel", "message"]
+                "required": ["channel", "message"],
             },
-            function=lambda **kwargs: send_slack(SendSlackParams(**kwargs))
+            function=lambda **kwargs: send_slack(SendSlackParams(**kwargs)),
         ),
         Tool(
             name="web_search",
@@ -729,11 +878,15 @@ def get_workspace_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Search query"},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 5}
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 5,
+                    },
                 },
-                "required": ["query"]
+                "required": ["query"],
             },
-            function=lambda **kwargs: web_search(WebSearchParams(**kwargs))
+            function=lambda **kwargs: web_search(WebSearchParams(**kwargs)),
         ),
         Tool(
             name="lookup_contact",
@@ -742,11 +895,17 @@ def get_workspace_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "name": {"type": "string", "description": "Contact name to search"},
-                    "email": {"type": "string", "description": "Contact email to search"},
-                    "department": {"type": "string", "description": "Filter by department"}
+                    "email": {
+                        "type": "string",
+                        "description": "Contact email to search",
+                    },
+                    "department": {
+                        "type": "string",
+                        "description": "Filter by department",
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: lookup_contact(LookupContactParams(**kwargs))
+            function=lambda **kwargs: lookup_contact(LookupContactParams(**kwargs)),
         ),
     ]

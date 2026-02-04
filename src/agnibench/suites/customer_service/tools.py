@@ -6,10 +6,9 @@ Provides 8 tools for ticket management, customer lookup, and issue resolution.
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
 
 from agentbuilder.Tools.base import Tool
-
+from pydantic import BaseModel, Field
 
 # Storage for simulated data
 _service_data: Dict[str, Any] = {
@@ -36,23 +35,36 @@ def get_service_data() -> Dict[str, Any]:
 
 # Pydantic models
 
+
 class SearchTicketsParams(BaseModel):
     """Parameters for searching tickets."""
-    query: Optional[str] = Field(default=None, description="Text search in ticket content")
-    customer_id: Optional[str] = Field(default=None, description="Filter by customer ID")
-    status: Optional[str] = Field(default=None, description="Filter by status: open, in_progress, resolved, closed")
-    priority: Optional[str] = Field(default=None, description="Filter by priority: low, medium, high, urgent")
+
+    query: Optional[str] = Field(
+        default=None, description="Text search in ticket content"
+    )
+    customer_id: Optional[str] = Field(
+        default=None, description="Filter by customer ID"
+    )
+    status: Optional[str] = Field(
+        default=None,
+        description="Filter by status: open, in_progress, resolved, closed",
+    )
+    priority: Optional[str] = Field(
+        default=None, description="Filter by priority: low, medium, high, urgent"
+    )
     issue_type: Optional[str] = Field(default=None, description="Filter by issue type")
     limit: int = Field(default=10, description="Maximum results")
 
 
 class GetTicketParams(BaseModel):
     """Parameters for getting ticket details."""
+
     ticket_id: str = Field(description="ID of the ticket to retrieve")
 
 
 class UpdateTicketParams(BaseModel):
     """Parameters for updating a ticket."""
+
     ticket_id: str = Field(description="ID of the ticket to update")
     status: Optional[str] = Field(default=None, description="New status")
     priority: Optional[str] = Field(default=None, description="New priority")
@@ -62,6 +74,7 @@ class UpdateTicketParams(BaseModel):
 
 class SearchKBParams(BaseModel):
     """Parameters for searching knowledge base."""
+
     query: str = Field(description="Search query")
     category: Optional[str] = Field(default=None, description="Filter by category")
     limit: int = Field(default=5, description="Maximum results")
@@ -69,33 +82,45 @@ class SearchKBParams(BaseModel):
 
 class GetCustomerParams(BaseModel):
     """Parameters for getting customer information."""
+
     customer_id: str = Field(description="Customer ID to look up")
 
 
 class CheckProductParams(BaseModel):
     """Parameters for checking product/service status."""
+
     product_id: Optional[str] = Field(default=None, description="Product ID to check")
-    service_name: Optional[str] = Field(default=None, description="Service name to check status")
+    service_name: Optional[str] = Field(
+        default=None, description="Service name to check status"
+    )
 
 
 class EscalateTicketParams(BaseModel):
     """Parameters for escalating a ticket."""
+
     ticket_id: str = Field(description="ID of the ticket to escalate")
     reason: str = Field(description="Reason for escalation")
-    specialist_team: Optional[str] = Field(default=None, description="Team to escalate to")
+    specialist_team: Optional[str] = Field(
+        default=None, description="Team to escalate to"
+    )
 
 
 class SendResponseParams(BaseModel):
     """Parameters for sending customer response."""
+
     ticket_id: str = Field(description="ID of the ticket to respond to")
     message: str = Field(description="Response message to customer")
-    resolution_type: Optional[str] = Field(default=None, description="Type: answer, solution, follow_up, escalation_notice")
+    resolution_type: Optional[str] = Field(
+        default=None, description="Type: answer, solution, follow_up, escalation_notice"
+    )
 
 
 # Pydantic result models
 
+
 class TicketSummary(BaseModel):
     """Summary of a ticket in search results."""
+
     id: Optional[str] = None
     customer_id: Optional[str] = None
     subject: Optional[str] = None
@@ -108,12 +133,14 @@ class TicketSummary(BaseModel):
 
 class SearchTicketsResult(BaseModel):
     """Result of searching tickets."""
+
     results: List[TicketSummary]
     count: int
 
 
 class GetTicketResult(BaseModel):
     """Result of getting a ticket."""
+
     found: bool
     ticket: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -121,6 +148,7 @@ class GetTicketResult(BaseModel):
 
 class UpdateTicketResult(BaseModel):
     """Result of updating a ticket."""
+
     success: bool
     message: Optional[str] = None
     changes: Optional[Dict[str, Any]] = None
@@ -129,6 +157,7 @@ class UpdateTicketResult(BaseModel):
 
 class KBArticleSummary(BaseModel):
     """Summary of a knowledge base article."""
+
     id: Optional[str] = None
     title: Optional[str] = None
     category: Optional[str] = None
@@ -138,6 +167,7 @@ class KBArticleSummary(BaseModel):
 
 class SearchKBResult(BaseModel):
     """Result of searching the knowledge base."""
+
     query: str
     results: List[KBArticleSummary]
     count: int
@@ -145,6 +175,7 @@ class SearchKBResult(BaseModel):
 
 class CustomerTicketSummary(BaseModel):
     """Summary of a customer's ticket."""
+
     id: str
     subject: str
     status: str
@@ -152,6 +183,7 @@ class CustomerTicketSummary(BaseModel):
 
 class GetCustomerResult(BaseModel):
     """Result of getting customer info."""
+
     found: bool
     customer: Optional[Dict[str, Any]] = None
     recent_tickets: Optional[List[CustomerTicketSummary]] = None
@@ -161,6 +193,7 @@ class GetCustomerResult(BaseModel):
 
 class GeneralServiceStatus(BaseModel):
     """General service status when no specific product is found."""
+
     all_services: str
     last_incident: str
     scheduled_maintenance: Optional[str] = None
@@ -168,6 +201,7 @@ class GeneralServiceStatus(BaseModel):
 
 class CheckProductResult(BaseModel):
     """Result of checking a product."""
+
     found: bool
     product: Optional[Dict[str, Any]] = None
     general_status: Optional[GeneralServiceStatus] = None
@@ -175,6 +209,7 @@ class CheckProductResult(BaseModel):
 
 class EscalationDetails(BaseModel):
     """Details of an escalation."""
+
     ticket_id: str
     reason: str
     specialist_team: str
@@ -184,6 +219,7 @@ class EscalationDetails(BaseModel):
 
 class EscalateTicketResult(BaseModel):
     """Result of escalating a ticket."""
+
     success: bool
     message: Optional[str] = None
     escalation: Optional[EscalationDetails] = None
@@ -192,6 +228,7 @@ class EscalateTicketResult(BaseModel):
 
 class SendResponseResult(BaseModel):
     """Result of sending a response."""
+
     success: bool
     message: Optional[str] = None
     response_type: Optional[str] = None
@@ -199,6 +236,7 @@ class SendResponseResult(BaseModel):
 
 
 # Tool implementations
+
 
 def search_tickets(params: SearchTicketsParams) -> SearchTicketsResult:
     """Search support tickets."""
@@ -209,8 +247,10 @@ def search_tickets(params: SearchTicketsParams) -> SearchTicketsResult:
         # Apply filters
         if params.query:
             query_lower = params.query.lower()
-            if (query_lower not in ticket.get("subject", "").lower() and
-                query_lower not in ticket.get("description", "").lower()):
+            if (
+                query_lower not in ticket.get("subject", "").lower()
+                and query_lower not in ticket.get("description", "").lower()
+            ):
                 continue
 
         if params.customer_id:
@@ -229,16 +269,18 @@ def search_tickets(params: SearchTicketsParams) -> SearchTicketsResult:
             if ticket.get("issue_type", "").lower() != params.issue_type.lower():
                 continue
 
-        results.append(TicketSummary(
-            id=ticket.get("id"),
-            customer_id=ticket.get("customer_id"),
-            subject=ticket.get("subject"),
-            status=ticket.get("status"),
-            priority=ticket.get("priority"),
-            issue_type=ticket.get("issue_type"),
-            created_at=ticket.get("created_at"),
-            preview=ticket.get("description", "")[:100],
-        ))
+        results.append(
+            TicketSummary(
+                id=ticket.get("id"),
+                customer_id=ticket.get("customer_id"),
+                subject=ticket.get("subject"),
+                status=ticket.get("status"),
+                priority=ticket.get("priority"),
+                issue_type=ticket.get("issue_type"),
+                created_at=ticket.get("created_at"),
+                preview=ticket.get("description", "")[:100],
+            )
+        )
 
         if len(results) >= params.limit:
             break
@@ -289,10 +331,12 @@ def update_ticket(params: UpdateTicketParams) -> UpdateTicketResult:
             if params.notes:
                 if "internal_notes" not in ticket:
                     ticket["internal_notes"] = []
-                ticket["internal_notes"].append({
-                    "note": params.notes,
-                    "added_at": datetime.now().isoformat(),
-                })
+                ticket["internal_notes"].append(
+                    {
+                        "note": params.notes,
+                        "added_at": datetime.now().isoformat(),
+                    }
+                )
                 update["changes"]["notes_added"] = True
 
             if params.assigned_to:
@@ -326,20 +370,24 @@ def search_kb(params: SearchKBParams) -> SearchKBResult:
         # Check title, content, and keywords
         title_match = query_lower in article.get("title", "").lower()
         content_match = query_lower in article.get("content", "").lower()
-        keyword_match = any(query_lower in kw.lower() for kw in article.get("keywords", []))
+        keyword_match = any(
+            query_lower in kw.lower() for kw in article.get("keywords", [])
+        )
 
         if title_match or content_match or keyword_match:
             if params.category:
                 if article.get("category", "").lower() != params.category.lower():
                     continue
 
-            results.append(KBArticleSummary(
-                id=article.get("id"),
-                title=article.get("title"),
-                category=article.get("category"),
-                preview=article.get("content", "")[:200],
-                relevance="high" if title_match else "medium",
-            ))
+            results.append(
+                KBArticleSummary(
+                    id=article.get("id"),
+                    title=article.get("title"),
+                    category=article.get("category"),
+                    preview=article.get("content", "")[:200],
+                    relevance="high" if title_match else "medium",
+                )
+            )
 
             if len(results) >= params.limit:
                 break
@@ -360,7 +408,9 @@ def get_customer(params: GetCustomerParams) -> GetCustomerResult:
             # Get customer's ticket history
             tickets = _service_data.get("tickets", [])
             customer_tickets = [
-                CustomerTicketSummary(id=t["id"], subject=t["subject"], status=t["status"])
+                CustomerTicketSummary(
+                    id=t["id"], subject=t["subject"], status=t["status"]
+                )
                 for t in tickets
                 if t.get("customer_id") == params.customer_id
             ]
@@ -388,7 +438,10 @@ def check_product(params: CheckProductParams) -> CheckProductResult:
                 found=True,
                 product=product,
             )
-        if params.service_name and params.service_name.lower() in product.get("name", "").lower():
+        if (
+            params.service_name
+            and params.service_name.lower() in product.get("name", "").lower()
+        ):
             return CheckProductResult(
                 found=True,
                 product=product,
@@ -474,6 +527,7 @@ def send_response(params: SendResponseParams) -> SendResponseResult:
 
 # Tool creation
 
+
 def get_customer_service_tools() -> List[Tool]:
     """Get all customer service tools."""
     return [
@@ -483,16 +537,43 @@ def get_customer_service_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Text search in ticket content"},
-                    "customer_id": {"type": "string", "description": "Filter by customer ID"},
-                    "status": {"type": "string", "enum": ["open", "in_progress", "resolved", "closed", "escalated"], "description": "Filter by status"},
-                    "priority": {"type": "string", "enum": ["low", "medium", "high", "urgent"], "description": "Filter by priority"},
-                    "issue_type": {"type": "string", "description": "Filter by issue type"},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 10}
+                    "query": {
+                        "type": "string",
+                        "description": "Text search in ticket content",
+                    },
+                    "customer_id": {
+                        "type": "string",
+                        "description": "Filter by customer ID",
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "in_progress",
+                            "resolved",
+                            "closed",
+                            "escalated",
+                        ],
+                        "description": "Filter by status",
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "urgent"],
+                        "description": "Filter by priority",
+                    },
+                    "issue_type": {
+                        "type": "string",
+                        "description": "Filter by issue type",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 10,
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: search_tickets(SearchTicketsParams(**kwargs))
+            function=lambda **kwargs: search_tickets(SearchTicketsParams(**kwargs)),
         ),
         Tool(
             name="get_ticket",
@@ -502,9 +583,9 @@ def get_customer_service_tools() -> List[Tool]:
                 "properties": {
                     "ticket_id": {"type": "string", "description": "ID of the ticket"}
                 },
-                "required": ["ticket_id"]
+                "required": ["ticket_id"],
             },
-            function=lambda **kwargs: get_ticket(GetTicketParams(**kwargs))
+            function=lambda **kwargs: get_ticket(GetTicketParams(**kwargs)),
         ),
         Tool(
             name="update_ticket",
@@ -513,14 +594,22 @@ def get_customer_service_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "ticket_id": {"type": "string", "description": "ID of the ticket"},
-                    "status": {"type": "string", "enum": ["open", "in_progress", "resolved", "closed"], "description": "New status"},
-                    "priority": {"type": "string", "enum": ["low", "medium", "high", "urgent"], "description": "New priority"},
+                    "status": {
+                        "type": "string",
+                        "enum": ["open", "in_progress", "resolved", "closed"],
+                        "description": "New status",
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "urgent"],
+                        "description": "New priority",
+                    },
                     "notes": {"type": "string", "description": "Internal notes to add"},
-                    "assigned_to": {"type": "string", "description": "Assign to agent"}
+                    "assigned_to": {"type": "string", "description": "Assign to agent"},
                 },
-                "required": ["ticket_id"]
+                "required": ["ticket_id"],
             },
-            function=lambda **kwargs: update_ticket(UpdateTicketParams(**kwargs))
+            function=lambda **kwargs: update_ticket(UpdateTicketParams(**kwargs)),
         ),
         Tool(
             name="search_kb",
@@ -530,11 +619,15 @@ def get_customer_service_tools() -> List[Tool]:
                 "properties": {
                     "query": {"type": "string", "description": "Search query"},
                     "category": {"type": "string", "description": "Filter by category"},
-                    "limit": {"type": "integer", "description": "Maximum results", "default": 5}
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum results",
+                        "default": 5,
+                    },
                 },
-                "required": ["query"]
+                "required": ["query"],
             },
-            function=lambda **kwargs: search_kb(SearchKBParams(**kwargs))
+            function=lambda **kwargs: search_kb(SearchKBParams(**kwargs)),
         ),
         Tool(
             name="get_customer",
@@ -544,9 +637,9 @@ def get_customer_service_tools() -> List[Tool]:
                 "properties": {
                     "customer_id": {"type": "string", "description": "Customer ID"}
                 },
-                "required": ["customer_id"]
+                "required": ["customer_id"],
             },
-            function=lambda **kwargs: get_customer(GetCustomerParams(**kwargs))
+            function=lambda **kwargs: get_customer(GetCustomerParams(**kwargs)),
         ),
         Tool(
             name="check_product",
@@ -554,12 +647,18 @@ def get_customer_service_tools() -> List[Tool]:
             parameters={
                 "type": "object",
                 "properties": {
-                    "product_id": {"type": "string", "description": "Product ID to check"},
-                    "service_name": {"type": "string", "description": "Service name to check"}
+                    "product_id": {
+                        "type": "string",
+                        "description": "Product ID to check",
+                    },
+                    "service_name": {
+                        "type": "string",
+                        "description": "Service name to check",
+                    },
                 },
-                "required": []
+                "required": [],
             },
-            function=lambda **kwargs: check_product(CheckProductParams(**kwargs))
+            function=lambda **kwargs: check_product(CheckProductParams(**kwargs)),
         ),
         Tool(
             name="escalate_ticket",
@@ -568,12 +667,18 @@ def get_customer_service_tools() -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "ticket_id": {"type": "string", "description": "ID of the ticket"},
-                    "reason": {"type": "string", "description": "Reason for escalation"},
-                    "specialist_team": {"type": "string", "description": "Team to escalate to: billing, technical, security, management"}
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for escalation",
+                    },
+                    "specialist_team": {
+                        "type": "string",
+                        "description": "Team to escalate to: billing, technical, security, management",
+                    },
                 },
-                "required": ["ticket_id", "reason"]
+                "required": ["ticket_id", "reason"],
             },
-            function=lambda **kwargs: escalate_ticket(EscalateTicketParams(**kwargs))
+            function=lambda **kwargs: escalate_ticket(EscalateTicketParams(**kwargs)),
         ),
         Tool(
             name="send_response",
@@ -583,10 +688,19 @@ def get_customer_service_tools() -> List[Tool]:
                 "properties": {
                     "ticket_id": {"type": "string", "description": "ID of the ticket"},
                     "message": {"type": "string", "description": "Response message"},
-                    "resolution_type": {"type": "string", "enum": ["answer", "solution", "follow_up", "escalation_notice"], "description": "Type of response"}
+                    "resolution_type": {
+                        "type": "string",
+                        "enum": [
+                            "answer",
+                            "solution",
+                            "follow_up",
+                            "escalation_notice",
+                        ],
+                        "description": "Type of response",
+                    },
                 },
-                "required": ["ticket_id", "message"]
+                "required": ["ticket_id", "message"],
             },
-            function=lambda **kwargs: send_response(SendResponseParams(**kwargs))
+            function=lambda **kwargs: send_response(SendResponseParams(**kwargs)),
         ),
     ]

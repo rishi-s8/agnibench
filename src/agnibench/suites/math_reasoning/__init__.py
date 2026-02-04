@@ -6,9 +6,9 @@ Selected for clear measurable outcomes and testing working memory capacity.
 """
 
 from agnibench.core.abstractions import BenchmarkSuite
-from agnibench.suites.math_reasoning.tools import get_math_tools
 from agnibench.suites.math_reasoning.environment import MathEnvironment
 from agnibench.suites.math_reasoning.tasks import get_math_tasks
+from agnibench.suites.math_reasoning.tools import get_math_tools
 
 
 def MathReasoningSuite() -> BenchmarkSuite:

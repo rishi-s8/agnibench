@@ -6,9 +6,9 @@ Selected for testing discovery-based workflows and pattern recognition.
 """
 
 from agnibench.core.abstractions import BenchmarkSuite
-from agnibench.suites.data_analysis.tools import get_data_analysis_tools
 from agnibench.suites.data_analysis.environment import DataAnalysisEnvironment
 from agnibench.suites.data_analysis.tasks import get_data_analysis_tasks
+from agnibench.suites.data_analysis.tools import get_data_analysis_tools
 
 
 def DataAnalysisSuite() -> BenchmarkSuite:
@@ -24,4 +24,9 @@ def DataAnalysisSuite() -> BenchmarkSuite:
     )
 
 
-__all__ = ["DataAnalysisSuite", "DataAnalysisEnvironment", "get_data_analysis_tools", "get_data_analysis_tasks"]
+__all__ = [
+    "DataAnalysisSuite",
+    "DataAnalysisEnvironment",
+    "get_data_analysis_tools",
+    "get_data_analysis_tasks",
+]

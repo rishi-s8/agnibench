@@ -3,15 +3,13 @@ Custom verifiers for the workspace benchmark suite.
 """
 
 from typing import Any, Dict, List
+
 from agnibench.core.abstractions import TaskResult, VerificationResult
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import (
-    Verifier,
-    CompositeVerifier,
-    EnvironmentStateVerifier,
-    ToolCallSequenceVerifier,
-    ExactMatchVerifier,
-)
+from agnibench.core.evaluation import (CompositeVerifier,
+                                       EnvironmentStateVerifier,
+                                       ExactMatchVerifier,
+                                       ToolCallSequenceVerifier, Verifier)
 
 
 class EmailSentVerifier(Verifier):
@@ -54,7 +52,10 @@ class EmailSentVerifier(Verifier):
                     details["recipient_mismatch"] = True
 
             if self.subject_contains:
-                if self.subject_contains.lower() not in email.get("subject", "").lower():
+                if (
+                    self.subject_contains.lower()
+                    not in email.get("subject", "").lower()
+                ):
                     matches = False
                     details["subject_mismatch"] = True
 
@@ -204,7 +205,9 @@ class CoordinationVerifier(Verifier):
 
     def __init__(
         self,
-        required_actions: List[str] = None,  # e.g., ["email_sent", "event_created", "slack_sent"]
+        required_actions: List[
+            str
+        ] = None,  # e.g., ["email_sent", "event_created", "slack_sent"]
     ):
         self.required_actions = required_actions or []
 
@@ -220,7 +223,8 @@ class CoordinationVerifier(Verifier):
 
         action_checks = {
             "email_sent": lambda: len(environment.get_state("sent_emails", [])) > 0,
-            "event_created": lambda: len(environment.get_state("created_events", [])) > 0,
+            "event_created": lambda: len(environment.get_state("created_events", []))
+            > 0,
             "slack_sent": lambda: len(environment.get_state("sent_slack", [])) > 0,
             "contacts_looked_up": lambda: any(
                 tc.tool_name == "lookup_contact" for tc in result.tool_calls
@@ -239,7 +243,11 @@ class CoordinationVerifier(Verifier):
             else:
                 missing.append(action)
 
-        score = len(completed) / len(self.required_actions) if self.required_actions else 1.0
+        score = (
+            len(completed) / len(self.required_actions)
+            if self.required_actions
+            else 1.0
+        )
 
         return VerificationResult(
             passed=len(missing) == 0,
@@ -266,8 +274,7 @@ class AvailabilityCheckVerifier(Verifier):
     ) -> VerificationResult:
         """Verify availability was checked for required attendees."""
         availability_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "check_availability"
+            tc for tc in result.tool_calls if tc.tool_name == "check_availability"
         ]
 
         if not availability_calls:
@@ -295,7 +302,8 @@ class AvailabilityCheckVerifier(Verifier):
             if missing:
                 return VerificationResult(
                     passed=False,
-                    score=len(self.required_attendees - len(missing)) / len(self.required_attendees),
+                    score=len(self.required_attendees - len(missing))
+                    / len(self.required_attendees),
                     details={
                         "checked_attendees": list(checked_attendees),
                         "missing": missing,

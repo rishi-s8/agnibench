@@ -3,15 +3,13 @@ Custom verifiers for the customer service benchmark suite.
 """
 
 from typing import Any, Dict, List
+
 from agnibench.core.abstractions import TaskResult, VerificationResult
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import (
-    Verifier,
-    CompositeVerifier,
-    ExactMatchVerifier,
-    ToolCallSequenceVerifier,
-    EnvironmentStateVerifier,
-)
+from agnibench.core.evaluation import (CompositeVerifier,
+                                       EnvironmentStateVerifier,
+                                       ExactMatchVerifier,
+                                       ToolCallSequenceVerifier, Verifier)
 
 
 class TicketResolutionVerifier(Verifier):
@@ -53,7 +51,10 @@ class TicketResolutionVerifier(Verifier):
                 return VerificationResult(
                     passed=False,
                     score=0.6,
-                    details={**details, "error": f"Ticket {self.ticket_id} not responded to"},
+                    details={
+                        **details,
+                        "error": f"Ticket {self.ticket_id} not responded to",
+                    },
                 )
 
         return VerificationResult(
@@ -77,13 +78,11 @@ class CustomerContextVerifier(Verifier):
     ) -> VerificationResult:
         """Verify customer context was gathered."""
         customer_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "get_customer"
+            tc for tc in result.tool_calls if tc.tool_name == "get_customer"
         ]
 
         response_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "send_response"
+            tc for tc in result.tool_calls if tc.tool_name == "send_response"
         ]
 
         details = {
@@ -101,11 +100,13 @@ class CustomerContextVerifier(Verifier):
         # Check if customer lookup happened before response
         if customer_calls and response_calls:
             first_customer_call = min(
-                i for i, tc in enumerate(result.tool_calls)
+                i
+                for i, tc in enumerate(result.tool_calls)
                 if tc.tool_name == "get_customer"
             )
             first_response = min(
-                i for i, tc in enumerate(result.tool_calls)
+                i
+                for i, tc in enumerate(result.tool_calls)
                 if tc.tool_name == "send_response"
             )
             if first_customer_call > first_response:
@@ -134,8 +135,7 @@ class EscalationVerifier(Verifier):
         """Verify escalation handling."""
         escalations = environment.get_state("escalations", [])
         escalation_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "escalate_ticket"
+            tc for tc in result.tool_calls if tc.tool_name == "escalate_ticket"
         ]
 
         details = {
@@ -152,14 +152,15 @@ class EscalationVerifier(Verifier):
                 )
 
             if self.expected_team:
-                escalated_to = [
-                    e.get("specialist_team") for e in escalations
-                ]
+                escalated_to = [e.get("specialist_team") for e in escalations]
                 if self.expected_team not in escalated_to:
                     return VerificationResult(
                         passed=False,
                         score=0.7,
-                        details={**details, "error": f"Not escalated to {self.expected_team}"},
+                        details={
+                            **details,
+                            "error": f"Not escalated to {self.expected_team}",
+                        },
                     )
 
         elif self.should_escalate is False:
@@ -190,10 +191,7 @@ class KnowledgeBaseUsageVerifier(Verifier):
         expected: Any,
     ) -> VerificationResult:
         """Verify KB usage."""
-        kb_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "search_kb"
-        ]
+        kb_calls = [tc for tc in result.tool_calls if tc.tool_name == "search_kb"]
 
         details = {
             "kb_searches": len(kb_calls),

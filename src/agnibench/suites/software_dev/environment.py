@@ -6,8 +6,10 @@ Provides a simulated codebase with files, errors, tests, and documentation.
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
+
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.suites.software_dev.tools import set_software_dev_data, get_software_dev_data
+from agnibench.suites.software_dev.tools import (get_software_dev_data,
+                                                 set_software_dev_data)
 
 
 class SoftwareDevEnvironment(SimulatedEnvironment):
@@ -135,9 +137,26 @@ class UserService:
         return False
 ''',
                 "last_modified": (now - timedelta(days=5)).isoformat(),
-                "imports": ["hashlib", "secrets", "typing", "datetime", ".models", ".database", ".cache", ".exceptions"],
+                "imports": [
+                    "hashlib",
+                    "secrets",
+                    "typing",
+                    "datetime",
+                    ".models",
+                    ".database",
+                    ".cache",
+                    ".exceptions",
+                ],
                 "classes": ["UserService"],
-                "functions": ["authenticate", "_get_user", "_hash_password", "_create_session", "validate_session", "_get_user_by_id", "logout"],
+                "functions": [
+                    "authenticate",
+                    "_get_user",
+                    "_hash_password",
+                    "_create_session",
+                    "validate_session",
+                    "_get_user_by_id",
+                    "logout",
+                ],
                 "has_bugs": True,
                 "bug_description": "Two bugs: 1) Password hash comparison is case-insensitive (line 42), 2) Sessions not persisted to database (line 73)",
             },
@@ -323,7 +342,14 @@ def get_user(user_id: int):
     }), 200
 ''',
                 "last_modified": (now - timedelta(days=2)).isoformat(),
-                "imports": ["flask", "typing", "..auth.user_service", "..auth.exceptions", ".validators", ".rate_limiter"],
+                "imports": [
+                    "flask",
+                    "typing",
+                    "..auth.user_service",
+                    "..auth.exceptions",
+                    ".validators",
+                    ".rate_limiter",
+                ],
                 "classes": [],
                 "functions": ["login", "logout", "get_profile", "get_user"],
                 "has_bugs": True,
@@ -424,7 +450,13 @@ class UserRepository(BaseRepository):
                 "last_modified": (now - timedelta(days=7)).isoformat(),
                 "imports": ["typing", "abc", "datetime"],
                 "classes": ["BaseRepository", "UserRepository"],
-                "functions": ["find_by_id", "find_all", "save", "delete", "find_by_username"],
+                "functions": [
+                    "find_by_id",
+                    "find_all",
+                    "save",
+                    "delete",
+                    "find_by_username",
+                ],
                 "has_bugs": True,
                 "bug_description": "Cache not invalidated after user update (line 64)",
             },
@@ -516,7 +548,13 @@ def validate_registration(data: Dict[str, Any]) -> List[str]:
                 "last_modified": (now - timedelta(days=15)).isoformat(),
                 "imports": ["re", "typing"],
                 "classes": [],
-                "functions": ["validate_email", "validate_password", "validate_username", "validate_login_request", "validate_registration"],
+                "functions": [
+                    "validate_email",
+                    "validate_password",
+                    "validate_username",
+                    "validate_login_request",
+                    "validate_registration",
+                ],
                 "has_bugs": False,
             },
             {
@@ -639,7 +677,14 @@ class TestLogout:
         assert result is False
 ''',
                 "last_modified": (now - timedelta(days=3)).isoformat(),
-                "imports": ["pytest", "datetime", "unittest.mock", "src.auth.user_service", "src.auth.models", "src.auth.exceptions"],
+                "imports": [
+                    "pytest",
+                    "datetime",
+                    "unittest.mock",
+                    "src.auth.user_service",
+                    "src.auth.models",
+                    "src.auth.exceptions",
+                ],
                 "classes": ["TestAuthenticate", "TestValidateSession", "TestLogout"],
                 "functions": [],
                 "test_file": True,
@@ -655,11 +700,11 @@ class TestLogout:
                 "file": "src/auth/user_service.py",
                 "line": 73,
                 "message": "Session persistence failed: sessions lost after server restart",
-                "stack_trace": '''Traceback (most recent call last):
+                "stack_trace": """Traceback (most recent call last):
   File "src/auth/user_service.py", line 73, in _create_session
     self._session_store[token] = session
 RuntimeError: Sessions not persisted to database
-''',
+""",
                 "context": {
                     "user_id": 42,
                     "token_prefix": "eyJ...",
@@ -672,11 +717,11 @@ RuntimeError: Sessions not persisted to database
                 "file": "src/api/endpoints.py",
                 "line": 72,
                 "message": "Unauthorized access: admin user denied access to /api/users/5",
-                "stack_trace": '''Traceback (most recent call last):
+                "stack_trace": """Traceback (most recent call last):
   File "src/api/endpoints.py", line 72, in get_user
     if current_user.role != "user":
         return jsonify({"error": "Unauthorized"}), 403
-''',
+""",
                 "context": {
                     "user_id": 1,
                     "user_role": "admin",
@@ -703,12 +748,12 @@ RuntimeError: Sessions not persisted to database
                 "file": "src/auth/user_service.py",
                 "line": 42,
                 "message": "Password hash mismatch: case sensitivity issue suspected",
-                "stack_trace": '''Traceback (most recent call last):
+                "stack_trace": """Traceback (most recent call last):
   File "src/auth/user_service.py", line 42, in authenticate
     if stored_hash != provided_hash:
         raise AuthenticationError("Invalid credentials")
 AuthenticationError: Invalid credentials
-''',
+""",
                 "context": {
                     "username": "JohnDoe",
                     "stored_hash_sample": "A1B2C3...",

@@ -6,9 +6,10 @@ Selected for testing inference and handling ambiguity.
 """
 
 from agnibench.core.abstractions import BenchmarkSuite
-from agnibench.suites.customer_service.tools import get_customer_service_tools
-from agnibench.suites.customer_service.environment import CustomerServiceEnvironment
+from agnibench.suites.customer_service.environment import \
+    CustomerServiceEnvironment
 from agnibench.suites.customer_service.tasks import get_customer_service_tasks
+from agnibench.suites.customer_service.tools import get_customer_service_tools
 
 
 def CustomerServiceSuite() -> BenchmarkSuite:
@@ -24,4 +25,9 @@ def CustomerServiceSuite() -> BenchmarkSuite:
     )
 
 
-__all__ = ["CustomerServiceSuite", "CustomerServiceEnvironment", "get_customer_service_tools", "get_customer_service_tasks"]
+__all__ = [
+    "CustomerServiceSuite",
+    "CustomerServiceEnvironment",
+    "get_customer_service_tools",
+    "get_customer_service_tasks",
+]

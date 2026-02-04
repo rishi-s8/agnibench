@@ -3,14 +3,11 @@ Custom verifiers for the research synthesis benchmark suite.
 """
 
 from typing import Any, Dict, List
+
 from agnibench.core.abstractions import TaskResult, VerificationResult
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import (
-    Verifier,
-    CompositeVerifier,
-    ExactMatchVerifier,
-    ToolCallSequenceVerifier,
-)
+from agnibench.core.evaluation import (CompositeVerifier, ExactMatchVerifier,
+                                       ToolCallSequenceVerifier, Verifier)
 
 
 class FactExtractionVerifier(Verifier):
@@ -28,15 +25,16 @@ class FactExtractionVerifier(Verifier):
     ) -> VerificationResult:
         """Verify fact extraction."""
         extract_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "extract_facts"
+            tc for tc in result.tool_calls if tc.tool_name == "extract_facts"
         ]
 
         if len(extract_calls) < self.min_facts:
             return VerificationResult(
                 passed=False,
                 score=len(extract_calls) / self.min_facts,
-                details={"error": f"Expected at least {self.min_facts} fact extraction calls"},
+                details={
+                    "error": f"Expected at least {self.min_facts} fact extraction calls"
+                },
             )
 
         # Check if expected facts appear in response
@@ -46,7 +44,9 @@ class FactExtractionVerifier(Verifier):
             if fact.lower() in response_lower:
                 found_facts.append(fact)
 
-        score = len(found_facts) / len(self.expected_facts) if self.expected_facts else 1.0
+        score = (
+            len(found_facts) / len(self.expected_facts) if self.expected_facts else 1.0
+        )
 
         return VerificationResult(
             passed=score >= 0.5,
@@ -75,7 +75,8 @@ class CrossReferenceVerifier(Verifier):
         """Verify cross-referencing was done."""
         # Count unique documents accessed
         read_calls = [
-            tc for tc in result.tool_calls
+            tc
+            for tc in result.tool_calls
             if tc.tool_name in ["read_document", "extract_facts"]
         ]
 
@@ -87,8 +88,7 @@ class CrossReferenceVerifier(Verifier):
 
         # Check for comparison calls
         compare_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "compare_sources"
+            tc for tc in result.tool_calls if tc.tool_name == "compare_sources"
         ]
 
         details = {
@@ -101,7 +101,10 @@ class CrossReferenceVerifier(Verifier):
             return VerificationResult(
                 passed=False,
                 score=len(unique_docs) / self.min_sources,
-                details={**details, "error": f"Expected at least {self.min_sources} sources"},
+                details={
+                    **details,
+                    "error": f"Expected at least {self.min_sources} sources",
+                },
             )
 
         if self.require_comparison and len(compare_calls) == 0:
@@ -133,8 +136,7 @@ class SynthesisQualityVerifier(Verifier):
         """Verify synthesis quality."""
         # Check if summary was generated
         summary_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "generate_summary"
+            tc for tc in result.tool_calls if tc.tool_name == "generate_summary"
         ]
 
         response_lower = result.final_response.lower()
@@ -158,7 +160,11 @@ class SynthesisQualityVerifier(Verifier):
                 details={**details, "warning": "No summary tool used"},
             )
 
-        topic_score = len(found_topics) / len(self.required_topics) if self.required_topics else 1.0
+        topic_score = (
+            len(found_topics) / len(self.required_topics)
+            if self.required_topics
+            else 1.0
+        )
 
         return VerificationResult(
             passed=topic_score >= 0.6,
@@ -181,10 +187,7 @@ class NotesTakenVerifier(Verifier):
         expected: Any,
     ) -> VerificationResult:
         """Verify notes were taken."""
-        note_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "take_notes"
-        ]
+        note_calls = [tc for tc in result.tool_calls if tc.tool_name == "take_notes"]
 
         notes = environment.get_state("notes", [])
 
@@ -198,7 +201,10 @@ class NotesTakenVerifier(Verifier):
             return VerificationResult(
                 passed=False,
                 score=len(note_calls) / self.min_notes,
-                details={**details, "error": f"Expected at least {self.min_notes} notes"},
+                details={
+                    **details,
+                    "error": f"Expected at least {self.min_notes} notes",
+                },
             )
 
         return VerificationResult(

@@ -3,15 +3,13 @@ Custom verifiers for the data analysis benchmark suite.
 """
 
 from typing import Any, Dict, List
+
 from agnibench.core.abstractions import TaskResult, VerificationResult
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import (
-    Verifier,
-    CompositeVerifier,
-    ExactMatchVerifier,
-    ToolCallSequenceVerifier,
-    EnvironmentStateVerifier,
-)
+from agnibench.core.evaluation import (CompositeVerifier,
+                                       EnvironmentStateVerifier,
+                                       ExactMatchVerifier,
+                                       ToolCallSequenceVerifier, Verifier)
 
 
 class InsightQualityVerifier(Verifier):
@@ -39,7 +37,10 @@ class InsightQualityVerifier(Verifier):
             return VerificationResult(
                 passed=False,
                 score=len(insights) / self.min_insights,
-                details={**details, "error": f"Expected at least {self.min_insights} insights"},
+                details={
+                    **details,
+                    "error": f"Expected at least {self.min_insights} insights",
+                },
             )
 
         # Check insight quality (has title and description)
@@ -47,7 +48,10 @@ class InsightQualityVerifier(Verifier):
         for i, insight in enumerate(insights):
             if not insight.get("title"):
                 quality_issues.append(f"Insight {i+1} missing title")
-            if not insight.get("description") or len(insight.get("description", "")) < 20:
+            if (
+                not insight.get("description")
+                or len(insight.get("description", "")) < 20
+            ):
                 quality_issues.append(f"Insight {i+1} has insufficient description")
 
         if quality_issues:
@@ -86,7 +90,10 @@ class VisualizationVerifier(Verifier):
             return VerificationResult(
                 passed=False,
                 score=len(visualizations) / self.min_visualizations,
-                details={**details, "error": f"Expected at least {self.min_visualizations} visualizations"},
+                details={
+                    **details,
+                    "error": f"Expected at least {self.min_visualizations} visualizations",
+                },
             )
 
         # Check for required types
@@ -124,12 +131,10 @@ class DataExplorationVerifier(Verifier):
     ) -> VerificationResult:
         """Verify data exploration."""
         describe_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "describe_dataset"
+            tc for tc in result.tool_calls if tc.tool_name == "describe_dataset"
         ]
         stats_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "compute_statistics"
+            tc for tc in result.tool_calls if tc.tool_name == "compute_statistics"
         ]
 
         # Count unique datasets explored
@@ -159,7 +164,9 @@ class DataExplorationVerifier(Verifier):
 
         if len(datasets_explored) < self.min_datasets_explored:
             score -= 0.3
-            issues.append(f"Only explored {len(datasets_explored)} datasets, expected {self.min_datasets_explored}")
+            issues.append(
+                f"Only explored {len(datasets_explored)} datasets, expected {self.min_datasets_explored}"
+            )
 
         if issues:
             details["issues"] = issues
@@ -185,8 +192,7 @@ class CorrelationAnalysisVerifier(Verifier):
     ) -> VerificationResult:
         """Verify correlation analysis."""
         correlation_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "correlate_columns"
+            tc for tc in result.tool_calls if tc.tool_name == "correlate_columns"
         ]
 
         details = {
@@ -202,8 +208,16 @@ class CorrelationAnalysisVerifier(Verifier):
 
         # Check if response mentions correlation findings
         response_lower = result.final_response.lower()
-        mentions_correlation = any(word in response_lower for word in
-            ["correlation", "correlate", "related", "relationship", "associated"])
+        mentions_correlation = any(
+            word in response_lower
+            for word in [
+                "correlation",
+                "correlate",
+                "related",
+                "relationship",
+                "associated",
+            ]
+        )
 
         if self.require_strong_correlation and not mentions_correlation:
             details["warning"] = "Response doesn't clearly discuss correlations"
@@ -228,10 +242,7 @@ class QueryEfficiencyVerifier(Verifier):
         expected: Any,
     ) -> VerificationResult:
         """Verify query efficiency."""
-        query_calls = [
-            tc for tc in result.tool_calls
-            if tc.tool_name == "query_data"
-        ]
+        query_calls = [tc for tc in result.tool_calls if tc.tool_name == "query_data"]
 
         # Check for duplicate queries
         query_signatures = []
@@ -256,7 +267,10 @@ class QueryEfficiencyVerifier(Verifier):
             return VerificationResult(
                 passed=False,
                 score=0.7,
-                details={**details, "warning": f"Too many redundant queries ({redundant})"},
+                details={
+                    **details,
+                    "warning": f"Too many redundant queries ({redundant})",
+                },
             )
 
         return VerificationResult(
@@ -320,7 +334,9 @@ class ComprehensiveAnalysisVerifier(Verifier):
 
         if len(unique_tools) < self.min_tool_diversity:
             score -= 0.2
-            issues.append(f"Low tool diversity ({len(unique_tools)} < {self.min_tool_diversity})")
+            issues.append(
+                f"Low tool diversity ({len(unique_tools)} < {self.min_tool_diversity})"
+            )
 
         if issues:
             details["issues"] = issues

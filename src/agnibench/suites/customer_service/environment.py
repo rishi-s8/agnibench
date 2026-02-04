@@ -3,8 +3,10 @@ Simulated environment for the customer service benchmark suite.
 """
 
 from datetime import datetime, timedelta
+
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.suites.customer_service.tools import set_service_data, get_service_data
+from agnibench.suites.customer_service.tools import (get_service_data,
+                                                     set_service_data)
 
 
 class CustomerServiceEnvironment(SimulatedEnvironment):
@@ -137,7 +139,10 @@ class CustomerServiceEnvironment(SimulatedEnvironment):
                 "assigned_to": "Agent_Sarah",
                 "tags": ["export", "data", "bug"],
                 "internal_notes": [
-                    {"note": "Investigating export queue system", "added_at": (now - timedelta(hours=6)).isoformat()}
+                    {
+                        "note": "Investigating export queue system",
+                        "added_at": (now - timedelta(hours=6)).isoformat(),
+                    }
                 ],
             },
             {
@@ -387,7 +392,9 @@ For audit requests, we typically provide:
     @property
     def open_ticket_count(self) -> int:
         """Number of open tickets."""
-        return sum(1 for t in self._state.get("tickets", []) if t.get("status") == "open")
+        return sum(
+            1 for t in self._state.get("tickets", []) if t.get("status") == "open"
+        )
 
     @property
     def response_count(self) -> int:

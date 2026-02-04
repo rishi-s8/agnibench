@@ -9,7 +9,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from agnibench.core.abstractions import TaskResult, VerificationResult, ToolCall
+from agnibench.core.abstractions import (TaskResult, ToolCall,
+                                         VerificationResult)
 from agnibench.core.environment import SimulatedEnvironment
 
 
@@ -210,7 +211,9 @@ class EnvironmentStateVerifier(Verifier):
                 return operand in actual
             elif isinstance(actual, dict):
                 if isinstance(operand, dict):
-                    return all(k in actual and actual[k] == v for k, v in operand.items())
+                    return all(
+                        k in actual and actual[k] == v for k, v in operand.items()
+                    )
                 return operand in actual
             return False
 
@@ -230,15 +233,23 @@ class EnvironmentStateVerifier(Verifier):
 
         elif operator == "$type":
             type_map = {
-                "str": str, "string": str,
-                "int": int, "integer": int,
+                "str": str,
+                "string": str,
+                "int": int,
+                "integer": int,
                 "float": float,
-                "bool": bool, "boolean": bool,
-                "list": list, "array": list,
-                "dict": dict, "object": dict,
-                "none": type(None), "null": type(None),
+                "bool": bool,
+                "boolean": bool,
+                "list": list,
+                "array": list,
+                "dict": dict,
+                "object": dict,
+                "none": type(None),
+                "null": type(None),
             }
-            expected_type = type_map.get(operand.lower() if isinstance(operand, str) else operand)
+            expected_type = type_map.get(
+                operand.lower() if isinstance(operand, str) else operand
+            )
             return isinstance(actual, expected_type) if expected_type else False
 
         elif operator == "$length":
@@ -315,58 +326,70 @@ class ToolCallSequenceVerifier(Verifier):
 
         # Check minimum calls
         if min_calls is not None and len(actual_calls) < min_calls:
-            details["checks"].append({
-                "check": "min_calls",
-                "passed": False,
-                "expected": min_calls,
-                "actual": len(actual_calls),
-            })
+            details["checks"].append(
+                {
+                    "check": "min_calls",
+                    "passed": False,
+                    "expected": min_calls,
+                    "actual": len(actual_calls),
+                }
+            )
             all_passed = False
         elif min_calls is not None:
-            details["checks"].append({
-                "check": "min_calls",
-                "passed": True,
-                "expected": min_calls,
-                "actual": len(actual_calls),
-            })
+            details["checks"].append(
+                {
+                    "check": "min_calls",
+                    "passed": True,
+                    "expected": min_calls,
+                    "actual": len(actual_calls),
+                }
+            )
 
         # Check maximum calls
         if max_calls is not None and len(actual_calls) > max_calls:
-            details["checks"].append({
-                "check": "max_calls",
-                "passed": False,
-                "expected": max_calls,
-                "actual": len(actual_calls),
-            })
+            details["checks"].append(
+                {
+                    "check": "max_calls",
+                    "passed": False,
+                    "expected": max_calls,
+                    "actual": len(actual_calls),
+                }
+            )
             all_passed = False
         elif max_calls is not None:
-            details["checks"].append({
-                "check": "max_calls",
-                "passed": True,
-                "expected": max_calls,
-                "actual": len(actual_calls),
-            })
+            details["checks"].append(
+                {
+                    "check": "max_calls",
+                    "passed": True,
+                    "expected": max_calls,
+                    "actual": len(actual_calls),
+                }
+            )
 
         # Check required tools
         if self.strict_order:
             # Must appear in exact order (but other tools can be interspersed)
             passed = self._check_ordered_sequence(actual_calls, required)
-            details["checks"].append({
-                "check": "required_ordered",
-                "passed": passed,
-                "expected": required,
-            })
+            details["checks"].append(
+                {
+                    "check": "required_ordered",
+                    "passed": passed,
+                    "expected": required,
+                }
+            )
             if not passed:
                 all_passed = False
         else:
             # Just check presence
             missing = [t for t in required if t not in actual_calls]
             passed = len(missing) == 0
-            details["checks"].append({
-                "check": "required_present",
-                "passed": passed,
-                "missing": missing,
-            })
+            details["checks"].append(
+                {
+                    "check": "required_present",
+                    "passed": passed,
+                    "missing": missing,
+                }
+            )
             if not passed:
                 all_passed = False
 
@@ -375,11 +398,13 @@ class ToolCallSequenceVerifier(Verifier):
             allowed = set(required + optional)
             extra = [t for t in actual_calls if t not in allowed]
             if extra:
-                details["checks"].append({
-                    "check": "no_extra_calls",
-                    "passed": False,
-                    "extra": extra,
-                })
+                details["checks"].append(
+                    {
+                        "check": "no_extra_calls",
+                        "passed": False,
+                        "extra": extra,
+                    }
+                )
                 all_passed = False
 
         # Calculate score
@@ -438,13 +463,15 @@ class CompositeVerifier(Verifier):
 
         for verifier, weight, verifier_expected in self.verifiers:
             sub_result = verifier.verify(result, environment, verifier_expected)
-            sub_results.append({
-                "verifier": verifier.name,
-                "weight": weight,
-                "passed": sub_result.passed,
-                "score": sub_result.score,
-                "details": sub_result.details,
-            })
+            sub_results.append(
+                {
+                    "verifier": verifier.name,
+                    "weight": weight,
+                    "passed": sub_result.passed,
+                    "score": sub_result.score,
+                    "details": sub_result.details,
+                }
+            )
 
         details = {"sub_results": sub_results, "mode": self.mode}
 
@@ -525,8 +552,7 @@ class ExecutionLayerVerifier(Verifier):
         details = {
             "error": result.error,
             "failed_tool_calls": [
-                {"tool": tc.tool_name, "error": tc.error}
-                for tc in failed_calls
+                {"tool": tc.tool_name, "error": tc.error} for tc in failed_calls
             ],
         }
 
@@ -559,13 +585,17 @@ class ReasoningQualityVerifier(Verifier):
         """Analyze reasoning quality."""
         tool_calls = result.tool_calls
         if not tool_calls:
-            return VerificationResult(passed=True, score=1.0, details={"note": "No tool calls"})
+            return VerificationResult(
+                passed=True, score=1.0, details={"note": "No tool calls"}
+            )
 
         # Check for exact duplicate consecutive calls
         duplicates = 0
         for i in range(1, len(tool_calls)):
-            if (tool_calls[i].tool_name == tool_calls[i-1].tool_name and
-                tool_calls[i].arguments == tool_calls[i-1].arguments):
+            if (
+                tool_calls[i].tool_name == tool_calls[i - 1].tool_name
+                and tool_calls[i].arguments == tool_calls[i - 1].arguments
+            ):
                 duplicates += 1
 
         redundancy_ratio = duplicates / len(tool_calls)

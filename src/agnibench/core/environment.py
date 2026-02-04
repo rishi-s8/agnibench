@@ -5,15 +5,16 @@ Provides state tracking and tool execution context.
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
 from copy import deepcopy
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class StateChange:
     """Record of a state change in the environment."""
+
     key: str
     old_value: Any
     new_value: Any
@@ -65,7 +66,9 @@ class SimulatedEnvironment(ABC):
         """Get a value from the state."""
         return self._state.get(key, default)
 
-    def set_state(self, key: str, value: Any, source_tool: Optional[str] = None) -> None:
+    def set_state(
+        self, key: str, value: Any, source_tool: Optional[str] = None
+    ) -> None:
         """
         Set a value in the state and record the change.
 
@@ -76,14 +79,18 @@ class SimulatedEnvironment(ABC):
         """
         old_value = self._state.get(key)
         self._state[key] = value
-        self._state_history.append(StateChange(
-            key=key,
-            old_value=old_value,
-            new_value=value,
-            source_tool=source_tool,
-        ))
+        self._state_history.append(
+            StateChange(
+                key=key,
+                old_value=old_value,
+                new_value=value,
+                source_tool=source_tool,
+            )
+        )
 
-    def update_state(self, updates: Dict[str, Any], source_tool: Optional[str] = None) -> None:
+    def update_state(
+        self, updates: Dict[str, Any], source_tool: Optional[str] = None
+    ) -> None:
         """Update multiple state values at once."""
         for key, value in updates.items():
             self.set_state(key, value, source_tool)
@@ -92,12 +99,14 @@ class SimulatedEnvironment(ABC):
         """Delete a key from the state."""
         if key in self._state:
             old_value = self._state.pop(key)
-            self._state_history.append(StateChange(
-                key=key,
-                old_value=old_value,
-                new_value=None,
-                source_tool=source_tool,
-            ))
+            self._state_history.append(
+                StateChange(
+                    key=key,
+                    old_value=old_value,
+                    new_value=None,
+                    source_tool=source_tool,
+                )
+            )
 
     def has_state(self, key: str) -> bool:
         """Check if a key exists in the state."""
@@ -124,14 +133,16 @@ class SimulatedEnvironment(ABC):
         error: Optional[str] = None,
     ) -> None:
         """Log a tool call for later verification."""
-        self._tool_call_log.append({
-            "tool_name": tool_name,
-            "arguments": arguments,
-            "result": result,
-            "success": success,
-            "error": error,
-            "timestamp": datetime.now(),
-        })
+        self._tool_call_log.append(
+            {
+                "tool_name": tool_name,
+                "arguments": arguments,
+                "result": result,
+                "success": success,
+                "error": error,
+                "timestamp": datetime.now(),
+            }
+        )
 
     @property
     def tool_call_log(self) -> List[Dict[str, Any]]:
@@ -160,7 +171,9 @@ class SimulatedEnvironment(ABC):
                 if k not in actual or actual[k] != v:
                     return False
             return True
-        elif isinstance(expected_value, (list, set)) and isinstance(actual, (list, set)):
+        elif isinstance(expected_value, (list, set)) and isinstance(
+            actual, (list, set)
+        ):
             # Check if all expected items are present
             return all(item in actual for item in expected_value)
         else:
@@ -231,5 +244,5 @@ class SimulatedEnvironment(ABC):
         """Restore to the last checkpoint created by context manager."""
         if hasattr(self, "_checkpoint_state"):
             self._state = deepcopy(self._checkpoint_state)
-            self._state_history = self._state_history[:self._checkpoint_history_len]
-            self._tool_call_log = self._tool_call_log[:self._checkpoint_log_len]
+            self._state_history = self._state_history[: self._checkpoint_history_len]
+            self._tool_call_log = self._tool_call_log[: self._checkpoint_log_len]

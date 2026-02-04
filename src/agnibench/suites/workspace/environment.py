@@ -4,14 +4,14 @@ Simulated environment for the workspace benchmark suite.
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
+
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.suites.workspace.tools import set_workspace_data, get_workspace_data
-from agnibench.utils.data_generators import (
-    generate_random_email,
-    generate_random_calendar_event,
-    generate_contact,
-    generate_slack_message,
-)
+from agnibench.suites.workspace.tools import (get_workspace_data,
+                                              set_workspace_data)
+from agnibench.utils.data_generators import (generate_contact,
+                                             generate_random_calendar_event,
+                                             generate_random_email,
+                                             generate_slack_message)
 
 
 class WorkspaceEnvironment(SimulatedEnvironment):
@@ -140,8 +140,12 @@ class WorkspaceEnvironment(SimulatedEnvironment):
         ]
 
         # Sample calendar events
-        tomorrow = (now + timedelta(days=1)).replace(hour=10, minute=0, second=0, microsecond=0)
-        next_week = (now + timedelta(days=7)).replace(hour=14, minute=0, second=0, microsecond=0)
+        tomorrow = (now + timedelta(days=1)).replace(
+            hour=10, minute=0, second=0, microsecond=0
+        )
+        next_week = (now + timedelta(days=7)).replace(
+            hour=14, minute=0, second=0, microsecond=0
+        )
 
         calendar_events = [
             {
@@ -216,8 +220,12 @@ class WorkspaceEnvironment(SimulatedEnvironment):
             {
                 "id": "event_allday_1",
                 "title": "Company Holiday",
-                "start_time": (now + timedelta(days=5)).replace(hour=0, minute=0).isoformat(),
-                "end_time": (now + timedelta(days=5)).replace(hour=23, minute=59).isoformat(),
+                "start_time": (now + timedelta(days=5))
+                .replace(hour=0, minute=0)
+                .isoformat(),
+                "end_time": (now + timedelta(days=5))
+                .replace(hour=23, minute=59)
+                .isoformat(),
                 "attendees": [],
                 "location": "",
                 "description": "Office closed - company holiday",

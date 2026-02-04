@@ -3,6 +3,7 @@ Simulated environment for the math reasoning benchmark suite.
 """
 
 from typing import Any, Dict
+
 from agnibench.core.environment import SimulatedEnvironment
 from agnibench.suites.math_reasoning.tools import reset_scratchpad
 
@@ -43,16 +44,22 @@ class MathEnvironment(SimulatedEnvironment):
         lookups.append(formula_name)
         self.set_state("formulas_looked_up", lookups, source_tool="formula_lookup")
 
-    def record_conversion(self, value: float, from_unit: str, to_unit: str, result: float) -> None:
+    def record_conversion(
+        self, value: float, from_unit: str, to_unit: str, result: float
+    ) -> None:
         """Record a unit conversion."""
         conversions = self._state.get("conversions_performed", [])
-        conversions.append({
-            "value": value,
-            "from_unit": from_unit,
-            "to_unit": to_unit,
-            "result": result
-        })
-        self.set_state("conversions_performed", conversions, source_tool="unit_converter")
+        conversions.append(
+            {
+                "value": value,
+                "from_unit": from_unit,
+                "to_unit": to_unit,
+                "result": result,
+            }
+        )
+        self.set_state(
+            "conversions_performed", conversions, source_tool="unit_converter"
+        )
 
     def record_equation_solved(self, equation: str, solutions: list) -> None:
         """Record an equation solution."""
