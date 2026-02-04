@@ -47,6 +47,24 @@ class BenchmarkReport:
         """Total number of passed tasks across all suites."""
         return sum(sr.passed_tasks for sr in self.suite_results.values())
 
+    @property
+    def overall_outcome_pass_rate(self) -> float:
+        """Calculate overall outcome pass rate across all suites."""
+        total_passed = sum(
+            sum(1 for r in sr.task_results if r.outcome_passed)
+            for sr in self.suite_results.values()
+        )
+        total_tasks = sum(sr.total_tasks for sr in self.suite_results.values())
+        return total_passed / total_tasks if total_tasks > 0 else 0.0
+
+    @property
+    def overall_partial_credit(self) -> float:
+        """Calculate overall average partial credit across all suites."""
+        all_scores = []
+        for sr in self.suite_results.values():
+            all_scores.extend(r.partial_credit for r in sr.task_results)
+        return sum(all_scores) / len(all_scores) if all_scores else 0.0
+
     def by_difficulty(self) -> Dict[str, Dict[str, float]]:
         """Aggregate results by difficulty level."""
         by_diff = {}
@@ -79,6 +97,9 @@ class BenchmarkReport:
                 "average_score": sr.average_score,
                 "total_tasks": sr.total_tasks,
                 "average_tool_calls": sr.average_tool_calls,
+                # NEW: Dual metrics for discrimination
+                "outcome_pass_rate": sr.outcome_pass_rate,
+                "average_partial_credit": sr.average_partial_credit,
             }
             for name, sr in self.suite_results.items()
         }
@@ -93,6 +114,9 @@ class BenchmarkReport:
                 "overall_average_score": self.overall_average_score,
                 "total_tasks": self.total_tasks,
                 "total_passed": self.total_passed,
+                # NEW: Dual metrics for discrimination
+                "overall_outcome_pass_rate": self.overall_outcome_pass_rate,
+                "overall_partial_credit": self.overall_partial_credit,
             },
             "by_difficulty": self.by_difficulty(),
             "by_suite": self.by_suite(),
@@ -134,6 +158,9 @@ class ComparisonReport:
                 "pass_rate": report.overall_pass_rate,
                 "average_score": report.overall_average_score,
                 "total_tasks": report.total_tasks,
+                # NEW: Dual metrics for discrimination
+                "outcome_pass_rate": report.overall_outcome_pass_rate,
+                "partial_credit": report.overall_partial_credit,
             }
             for report in self.reports
         }
@@ -148,6 +175,9 @@ class ComparisonReport:
                     "pass_rate": sr.pass_rate,
                     "average_score": sr.average_score,
                     "average_tool_calls": sr.average_tool_calls,
+                    # NEW: Dual metrics for discrimination
+                    "outcome_pass_rate": sr.outcome_pass_rate,
+                    "partial_credit": sr.average_partial_credit,
                 }
         return comparison
 
@@ -223,27 +253,27 @@ class ComparisonReport:
         return deltas
 
     def generate_summary_table(self) -> str:
-        """Generate a formatted summary table."""
+        """Generate a formatted summary table with dual metrics."""
         lines = []
-        lines.append("=" * 80)
+        lines.append("=" * 95)
         lines.append("BENCHMARK COMPARISON SUMMARY")
-        lines.append("=" * 80)
+        lines.append("=" * 95)
         lines.append("")
 
-        # Header
-        header = f"{'Model':<30} {'Pass Rate':>12} {'Avg Score':>12} {'Tasks':>8}"
+        # Header with dual metrics
+        header = f"{'Model':<25} {'Outcome Pass':>14} {'Partial Credit':>16} {'Tasks':>8}"
         lines.append(header)
         lines.append("-" * 70)
 
-        # Overall results
+        # Overall results sorted by outcome pass rate (primary metric)
         for report in sorted(
-            self.reports, key=lambda r: r.overall_average_score, reverse=True
+            self.reports, key=lambda r: r.overall_outcome_pass_rate, reverse=True
         ):
-            line = f"{report.model_name:<30} {report.overall_pass_rate:>11.1%} {report.overall_average_score:>12.3f} {report.total_tasks:>8}"
+            line = f"{report.model_name:<25} {report.overall_outcome_pass_rate:>13.1%} {report.overall_partial_credit:>16.3f} {report.total_tasks:>8}"
             lines.append(line)
 
         lines.append("")
-        lines.append("BY SUITE:")
+        lines.append("BY SUITE (sorted by outcome pass rate):")
         lines.append("-" * 70)
 
         # Per-suite results
@@ -257,12 +287,12 @@ class ComparisonReport:
                 self.reports,
                 key=lambda r: r.suite_results.get(
                     suite_name, SuiteResult(suite_name, "", [], datetime.now())
-                ).average_score,
+                ).outcome_pass_rate,
                 reverse=True,
             ):
                 if suite_name in report.suite_results:
                     sr = report.suite_results[suite_name]
-                    line = f"  {report.model_name:<28} {sr.pass_rate:>11.1%} {sr.average_score:>12.3f}"
+                    line = f"  {report.model_name:<23} {sr.outcome_pass_rate:>13.1%} {sr.average_partial_credit:>16.3f}"
                     lines.append(line)
 
         lines.append("")

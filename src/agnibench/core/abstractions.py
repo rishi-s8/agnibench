@@ -166,14 +166,25 @@ class TaskResult:
     Result of executing a single task.
 
     Contains the execution trace, final response, and verification results.
+
+    Metrics:
+    - success: Backward-compatible, now equals outcome_passed
+    - outcome_passed: Binary pass/fail based purely on environment state correctness
+    - partial_credit: Continuous 0-1 score for process quality (tool efficiency, etc.)
     """
 
     task_id: str
     task_name: str
-    success: bool
+    success: bool  # Backwards compat - now equals outcome_passed
     final_response: str
     tool_calls: List[ToolCall]
     verification: VerificationResult
+
+    # NEW: Separate metrics for discrimination
+    outcome_passed: bool = False  # Pure outcome (environment state correct)
+    partial_credit: float = 0.0  # Process quality score (0-1)
+    outcome_details: Dict[str, Any] = field(default_factory=dict)
+    partial_credit_details: Dict[str, Any] = field(default_factory=dict)
 
     # Timing and metadata
     start_time: Optional[datetime] = None
@@ -216,6 +227,11 @@ class TaskResult:
                 "layer_results": self.verification.layer_results,
                 "error": self.verification.error,
             },
+            # NEW: Dual metrics for discrimination
+            "outcome_passed": self.outcome_passed,
+            "partial_credit": self.partial_credit,
+            "outcome_details": self.outcome_details,
+            "partial_credit_details": self.partial_credit_details,
             "tool_call_count": self.tool_call_count,
             "tool_names_used": self.tool_names_used,
             "start_time": self.start_time.isoformat() if self.start_time else None,

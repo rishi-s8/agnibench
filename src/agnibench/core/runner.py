@@ -14,7 +14,7 @@ from agnibench.core.abstractions import (BenchmarkSuite, DifficultyLevel, Task,
                                          TaskResult, ToolCall,
                                          VerificationResult)
 from agnibench.core.environment import SimulatedEnvironment
-from agnibench.core.evaluation import CompositeVerifier, Verifier
+from agnibench.core.evaluation import CompositeVerifier, OutcomeVerifier, Verifier
 
 
 @dataclass
@@ -69,6 +69,22 @@ class SuiteResult:
             self.task_results
         )
 
+    @property
+    def outcome_pass_rate(self) -> float:
+        """Pass rate based on outcome only (environment state correctness)."""
+        if not self.task_results:
+            return 0.0
+        passed = sum(1 for r in self.task_results if r.outcome_passed)
+        return passed / len(self.task_results)
+
+    @property
+    def average_partial_credit(self) -> float:
+        """Average partial credit score (process quality)."""
+        if not self.task_results:
+            return 0.0
+        scores = [r.partial_credit for r in self.task_results]
+        return sum(scores) / len(scores)
+
     def results_by_difficulty(self) -> Dict[str, Dict[str, Any]]:
         """Get pass rates and scores grouped by difficulty."""
         by_difficulty = {}
@@ -105,6 +121,9 @@ class SuiteResult:
             "pass_rate": self.pass_rate,
             "average_score": self.average_score,
             "average_tool_calls": self.average_tool_calls,
+            # NEW: Dual metrics for discrimination
+            "outcome_pass_rate": self.outcome_pass_rate,
+            "average_partial_credit": self.average_partial_credit,
             "start_time": self.start_time.isoformat(),
             "end_time": self.end_time.isoformat() if self.end_time else None,
             "results_by_difficulty": self.results_by_difficulty(),
@@ -228,30 +247,58 @@ class BenchmarkRunner:
                 for tc in environment.tool_call_log
             ]
 
-            # Verify the result
+            # Create provisional task result for verification
+            provisional_result = TaskResult(
+                task_id=task.id,
+                task_name=task.name,
+                success=True,  # Provisional
+                final_response=final_response,
+                tool_calls=tool_calls,
+                verification=VerificationResult(passed=False, score=0.0),
+            )
+
+            # 1. Run OutcomeVerifier for pass/fail (if expected_state defined)
+            expected_state = task.verifier_config.get("expected_state", {})
+            # Also use "state" key for backwards compatibility
+            if not expected_state:
+                expected_state = task.verifier_config.get("state", {})
+
+            outcome_verifier = OutcomeVerifier()
+            outcome_result = outcome_verifier.verify(
+                provisional_result, environment, expected_state
+            )
+
+            # 2. Run existing composite verifier for partial credit
             verifier = self._get_verifier(task)
             verification = verifier.verify(
-                TaskResult(
-                    task_id=task.id,
-                    task_name=task.name,
-                    success=True,  # Provisional
-                    final_response=final_response,
-                    tool_calls=tool_calls,
-                    verification=VerificationResult(passed=False, score=0.0),
-                ),
+                provisional_result,
                 environment,
                 task.expected_answer,
             )
+
+            # 3. Determine final outcome_passed
+            # If expected_state is defined, use outcome_verifier result
+            # Otherwise, fall back to verification.passed (for backwards compat)
+            if expected_state:
+                outcome_passed = outcome_result.passed
+                outcome_details = outcome_result.details
+            else:
+                outcome_passed = verification.passed
+                outcome_details = {"note": "No expected_state; using verification.passed"}
 
             end_time = datetime.now()
 
             return TaskResult(
                 task_id=task.id,
                 task_name=task.name,
-                success=verification.passed,
+                success=outcome_passed,  # Now equals outcome_passed
                 final_response=final_response,
                 tool_calls=tool_calls,
                 verification=verification,
+                outcome_passed=outcome_passed,
+                partial_credit=verification.score,
+                outcome_details=outcome_details,
+                partial_credit_details=verification.details,
                 start_time=start_time,
                 end_time=end_time,
                 execution_time_ms=(end_time - start_time).total_seconds() * 1000,
@@ -275,6 +322,10 @@ class BenchmarkRunner:
                     score=0.0,
                     error=error_msg,
                 ),
+                outcome_passed=False,
+                partial_credit=0.0,
+                outcome_details={"error": error_msg},
+                partial_credit_details={"error": error_msg},
                 start_time=start_time,
                 end_time=end_time,
                 execution_time_ms=(end_time - start_time).total_seconds() * 1000,
@@ -356,6 +407,7 @@ class BenchmarkRunner:
             verifier = ExactMatchVerifier(
                 case_sensitive=config.get("case_sensitive", False),
                 match_mode=config.get("match_mode", "contains"),
+                rejection_patterns=config.get("rejection_patterns", []),
             )
             answer_verifier = (
                 verifier,

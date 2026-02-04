@@ -32,7 +32,7 @@ def get_math_tasks() -> List[Task]:
             expected_tool_calls=["calculator", "calculator"],
             expected_answer=67.5,
             verifier_config={
-                "answer": 67.5,
+                "answer": ["67.5", "$67.50", "67.50"],
                 "match_mode": "contains",
                 "tools": {"required": ["calculator"], "min_calls": 1, "max_calls": 3},
             },
@@ -57,7 +57,7 @@ def get_math_tasks() -> List[Task]:
             expected_tool_calls=["unit_converter"],
             expected_answer=62.137,
             verifier_config={
-                "answer": [62.137, 62.14, "62.1"],
+                "answer": ["62.137", "62.14", "62.1"],
                 "match_mode": "contains",
                 "tools": {
                     "required": ["unit_converter"],
@@ -86,7 +86,7 @@ def get_math_tasks() -> List[Task]:
             expected_tool_calls=["formula_lookup", "calculator"],
             expected_answer=153.94,
             verifier_config={
-                "answer": [153.94, 153.9, "153.9", "154"],
+                "answer": ["153.94", "153.9", "154"],
                 "match_mode": "contains",
                 "tools": {
                     "required": ["calculator"],
@@ -116,7 +116,7 @@ def get_math_tasks() -> List[Task]:
             expected_tool_calls=["equation_solver"],
             expected_answer=5,
             verifier_config={
-                "answer": [5, "5", "x = 5"],
+                "answer": ["5", "x = 5", "x=5"],
                 "match_mode": "contains",
                 "tools": {
                     "required": ["equation_solver"],
@@ -185,7 +185,7 @@ def get_math_tasks() -> List[Task]:
             expected_tool_calls=["formula_lookup", "calculator"],
             expected_answer=5983.40,
             verifier_config={
-                "answer": [5983, "5983.4", "5983.40", "$5,983"],
+                "answer": ["5983", "5983.4", "5983.40", "$5,983"],
                 "match_mode": "contains",
                 "tools": {
                     "required": ["calculator"],
@@ -321,7 +321,7 @@ def get_math_tasks() -> List[Task]:
             ],
             expected_answer="Option B",
             verifier_config={
-                "answer": ["Option B", "B", "compounded", "12511", "12500"],
+                "answer": ["Option B", "compounded", "12511", "12500"],
                 "match_mode": "contains",
                 "tools": {
                     "required": ["calculator"],

@@ -52,6 +52,7 @@ class ExactMatchVerifier(Verifier):
     - Substring containment
     - Numeric tolerance
     - List of acceptable answers
+    - Rejection patterns (negative matching)
     """
 
     def __init__(
@@ -59,10 +60,12 @@ class ExactMatchVerifier(Verifier):
         case_sensitive: bool = False,
         match_mode: str = "contains",  # "exact", "contains", "regex"
         numeric_tolerance: float = 0.001,
+        rejection_patterns: Optional[List[str]] = None,
     ):
         self.case_sensitive = case_sensitive
         self.match_mode = match_mode
         self.numeric_tolerance = numeric_tolerance
+        self.rejection_patterns = rejection_patterns or []
 
     def verify(
         self,
@@ -73,6 +76,21 @@ class ExactMatchVerifier(Verifier):
         """Verify the response matches expected value."""
         response = result.final_response
         details = {"response": response, "expected": expected, "mode": self.match_mode}
+
+        # Check rejection patterns FIRST - if any match, fail immediately
+        for pattern in self.rejection_patterns:
+            pattern_to_check = pattern if self.case_sensitive else pattern.lower()
+            response_to_check = response if self.case_sensitive else response.lower()
+            if pattern_to_check in response_to_check:
+                return VerificationResult(
+                    passed=False,
+                    score=0.0,
+                    details={
+                        **details,
+                        "rejected_by": pattern,
+                        "error": f"Response contains rejection pattern: {pattern}",
+                    },
+                )
 
         # Handle list of acceptable answers
         if isinstance(expected, list):
@@ -129,6 +147,152 @@ class ExactMatchVerifier(Verifier):
             return bool(re.search(expected_str, response, flags))
         else:
             return expected_str in response_str
+
+
+class OutcomeVerifier(Verifier):
+    """
+    Pass/fail based purely on environment state.
+
+    Does NOT consider tool calls - only final outcome.
+    This is the primary metric for benchmark discrimination.
+
+    All state conditions must pass for the task to be considered passed.
+    """
+
+    def verify(
+        self,
+        result: TaskResult,
+        environment: SimulatedEnvironment,
+        expected_state: Dict[str, Any],
+    ) -> VerificationResult:
+        """
+        Verify environment state matches expected conditions.
+
+        Args:
+            result: The task execution result (used for response checks)
+            environment: The simulated environment with state
+            expected_state: Dict mapping state keys to expected values or conditions
+
+        Returns:
+            VerificationResult with binary pass/fail (all must pass)
+        """
+        if not expected_state:
+            # No expected state defined - pass by default
+            return VerificationResult(
+                passed=True,
+                score=1.0,
+                details={"note": "No expected_state defined"},
+            )
+
+        all_passed = True
+        details = {"checks": []}
+
+        for key, condition in expected_state.items():
+            actual = environment.get_state(key)
+            check_result = self._check_condition(key, actual, condition)
+            details["checks"].append(check_result)
+            if not check_result["passed"]:
+                all_passed = False
+
+        return VerificationResult(
+            passed=all_passed,  # Binary - ALL must pass
+            score=1.0 if all_passed else 0.0,
+            details=details,
+        )
+
+    def _check_condition(self, key: str, actual: Any, condition: Any) -> Dict[str, Any]:
+        """Check a single condition against actual value."""
+        result = {"key": key, "actual": actual, "condition": condition}
+
+        # If condition is a dict with operators
+        if isinstance(condition, dict):
+            operator = next((k for k in condition.keys() if k.startswith("$")), None)
+            if operator:
+                passed = self._apply_operator(actual, operator, condition[operator])
+                result["passed"] = passed
+                result["operator"] = operator
+                return result
+
+        # Simple equality check
+        result["passed"] = actual == condition
+        return result
+
+    def _apply_operator(self, actual: Any, operator: str, operand: Any) -> bool:
+        """Apply an operator to check the condition."""
+        if operator == "$eq":
+            return actual == operand
+
+        elif operator == "$contains":
+            if actual is None:
+                return False
+            if isinstance(actual, str):
+                return operand in actual
+            elif isinstance(actual, (list, tuple, set)):
+                return operand in actual
+            elif isinstance(actual, dict):
+                if isinstance(operand, dict):
+                    return all(
+                        k in actual and actual[k] == v for k, v in operand.items()
+                    )
+                return operand in actual
+            return False
+
+        elif operator == "$regex":
+            if not isinstance(actual, str):
+                return False
+            return bool(re.search(operand, actual))
+
+        elif operator == "$range":
+            if not isinstance(actual, (int, float)):
+                return False
+            min_val, max_val = operand
+            return min_val <= actual <= max_val
+
+        elif operator == "$exists":
+            return (actual is not None) == operand
+
+        elif operator == "$type":
+            type_map = {
+                "str": str,
+                "string": str,
+                "int": int,
+                "integer": int,
+                "float": float,
+                "bool": bool,
+                "boolean": bool,
+                "list": list,
+                "array": list,
+                "dict": dict,
+                "object": dict,
+                "none": type(None),
+                "null": type(None),
+            }
+            expected_type = type_map.get(
+                operand.lower() if isinstance(operand, str) else operand
+            )
+            return isinstance(actual, expected_type) if expected_type else False
+
+        elif operator == "$length":
+            if not hasattr(actual, "__len__"):
+                return False
+            length = len(actual)
+            if isinstance(operand, int):
+                return length == operand
+            elif isinstance(operand, dict):
+                # Support $gte, $lte, $gt, $lt
+                for op, val in operand.items():
+                    if op == "$gte" and not length >= val:
+                        return False
+                    elif op == "$lte" and not length <= val:
+                        return False
+                    elif op == "$gt" and not length > val:
+                        return False
+                    elif op == "$lt" and not length < val:
+                        return False
+                return True
+            return False
+
+        return False
 
 
 class EnvironmentStateVerifier(Verifier):
