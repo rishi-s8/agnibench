@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agnibench"
+version = "0.1.0"
+description = "A comprehensive benchmarking framework for evaluating AI agents on multi-step tool-calling tasks"
+readme = "README.md"
+license = {text = "CC BY-SA 4.0"}
+authors = [
+    { name = "Rishi Sharma" }
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
