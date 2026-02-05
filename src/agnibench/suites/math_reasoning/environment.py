@@ -73,6 +73,76 @@ class MathEnvironment(SimulatedEnvironment):
         scratchpad[key] = value
         self.set_state("scratchpad", scratchpad, source_tool="scratchpad")
 
+    def sync_state_from_math(self) -> None:
+        """Sync environment state from tool calls."""
+        calculation_history = []
+        formulas_looked_up = []
+        conversions_performed = []
+        equations_solved = []
+        scratchpad = {}
+
+        def _as_dict(result: Any) -> Dict[str, Any]:
+            if result is None:
+                return {}
+            if isinstance(result, dict):
+                return result
+            if hasattr(result, "model_dump"):
+                return result.model_dump()
+            if hasattr(result, "dict"):
+                return result.dict()
+            if hasattr(result, "__dict__"):
+                return {
+                    k: v for k, v in result.__dict__.items() if not k.startswith("_")
+                }
+            return {}
+
+        for call in self.tool_call_log:
+            tool = call.get("tool_name")
+            args = call.get("arguments", {}) or {}
+            data = _as_dict(call.get("result"))
+
+            if tool == "calculator":
+                expression = args.get("expression") or data.get("expression")
+                result = data.get("result")
+                calculation_history.append(
+                    {"expression": expression, "result": result}
+                )
+            elif tool == "formula_lookup":
+                formula_name = args.get("formula_name") or data.get("formula_name")
+                if formula_name:
+                    formulas_looked_up.append(formula_name)
+            elif tool == "unit_converter":
+                conversions_performed.append(
+                    {
+                        "value": args.get("value", data.get("original_value")),
+                        "from_unit": args.get("from_unit", data.get("from_unit")),
+                        "to_unit": args.get("to_unit", data.get("to_unit")),
+                        "result": data.get("converted_value"),
+                    }
+                )
+            elif tool == "equation_solver":
+                equations_solved.append(
+                    {
+                        "equation": args.get("equation", data.get("equation")),
+                        "solutions": data.get("solutions"),
+                    }
+                )
+            elif tool == "scratchpad":
+                operation = args.get("operation", data.get("operation"))
+                if operation == "store":
+                    key = args.get("key", data.get("key"))
+                    value = args.get("value", data.get("value"))
+                    if key is not None:
+                        scratchpad[key] = value
+                elif operation == "clear":
+                    scratchpad = {}
+
+        self._state["calculation_history"] = calculation_history
+        self._state["formulas_looked_up"] = formulas_looked_up
+        self._state["conversions_performed"] = conversions_performed
+        self._state["equations_solved"] = equations_solved
+        self._state["scratchpad"] = scratchpad
+
     @property
     def calculation_count(self) -> int:
         """Number of calculations performed."""

@@ -122,8 +122,22 @@ def get_workspace_tasks() -> List[Task]:
                 "answer": ["sent", "message", "success"],
                 "match_mode": "contains",
                 "tools": {"required": ["send_slack"], "min_calls": 1, "max_calls": 2},
-                "state": {"sent_slack": {"$length": {"$gte": 1}}},
-                "expected_state": {"sent_slack": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": "Thanks for the update!",
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": "Thanks for the update!",
+                        }
+                    }
+                },
             },
             description="Simple Slack message",
             min_tool_calls=1,
@@ -158,8 +172,22 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 2,
                     "max_calls": 5,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
-                "expected_state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)alice\\.johnson@company\\.com"},
+                            "body": {"$regex": "(?i)tomorrow\\s+afternoon"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)alice\\.johnson@company\\.com"},
+                            "body": {"$regex": "(?i)tomorrow\\s+afternoon"},
+                        }
+                    }
+                },
             },
             description="Find and reply to specific email",
             min_tool_calls=2,
@@ -190,8 +218,36 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 1,
                     "max_calls": 5,
                 },
-                "state": {"created_events": {"$length": {"$gte": 1}}},
-                "expected_state": {"created_events": {"$length": {"$gte": 1}}},
+                "state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)project\\s+sync"},
+                            "description": {"$regex": "(?i)feature\\s+request"},
+                            "attendees": {
+                                "$contains": ["bob.smith@company.com"]
+                            },
+                            "start_time": {
+                                "$regex": "(?i)(T14:00|2\\s*pm)"
+                            },
+                            "end_time": {"$regex": "(?i)(T15:00|3\\s*pm)"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)project\\s+sync"},
+                            "description": {"$regex": "(?i)feature\\s+request"},
+                            "attendees": {
+                                "$contains": ["bob.smith@company.com"]
+                            },
+                            "start_time": {
+                                "$regex": "(?i)(T14:00|2\\s*pm)"
+                            },
+                            "end_time": {"$regex": "(?i)(T15:00|3\\s*pm)"},
+                        }
+                    }
+                },
             },
             description="Create meeting with contact lookup",
             min_tool_calls=1,
@@ -253,8 +309,22 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 2,
                     "max_calls": 6,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
-                "expected_state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)bob\\.smith@company\\.com"},
+                            "body": {"$regex": "(?is)(?=.*acme)(?=.*demo)"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)bob\\.smith@company\\.com"},
+                            "body": {"$regex": "(?is)(?=.*acme)(?=.*demo)"},
+                        }
+                    }
+                },
             },
             description="Find, read, and forward email",
             min_tool_calls=2,
@@ -285,6 +355,20 @@ def get_workspace_tasks() -> List[Task]:
                     "optional": ["lookup_contact"],
                     "min_calls": 2,
                     "max_calls": 5,
+                },
+                "state": {
+                    "sent_slack": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)design\\s+review"}
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_slack": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)design\\s+review"}
+                        }
+                    }
                 },
             },
             description="Check availability and send notification",
@@ -357,8 +441,38 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"created_events": {"$length": {"$gte": 1}}},
-                "expected_state": {"created_events": {"$length": {"$gte": 1}}},
+                "state": {
+                    "created_events": {
+                        "$contains": {
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                ]
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {"message": {"$regex": "(?i)meeting"}}
+                    },
+                },
+                "expected_state": {
+                    "created_events": {
+                        "$contains": {
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                ]
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {"message": {"$regex": "(?i)meeting"}}
+                    },
+                },
             },
             description="Multi-constraint scheduling",
             min_tool_calls=3,
@@ -398,8 +512,26 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
-                "expected_state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)david\\.brown@company\\.com"},
+                            "body": {
+                                "$regex": "(?is)(?=.*action\\s+item)(?=.*summary)(?=.*(q4|design\\s+review|acme))"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)david\\.brown@company\\.com"},
+                            "body": {
+                                "$regex": "(?is)(?=.*action\\s+item)(?=.*summary)(?=.*(q4|design\\s+review|acme))"
+                            },
+                        }
+                    }
+                },
             },
             description="Aggregate and summarize multiple emails",
             min_tool_calls=3,
@@ -439,7 +571,20 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 10,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "body": {"$regex": "(?is)(?=.*demo)(?=.*acme)"}
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "body": {"$regex": "(?is)(?=.*demo)(?=.*acme)"}
+                        }
+                    }
+                },
             },
             description="Complex coordination task",
             min_tool_calls=4,
@@ -473,7 +618,22 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"sent_slack": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {"$regex": "(?i)alice"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {"$regex": "(?i)alice"},
+                        }
+                    }
+                },
             },
             description="Cross-channel information synthesis",
             min_tool_calls=3,
@@ -511,12 +671,110 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 10,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)david\\.brown@company\\.com"},
+                            "body": {"$regex": "(?i)agenda"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)david\\.brown@company\\.com"},
+                            "body": {"$regex": "(?i)agenda"},
+                        }
+                    }
+                },
             },
             description="Comprehensive meeting preparation",
             min_tool_calls=4,
             max_tool_calls=10,
             tags=["email", "calendar", "slack", "preparation"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="workspace_hard_06",
+            name="Backtracked Scheduling Decision",
+            prompt="Schedule a 90-minute meeting titled 'Roadmap Alignment' tomorrow with Alice Johnson, Bob Smith, Carol Williams, and David Brown. First, check if 2 PM works for everyone. If there is any conflict, schedule the earliest 90-minute slot that finishes by noon. If no morning slot works, pick the earliest slot after 3 PM. Create the event and post to #general noting the final time and that 2 PM had conflicts.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_multi_constraint=True,
+                requires_state_tracking=True,
+                requires_plan_adaptation=True,
+            ),
+            expected_tool_calls=["check_availability", "create_event", "send_slack"],
+            expected_answer=["Roadmap Alignment", "scheduled", "conflict"],
+            verifier_config={
+                "answer": ["Roadmap Alignment", "scheduled", "10:30", "conflict"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["check_availability", "create_event", "send_slack"],
+                    "optional": ["lookup_contact", "search_calendar"],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+                "state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)roadmap\\s+alignment"},
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                    "David Brown",
+                                ]
+                            },
+                            "start_time": {"$regex": "(?i)T10:30"},
+                            "end_time": {"$regex": "(?i)T12:00"},
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?is)(?=.*roadmap\\s+alignment)(?=.*2\\s*pm)(?=.*conflict)(?=.*10:30)"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)roadmap\\s+alignment"},
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                    "David Brown",
+                                ]
+                            },
+                            "start_time": {"$regex": "(?i)T10:30"},
+                            "end_time": {"$regex": "(?i)T12:00"},
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?is)(?=.*roadmap\\s+alignment)(?=.*2\\s*pm)(?=.*conflict)(?=.*10:30)"
+                            },
+                        }
+                    },
+                },
+            },
+            description="Multi-constraint scheduling with backtracking from a conflicting preferred slot",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["calendar", "scheduling", "backtracking", "multi-constraint"],
         )
     )
 
@@ -562,8 +820,46 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 5,
                     "max_calls": 20,
                 },
-                "state": {"created_events": {"$length": {"$gte": 1}}},
-                "expected_state": {"created_events": {"$length": {"$gte": 1}}},
+                "state": {
+                    "created_events": {
+                        "$contains": {
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                    "David Brown",
+                                    "Eve Davis",
+                                ]
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)planning\\s+meeting"}
+                        }
+                    },
+                },
+                "expected_state": {
+                    "created_events": {
+                        "$contains": {
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                    "David Brown",
+                                    "Eve Davis",
+                                ]
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)planning\\s+meeting"}
+                        }
+                    },
+                },
             },
             description="Complex multi-person scheduling with conflict resolution",
             min_tool_calls=5,
@@ -618,8 +914,42 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 5,
                     "max_calls": 20,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
-                "expected_state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)david\\.brown@company\\.com"},
+                            "body": {
+                                "$regex": "(?is)(?=.*completed)(?=.*pending)(?=.*upcoming)(?=.*blocker)"
+                            },
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?is)(?=.*status)(?=.*report)"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)david\\.brown@company\\.com"},
+                            "body": {
+                                "$regex": "(?is)(?=.*completed)(?=.*pending)(?=.*upcoming)(?=.*blocker)"
+                            },
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?is)(?=.*status)(?=.*report)"
+                            },
+                        }
+                    },
+                },
             },
             description="Multi-source status report compilation",
             min_tool_calls=5,
@@ -677,14 +1007,54 @@ def get_workspace_tasks() -> List[Task]:
                     "max_calls": 25,
                 },
                 "state": {
-                    "created_events": {"$length": {"$gte": 1}},
-                    "sent_emails": {"$length": {"$gte": 1}},
-                    "sent_slack": {"$length": {"$gte": 1}},
+                    "created_events": {
+                        "$contains": {
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "David Brown",
+                                ]
+                            }
+                        }
+                    },
+                    "sent_emails": {
+                        "$contains": [
+                            {"body": {"$regex": "(?i)agenda"}},
+                            {"to": {"$regex": "(?i)eve\\.davis@company\\.com"}},
+                        ]
+                    },
+                    "sent_slack": {
+                        "$contains": [
+                            {"channel": "#engineering"},
+                            {"channel": "#general"},
+                        ]
+                    },
                 },
                 "expected_state": {
-                    "created_events": {"$length": {"$gte": 1}},
-                    "sent_emails": {"$length": {"$gte": 1}},
-                    "sent_slack": {"$length": {"$gte": 1}},
+                    "created_events": {
+                        "$contains": {
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "David Brown",
+                                ]
+                            }
+                        }
+                    },
+                    "sent_emails": {
+                        "$contains": [
+                            {"body": {"$regex": "(?i)agenda"}},
+                            {"to": {"$regex": "(?i)eve\\.davis@company\\.com"}},
+                        ]
+                    },
+                    "sent_slack": {
+                        "$contains": [
+                            {"channel": "#engineering"},
+                            {"channel": "#general"},
+                        ]
+                    },
                 },
             },
             description="Full project kickoff coordination",
@@ -952,6 +1322,137 @@ def get_workspace_tasks() -> List[Task]:
         )
     )
 
+    tasks.append(
+        Task(
+            id="workspace_discovery_07",
+            name="Resolve Tentative Conflict",
+            prompt="There's a scheduling conflict tomorrow. Find the conflicting meetings, and reschedule only the tentative meeting to the earliest 1-hour slot after 3 PM that works for its attendees. Create the new event and email the organizer with the new time, noting the original conflict.",
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_state_tracking=True,
+                requires_plan_adaptation=True,
+            ),
+            expected_tool_calls=[
+                "search_calendar",
+                "check_availability",
+                "create_event",
+                "send_email",
+            ],
+            expected_answer=["Budget Planning", "rescheduled", "4 PM", "conflict"],
+            verifier_config={
+                "answer": ["Budget Planning", "rescheduled", "conflict", "4 PM"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_calendar", "create_event", "send_email"],
+                    "optional": ["check_availability", "lookup_contact"],
+                    "min_calls": 3,
+                    "max_calls": 12,
+                },
+                "state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)budget\\s+planning"},
+                            "start_time": {"$regex": "(?i)T16:00"},
+                            "end_time": {"$regex": "(?i)T17:00"},
+                        }
+                    },
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)eve\\.davis@company\\.com"},
+                            "body": {
+                                "$regex": "(?is)(?=.*budget\\s+planning)(?=.*conflict)(?=.*(4\\s*pm|16:00))"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)budget\\s+planning"},
+                            "start_time": {"$regex": "(?i)T16:00"},
+                            "end_time": {"$regex": "(?i)T17:00"},
+                        }
+                    },
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)eve\\.davis@company\\.com"},
+                            "body": {
+                                "$regex": "(?is)(?=.*budget\\s+planning)(?=.*conflict)(?=.*(4\\s*pm|16:00))"
+                            },
+                        }
+                    },
+                },
+            },
+            description="TRUE tool-driven: detect conflict and reschedule tentative meeting",
+            min_tool_calls=3,
+            max_tool_calls=12,
+            tags=["discovery", "conflict", "reschedule", "conditional"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="workspace_discovery_08",
+            name="Most Recent Contact Response",
+            prompt="Check recent communications from Alice Johnson and Eve Davis across email and Slack. Identify which of those two people contacted you most recently, and respond via the same channel with a short reply that references their specific topic.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_emails",
+                "search_slack",
+                "read_email",
+                "send_email",
+            ],
+            expected_answer=["Eve", "Acme", "demo", "replied"],
+            verifier_config={
+                "answer": ["Eve", "Acme", "demo", "reply"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_emails", "search_slack", "send_email"],
+                    "optional": ["read_email", "lookup_contact"],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)eve\\.davis@company\\.com"},
+                            "body": {"$regex": "(?is)(?=.*acme)(?=.*demo)"},
+                        }
+                    },
+                    "sent_slack": {"$length": 0},
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)eve\\.davis@company\\.com"},
+                            "body": {"$regex": "(?is)(?=.*acme)(?=.*demo)"},
+                        }
+                    },
+                    "sent_slack": {"$length": 0},
+                },
+            },
+            description="TRUE tool-driven: compare cross-channel timestamps and respond via correct channel",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["discovery", "recency", "cross-channel", "conditional"],
+        )
+    )
+
     # ============================================================================
     # WORKBENCH-INSPIRED TASKS
     # Realistic workplace tasks inspired by the WorkBench dataset
@@ -1000,7 +1501,40 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 12,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "body": {
+                                "$regex": "(?i)review\\s+q1\\s+priorities\\s+by\\s+friday"
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#product",
+                            "message": {
+                                "$regex": "(?i)review\\s+q1\\s+priorities"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "body": {
+                                "$regex": "(?i)review\\s+q1\\s+priorities\\s+by\\s+friday"
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#product",
+                            "message": {
+                                "$regex": "(?i)review\\s+q1\\s+priorities"
+                            },
+                        }
+                    },
+                },
             },
             description="WorkBench-style: Post-meeting follow-up workflow",
             min_tool_calls=4,
@@ -1046,7 +1580,22 @@ def get_workspace_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 12,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)me@company\\.com"},
+                            "body": {"$regex": "(?i)brief"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)me@company\\.com"},
+                            "body": {"$regex": "(?i)brief"},
+                        }
+                    }
+                },
             },
             description="WorkBench-style: Cross-channel information aggregation",
             min_tool_calls=4,
@@ -1095,9 +1644,78 @@ Message: "Sprint planning moved to Thursday 2 PM. Please review backlog items be
                     "max_calls": 15,
                 },
                 "state": {
-                    "created_events": {"$length": {"$gte": 1}},
-                    "sent_emails": {"$length": {"$gte": 1}},
-                    "sent_slack": {"$length": {"$gte": 1}},
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)sprint\\s+planning"},
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                ]
+                            },
+                        }
+                    },
+                    "sent_emails": {
+                        "$contains": {
+                            "body": {
+                                "$regex": "(?i)sprint\\s+planning\\s+moved\\s+to\\s+thursday\\s+2\\s+pm"
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": [
+                            {
+                                "channel": "#engineering",
+                                "message": {
+                                    "$regex": "(?i)sprint\\s+planning\\s+moved\\s+to\\s+thursday\\s+2\\s+pm"
+                                },
+                            },
+                            {
+                                "channel": {"$regex": "(?i)david"},
+                                "message": {
+                                    "$regex": "(?is)(?=.*sprint\\s+planning)(?=.*(confirm|communicat))"
+                                },
+                            },
+                        ]
+                    },
+                },
+                "expected_state": {
+                    "created_events": {
+                        "$contains": {
+                            "title": {"$regex": "(?i)sprint\\s+planning"},
+                            "attendees": {
+                                "$contains": [
+                                    "Alice Johnson",
+                                    "Bob Smith",
+                                    "Carol Williams",
+                                ]
+                            },
+                        }
+                    },
+                    "sent_emails": {
+                        "$contains": {
+                            "body": {
+                                "$regex": "(?i)sprint\\s+planning\\s+moved\\s+to\\s+thursday\\s+2\\s+pm"
+                            }
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": [
+                            {
+                                "channel": "#engineering",
+                                "message": {
+                                    "$regex": "(?i)sprint\\s+planning\\s+moved\\s+to\\s+thursday\\s+2\\s+pm"
+                                },
+                            },
+                            {
+                                "channel": {"$regex": "(?i)david"},
+                                "message": {
+                                    "$regex": "(?is)(?=.*sprint\\s+planning)(?=.*(confirm|communicat))"
+                                },
+                            },
+                        ]
+                    },
                 },
             },
             description="WorkBench-style: Multi-channel cascade notification",
@@ -1149,7 +1767,38 @@ Message: "Sprint planning moved to Thursday 2 PM. Please review backlog items be
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 1}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)carol\\.williams@company\\.com"},
+                            "body": {"$regex": "(?i)documentation"},
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?i)documentation\\s+request.*fulfilled"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)carol\\.williams@company\\.com"},
+                            "body": {"$regex": "(?i)documentation"},
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?i)documentation\\s+request.*fulfilled"
+                            },
+                        }
+                    },
+                },
             },
             description="WorkBench-style: Request identification and fulfillment",
             min_tool_calls=3,
@@ -1199,8 +1848,36 @@ Message: "Sprint planning moved to Thursday 2 PM. Please review backlog items be
                     "max_calls": 18,
                 },
                 "state": {
-                    "sent_emails": {"$length": {"$gte": 1}},
-                    "sent_slack": {"$length": {"$gte": 1}},
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)me@company\\.com"},
+                            "body": {"$regex": "(?i)overview|weekly"},
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?is)(?=.*you\\s+have\\s+\\d+\\s+meetings)(?=.*this\\s+week)"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": {
+                            "to": {"$regex": "(?i)me@company\\.com"},
+                            "body": {"$regex": "(?i)overview|weekly"},
+                        }
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {
+                                "$regex": "(?is)(?=.*you\\s+have\\s+\\d+\\s+meetings)(?=.*this\\s+week)"
+                            },
+                        }
+                    },
                 },
             },
             description="WorkBench-style: Automated weekly planning compilation",
@@ -1271,7 +1948,52 @@ Summarize all the interactions you completed.""",
                     "min_calls": 8,
                     "max_calls": 25,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 2}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": [
+                            {
+                                "to": {
+                                    "$regex": "(?i)alice\\.johnson@company\\.com"
+                                },
+                                "body": {
+                                    "$regex": "(?is)(?=.*(q4|planning))(?=.*(attend|attendance|meeting|available))"
+                                },
+                            },
+                            {
+                                "to": {"$regex": "(?i)bob\\.smith@company\\.com"},
+                                "body": {"$regex": "(?i)product\\s+specs"},
+                            },
+                        ]
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)design\\s+review"}
+                        }
+                    },
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": [
+                            {
+                                "to": {
+                                    "$regex": "(?i)alice\\.johnson@company\\.com"
+                                },
+                                "body": {
+                                    "$regex": "(?is)(?=.*(q4|planning))(?=.*(attend|attendance|meeting|available))"
+                                },
+                            },
+                            {
+                                "to": {"$regex": "(?i)bob\\.smith@company\\.com"},
+                                "body": {"$regex": "(?i)product\\s+specs"},
+                            },
+                        ]
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)design\\s+review"}
+                        }
+                    },
+                },
             },
             description="Compound: Coordinate with three people on separate matters",
             min_tool_calls=8,
@@ -1341,7 +2063,44 @@ FINAL REPORT:
                     "min_calls": 7,
                     "max_calls": 25,
                 },
-                "state": {"sent_emails": {"$length": {"$gte": 2}}},
+                "state": {
+                    "sent_emails": {
+                        "$contains": [
+                            {
+                                "to": {
+                                    "$regex": "(?i)david\\.brown@company\\.com"
+                                },
+                                "body": {"$regex": "(?i)report|summary"},
+                            },
+                            {"body": {"$regex": "(?i)urgent|follow[- ]?up"}},
+                        ]
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {"$regex": "(?i)status|progress"},
+                        }
+                    },
+                },
+                "expected_state": {
+                    "sent_emails": {
+                        "$contains": [
+                            {
+                                "to": {
+                                    "$regex": "(?i)david\\.brown@company\\.com"
+                                },
+                                "body": {"$regex": "(?i)report|summary"},
+                            },
+                            {"body": {"$regex": "(?i)urgent|follow[- ]?up"}},
+                        ]
+                    },
+                    "sent_slack": {
+                        "$contains": {
+                            "channel": "#general",
+                            "message": {"$regex": "(?i)status|progress"},
+                        }
+                    },
+                },
             },
             description="Compound: Full communication audit across all channels",
             min_tool_calls=7,

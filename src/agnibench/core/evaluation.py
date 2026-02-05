@@ -228,12 +228,28 @@ class OutcomeVerifier(Verifier):
             if isinstance(actual, str):
                 return operand in actual
             elif isinstance(actual, (list, tuple, set)):
+                if isinstance(operand, dict):
+                    return any(
+                        isinstance(item, dict) and self._dict_contains(item, operand)
+                        for item in actual
+                    )
+                if isinstance(operand, (list, tuple, set)):
+                    for expected_item in operand:
+                        if isinstance(expected_item, dict):
+                            if not any(
+                                isinstance(item, dict)
+                                and self._dict_contains(item, expected_item)
+                                for item in actual
+                            ):
+                                return False
+                        else:
+                            if expected_item not in actual:
+                                return False
+                    return True
                 return operand in actual
             elif isinstance(actual, dict):
                 if isinstance(operand, dict):
-                    return all(
-                        k in actual and actual[k] == v for k, v in operand.items()
-                    )
+                    return self._dict_contains(actual, operand)
                 return operand in actual
             return False
 
@@ -293,6 +309,27 @@ class OutcomeVerifier(Verifier):
             return False
 
         return False
+
+    def _dict_contains(self, actual: Dict[str, Any], expected: Dict[str, Any]) -> bool:
+        """Check whether actual dict satisfies all expected key/value constraints."""
+        for key, expected_value in expected.items():
+            if key not in actual:
+                return False
+            if not self._value_matches(actual.get(key), expected_value):
+                return False
+        return True
+
+    def _value_matches(self, actual_value: Any, expected_value: Any) -> bool:
+        """Match a value against either a raw value or an operator dict."""
+        if isinstance(expected_value, dict):
+            operator = next(
+                (k for k in expected_value.keys() if k.startswith("$")), None
+            )
+            if operator:
+                return self._apply_operator(
+                    actual_value, operator, expected_value[operator]
+                )
+        return actual_value == expected_value
 
 
 class EnvironmentStateVerifier(Verifier):
@@ -372,12 +409,28 @@ class EnvironmentStateVerifier(Verifier):
             if isinstance(actual, str):
                 return operand in actual
             elif isinstance(actual, (list, tuple, set)):
+                if isinstance(operand, dict):
+                    return any(
+                        isinstance(item, dict) and self._dict_contains(item, operand)
+                        for item in actual
+                    )
+                if isinstance(operand, (list, tuple, set)):
+                    for expected_item in operand:
+                        if isinstance(expected_item, dict):
+                            if not any(
+                                isinstance(item, dict)
+                                and self._dict_contains(item, expected_item)
+                                for item in actual
+                            ):
+                                return False
+                        else:
+                            if expected_item not in actual:
+                                return False
+                    return True
                 return operand in actual
             elif isinstance(actual, dict):
                 if isinstance(operand, dict):
-                    return all(
-                        k in actual and actual[k] == v for k, v in operand.items()
-                    )
+                    return self._dict_contains(actual, operand)
                 return operand in actual
             return False
 
@@ -437,6 +490,27 @@ class EnvironmentStateVerifier(Verifier):
             return False
 
         return False
+
+    def _dict_contains(self, actual: Dict[str, Any], expected: Dict[str, Any]) -> bool:
+        """Check whether actual dict satisfies all expected key/value constraints."""
+        for key, expected_value in expected.items():
+            if key not in actual:
+                return False
+            if not self._value_matches(actual.get(key), expected_value):
+                return False
+        return True
+
+    def _value_matches(self, actual_value: Any, expected_value: Any) -> bool:
+        """Match a value against either a raw value or an operator dict."""
+        if isinstance(expected_value, dict):
+            operator = next(
+                (k for k in expected_value.keys() if k.startswith("$")), None
+            )
+            if operator:
+                return self._apply_operator(
+                    actual_value, operator, expected_value[operator]
+                )
+        return actual_value == expected_value
 
 
 class ToolCallSequenceVerifier(Verifier):

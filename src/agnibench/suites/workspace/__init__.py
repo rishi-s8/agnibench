@@ -9,6 +9,7 @@ from agnibench.core.abstractions import BenchmarkSuite
 from agnibench.suites.workspace.environment import WorkspaceEnvironment
 from agnibench.suites.workspace.tasks import get_workspace_tasks
 from agnibench.suites.workspace.tools import get_workspace_tools
+from agnibench.suites.workspace.verifiers import create_workspace_verifier
 
 
 def WorkspaceSuite() -> BenchmarkSuite:
@@ -19,6 +20,7 @@ def WorkspaceSuite() -> BenchmarkSuite:
         tasks=get_workspace_tasks(),
         tools=get_workspace_tools(),
         environment_class=WorkspaceEnvironment,
+        verifier_factory=lambda task: create_workspace_verifier(task.verifier_config),
         version="1.0.0",
         tags=["workspace", "email", "calendar", "slack", "coordination"],
     )

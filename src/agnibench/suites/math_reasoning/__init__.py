@@ -9,6 +9,7 @@ from agnibench.core.abstractions import BenchmarkSuite
 from agnibench.suites.math_reasoning.environment import MathEnvironment
 from agnibench.suites.math_reasoning.tasks import get_math_tasks
 from agnibench.suites.math_reasoning.tools import get_math_tools
+from agnibench.suites.math_reasoning.verifiers import create_math_verifier
 
 
 def MathReasoningSuite() -> BenchmarkSuite:
@@ -19,6 +20,7 @@ def MathReasoningSuite() -> BenchmarkSuite:
         tasks=get_math_tasks(),
         tools=get_math_tools(),
         environment_class=MathEnvironment,
+        verifier_factory=lambda task: create_math_verifier(task.verifier_config),
         version="1.0.0",
         tags=["math", "reasoning", "calculation", "memory"],
     )

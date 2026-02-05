@@ -174,7 +174,26 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 1,
                     "max_calls": 5,
                 },
-                "state": {"visualizations": {"$length": {"$gte": 1}}},
+                "state": {
+                    "visualizations": {
+                        "$contains": {
+                            "dataset_id": "ds_sales",
+                            "chart_type": "bar",
+                            "x_column": "category",
+                            "y_column": "amount",
+                        }
+                    }
+                },
+                "expected_state": {
+                    "visualizations": {
+                        "$contains": {
+                            "dataset_id": "ds_sales",
+                            "chart_type": "bar",
+                            "x_column": "category",
+                            "y_column": "amount",
+                        }
+                    }
+                },
             },
             description="Visualization creation",
             min_tool_calls=1,
@@ -368,7 +387,24 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 10,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*lifetime\\s*value)(?=.*churn)(?=.*(-0\\.72|0\\.35|West))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*lifetime\\s*value)(?=.*churn)(?=.*(-0\\.72|0\\.35|West))"
+                            }
+                        }
+                    }
+                },
             },
             description="Comprehensive customer analysis",
             min_tool_calls=4,
@@ -409,7 +445,24 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"visualizations": {"$length": {"$gte": 1}}},
+                "state": {
+                    "visualizations": {
+                        "$contains": {
+                            "dataset_id": "ds_sales",
+                            "x_column": {"$regex": "(?i)category|region"},
+                            "y_column": "amount",
+                        }
+                    }
+                },
+                "expected_state": {
+                    "visualizations": {
+                        "$contains": {
+                            "dataset_id": "ds_sales",
+                            "x_column": {"$regex": "(?i)category|region"},
+                            "y_column": "amount",
+                        }
+                    }
+                },
             },
             description="Sales pattern investigation",
             min_tool_calls=3,
@@ -454,7 +507,24 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*stock)(?=.*(30|45))(?=.*(Laptop\\s+Pro|Smart\\s+TV|1299\\.99|799\\.99))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*stock)(?=.*(30|45))(?=.*(Laptop\\s+Pro|Smart\\s+TV|1299\\.99|799\\.99))"
+                            }
+                        }
+                    }
+                },
             },
             description="Inventory risk analysis",
             min_tool_calls=3,
@@ -502,12 +572,83 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*churn)(?=.*correlation)(?=.*-0\\.(72|68))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*churn)(?=.*correlation)(?=.*-0\\.(72|68))"
+                            }
+                        }
+                    }
+                },
             },
             description="Churn prediction factor analysis",
             min_tool_calls=3,
             max_tool_calls=10,
             tags=["churn", "prediction", "factors"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="data_hard_06",
+            name="Precision Delta Calculation",
+            prompt="Compute the average sale amount for the East and West regions, then calculate the difference (East minus West). Save a single insight that explicitly states the East average, the West average, and the exact difference. Use the precise values from the dataset.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "compute_statistics",
+                "compute_statistics",
+                "save_insight",
+            ],
+            expected_answer=["East", "West", "412.50", "324.99", "87.51"],
+            verifier_config={
+                "answer": ["East", "West", "difference", "87.51"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["compute_statistics", "save_insight"],
+                    "optional": ["query_data", "describe_dataset", "create_visualization"],
+                    "min_calls": 3,
+                    "max_calls": 8,
+                },
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*East)(?=.*West)(?=.*412\\.5(0)?)(?=.*324\\.99)(?=.*87\\.51)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*East)(?=.*West)(?=.*412\\.5(0)?)(?=.*324\\.99)(?=.*87\\.51)"
+                            }
+                        }
+                    }
+                },
+            },
+            description="Precise multi-step computation with exact numeric carry-through",
+            min_tool_calls=3,
+            max_tool_calls=8,
+            tags=["precision", "delta", "multi-step", "numbers"],
         )
     )
 
@@ -567,8 +708,58 @@ def get_data_analysis_tasks() -> List[Task]:
                     "max_calls": 20,
                 },
                 "state": {
-                    "visualizations": {"$length": {"$gte": 2}},
-                    "insights": {"$length": {"$gte": 3}},
+                    "visualizations": {
+                        "$contains": [
+                            {"dataset_id": "ds_sales", "x_column": "category"},
+                            {"dataset_id": "ds_sales", "x_column": "region"},
+                        ]
+                    },
+                    "insights": {
+                        "$contains": [
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(sales|revenue))(?=.*(East|412\\.5|412\\.50|Electronics|549\\.99))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(churn|customer))(?=.*(West|0\\.35|0\\.32))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(inventory|stock))(?=.*(30|45|Laptop\\s+Pro|Smart\\s+TV))"
+                                }
+                            },
+                        ]
+                    },
+                },
+                "expected_state": {
+                    "visualizations": {
+                        "$contains": [
+                            {"dataset_id": "ds_sales", "x_column": "category"},
+                            {"dataset_id": "ds_sales", "x_column": "region"},
+                        ]
+                    },
+                    "insights": {
+                        "$contains": [
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(sales|revenue))(?=.*(East|412\\.5|412\\.50|Electronics|549\\.99))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(churn|customer))(?=.*(West|0\\.35|0\\.32))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(inventory|stock))(?=.*(30|45|Laptop\\s+Pro|Smart\\s+TV))"
+                                }
+                            },
+                        ]
+                    },
                 },
             },
             description="Full business analysis report",
@@ -636,7 +827,38 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 8,
                     "max_calls": 25,
                 },
-                "state": {"insights": {"$length": {"$gte": 2}}},
+                "state": {
+                    "insights": {
+                        "$contains": [
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(revenue|optimization))(?=.*(Electronics|East|549\\.99|412\\.5))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(churn|customer\\s+value|lifetime\\s*value))(?=.*(-0\\.72|0\\.35|1450\\.25))"
+                                }
+                            },
+                        ]
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": [
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(revenue|optimization))(?=.*(Electronics|East|549\\.99|412\\.5))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(churn|customer\\s+value|lifetime\\s*value))(?=.*(-0\\.72|0\\.35|1450\\.25))"
+                                }
+                            },
+                        ]
+                    }
+                },
             },
             description="Revenue optimization deep dive",
             min_tool_calls=8,
@@ -699,8 +921,42 @@ def get_data_analysis_tasks() -> List[Task]:
                     "max_calls": 25,
                 },
                 "state": {
-                    "insights": {"$length": {"$gte": 4}},
-                    "visualizations": {"$length": {"$gte": 2}},
+                    "insights": {
+                        "$contains": [
+                            {"description": {"$regex": "(?is)(?=.*electronics)(?=.*549\\.99)"}},
+                            {"description": {"$regex": "(?is)(?=.*north)(?=.*389\\.99)"}},
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*lifetime\\s*value)(?=.*purchase)(?=.*0\\.85)"
+                                }
+                            },
+                        ]
+                    },
+                    "visualizations": {
+                        "$contains": [
+                            {"dataset_id": "ds_sales", "x_column": "category"},
+                            {"dataset_id": "ds_sales", "x_column": "region"},
+                        ]
+                    },
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": [
+                            {"description": {"$regex": "(?is)(?=.*electronics)(?=.*549\\.99)"}},
+                            {"description": {"$regex": "(?is)(?=.*north)(?=.*389\\.99)"}},
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*lifetime\\s*value)(?=.*purchase)(?=.*0\\.85)"
+                                }
+                            },
+                        ]
+                    },
+                    "visualizations": {
+                        "$contains": [
+                            {"dataset_id": "ds_sales", "x_column": "category"},
+                            {"dataset_id": "ds_sales", "x_column": "region"},
+                        ]
+                    },
                 },
             },
             description="Multi-hypothesis testing",
@@ -793,7 +1049,24 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 15,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?i)decline|drop|decrease|metric"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?i)decline|drop|decrease|metric"
+                            }
+                        }
+                    }
+                },
             },
             description="TRUE tool-driven: discovered decline determines investigation path",
             min_tool_calls=3,
@@ -836,7 +1109,22 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 20,
                 },
-                "state": {"insights": {"$length": {"$gte": 2}}},
+                "state": {
+                    "insights": {
+                        "$contains": [
+                            {"description": {"$regex": "(?i)actionable"}},
+                            {"description": {"$regex": "(?i)pattern|trend"}},
+                        ]
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": [
+                            {"description": {"$regex": "(?i)actionable"}},
+                            {"description": {"$regex": "(?i)pattern|trend"}},
+                        ]
+                    }
+                },
             },
             description="TRUE tool-driven: open exploration where discoveries drive analysis",
             min_tool_calls=4,
@@ -878,7 +1166,24 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 5,
                     "max_calls": 20,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*recommend)(?=.*next\\s+quarter)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*recommend)(?=.*next\\s+quarter)"
+                            }
+                        }
+                    }
+                },
             },
             description="TRUE tool-driven: vague question requires data exploration to answer",
             min_tool_calls=5,
@@ -962,12 +1267,87 @@ def get_data_analysis_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 12,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*strength)(?=.*weakness)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*strength)(?=.*weakness)"
+                            }
+                        }
+                    }
+                },
             },
             description="TRUE tool-driven: available data determines analysis scope",
             min_tool_calls=3,
             max_tool_calls=12,
             tags=["discovery", "competitive", "swot"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="data_discovery_07",
+            name="Expansion Tradeoff Decision",
+            prompt="Leadership wants a region expansion recommendation. Use the data to find the region with the highest average sale amount and the region with the lowest churn risk. If they are different, recommend a split focus and justify with exact numbers. If they are the same, recommend that single region. Save your recommendation as an insight.",
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+                requires_multi_constraint=True,
+            ),
+            expected_tool_calls=[
+                "list_datasets",
+                "compute_statistics",
+                "save_insight",
+            ],
+            expected_answer=["East", "North", "split", "412.50", "0.22"],
+            verifier_config={
+                "answer": ["East", "North", "split", "churn", "sales"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["compute_statistics", "save_insight"],
+                    "optional": ["list_datasets", "describe_dataset", "query_data"],
+                    "min_calls": 3,
+                    "max_calls": 12,
+                },
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*East)(?=.*North)(?=.*412\\.5(0)?)(?=.*0\\.22)(?=.*churn)(?=.*(split|dual|both|tradeoff|balance))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*East)(?=.*North)(?=.*412\\.5(0)?)(?=.*0\\.22)(?=.*churn)(?=.*(split|dual|both|tradeoff|balance))"
+                            }
+                        }
+                    }
+                },
+            },
+            description="TRUE tool-driven: reconcile competing metrics and decide split vs single-region focus",
+            min_tool_calls=3,
+            max_tool_calls=12,
+            tags=["discovery", "tradeoff", "multi-constraint", "decision"],
         )
     )
 
@@ -1022,7 +1402,24 @@ Present findings as a cross-table analysis.""",
                     "min_calls": 5,
                     "max_calls": 15,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*correlation)(?=.*lifetime\\s*value)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*correlation)(?=.*lifetime\\s*value)"
+                            }
+                        }
+                    }
+                },
             },
             description="MMTU-style: Multi-table join with statistical analysis",
             min_tool_calls=5,
@@ -1127,7 +1524,24 @@ Store each intermediate result and show the full calculation chain.""",
                     "min_calls": 4,
                     "max_calls": 12,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*efficiency)(?=.*East)(?=.*West)(?=.*(412\\.5|412\\.50|324\\.99))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*efficiency)(?=.*East)(?=.*West)(?=.*(412\\.5|412\\.50|324\\.99))"
+                            }
+                        }
+                    }
+                },
             },
             description="TReB-style: Multi-step numerical computation chain",
             min_tool_calls=4,
@@ -1182,7 +1596,24 @@ Create a visualization showing the regional differences.""",
                     "min_calls": 5,
                     "max_calls": 15,
                 },
-                "state": {"visualizations": {"$length": {"$gte": 1}}},
+                "state": {
+                    "visualizations": {
+                        "$contains": {
+                            "dataset_id": "ds_customers",
+                            "x_column": "region",
+                            "y_column": "lifetime_value",
+                        }
+                    }
+                },
+                "expected_state": {
+                    "visualizations": {
+                        "$contains": {
+                            "dataset_id": "ds_customers",
+                            "x_column": "region",
+                            "y_column": "lifetime_value",
+                        }
+                    }
+                },
             },
             description="TableBench-style: Complex aggregation with filtering and grouping",
             min_tool_calls=5,
@@ -1231,7 +1662,24 @@ Save your structural analysis as an insight.""",
                     "min_calls": 4,
                     "max_calls": 10,
                 },
-                "state": {"insights": {"$length": {"$gte": 1}}},
+                "state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*schema)(?=.*join)(?=.*customer_id)(?=.*product_id)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": {
+                            "description": {
+                                "$regex": "(?is)(?=.*schema)(?=.*join)(?=.*customer_id)(?=.*product_id)"
+                            }
+                        }
+                    }
+                },
             },
             description="MMTU-style: Schema understanding and join analysis",
             min_tool_calls=4,
@@ -1299,7 +1747,48 @@ Create a unified executive summary insight that synthesizes findings from all th
                     "min_calls": 10,
                     "max_calls": 30,
                 },
-                "state": {"insights": {"$length": {"$gte": 3}}},
+                "state": {
+                    "insights": {
+                        "$contains": [
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(sales|revenue))(?=.*(East|412\\.5|412\\.50|Electronics|549\\.99))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(churn|customer))(?=.*(West|0\\.35|0\\.32))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(inventory|stock))(?=.*(30|45|Laptop\\s+Pro|Smart\\s+TV))"
+                                }
+                            },
+                        ]
+                    }
+                },
+                "expected_state": {
+                    "insights": {
+                        "$contains": [
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(sales|revenue))(?=.*(East|412\\.5|412\\.50|Electronics|549\\.99))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(churn|customer))(?=.*(West|0\\.35|0\\.32))"
+                                }
+                            },
+                            {
+                                "description": {
+                                    "$regex": "(?is)(?=.*(inventory|stock))(?=.*(30|45|Laptop\\s+Pro|Smart\\s+TV))"
+                                }
+                            },
+                        ]
+                    }
+                },
             },
             description="Compound: Analyze three business domains in one session",
             min_tool_calls=10,

@@ -188,6 +188,20 @@ class CustomerServiceEnvironment(SimulatedEnvironment):
                 "tags": ["login", "password", "follow-up", "frustrated"],
                 "related_ticket": "ticket_001",  # Linked to original ticket
             },
+            # EDGE CASE: Customer claims enterprise tier but profile is premium
+            {
+                "id": "ticket_011",
+                "customer_id": "cust_002",
+                "subject": "Enterprise SLA request - urgent response needed",
+                "description": "We are an enterprise customer and need the enterprise SLA (1-hour response). Please confirm the enterprise SLA and assign a dedicated engineer. This is time-sensitive.",
+                "issue_type": "general_inquiry",
+                "priority": "high",
+                "status": "open",
+                "created_at": (now - timedelta(hours=1, minutes=15)).isoformat(),
+                "updated_at": (now - timedelta(hours=1, minutes=15)).isoformat(),
+                "assigned_to": None,
+                "tags": ["sla", "enterprise", "priority"],
+            },
             # EDGE CASE: VIP customer with urgent issue
             {
                 "id": "ticket_009",

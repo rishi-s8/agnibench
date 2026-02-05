@@ -9,6 +9,7 @@ from agnibench.core.abstractions import BenchmarkSuite
 from agnibench.suites.data_analysis.environment import DataAnalysisEnvironment
 from agnibench.suites.data_analysis.tasks import get_data_analysis_tasks
 from agnibench.suites.data_analysis.tools import get_data_analysis_tools
+from agnibench.suites.data_analysis.verifiers import create_data_analysis_verifier
 
 
 def DataAnalysisSuite() -> BenchmarkSuite:
@@ -19,6 +20,9 @@ def DataAnalysisSuite() -> BenchmarkSuite:
         tasks=get_data_analysis_tasks(),
         tools=get_data_analysis_tools(),
         environment_class=DataAnalysisEnvironment,
+        verifier_factory=lambda task: create_data_analysis_verifier(
+            task.verifier_config
+        ),
         version="1.0.0",
         tags=["data", "analysis", "exploration", "insights"],
     )

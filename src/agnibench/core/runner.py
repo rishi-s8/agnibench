@@ -234,6 +234,9 @@ class BenchmarkRunner:
             # Run the task
             final_response = agent.run(task.prompt)
 
+            # Sync environment state from suite data stores (if supported)
+            self._sync_environment_state(environment)
+
             # Get tool calls from environment log
             tool_calls = [
                 ToolCall(
@@ -269,7 +272,7 @@ class BenchmarkRunner:
             )
 
             # 2. Run existing composite verifier for partial credit
-            verifier = self._get_verifier(task)
+            verifier = self._get_verifier(task, suite)
             verification = verifier.verify(
                 provisional_result,
                 environment,
@@ -333,6 +336,20 @@ class BenchmarkRunner:
                 error=error_msg,
             )
 
+    def _sync_environment_state(self, environment: SimulatedEnvironment) -> None:
+        """Sync environment state from suite-specific data stores, if supported."""
+        sync_methods = (
+            "sync_state_from_workspace",
+            "sync_state_from_service",
+            "sync_state_from_research",
+            "sync_state_from_data",
+            "sync_state_from_software",
+            "sync_state_from_math",
+        )
+        for method_name in sync_methods:
+            if hasattr(environment, method_name):
+                getattr(environment, method_name)()
+
     def _wrap_tools_for_logging(
         self,
         tools: List[Any],
@@ -389,10 +406,15 @@ class BenchmarkRunner:
 
         return WrappedTool(tool)
 
-    def _get_verifier(self, task: Task) -> Verifier:
+    def _get_verifier(
+        self, task: Task, suite: Optional[BenchmarkSuite] = None
+    ) -> Verifier:
         """Get the appropriate verifier for a task."""
         if self.verifier_factory:
             return self.verifier_factory(task)
+
+        if suite and suite.verifier_factory:
+            return suite.verifier_factory(task)
 
         # Default: create verifier from task's verifier_config
         from agnibench.core.evaluation import (EnvironmentStateVerifier,

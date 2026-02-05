@@ -749,6 +749,127 @@ def get_math_tasks() -> List[Task]:
         )
     )
 
+    tasks.append(
+        Task(
+            id="math_discovery_06",
+            name="Conditional Conversion Cost",
+            prompt="Compute the circumference of a circle with radius 8 cm and store it in scratchpad as 'circ_cm'. If circ_cm > 50, convert it to inches; otherwise convert it to meters. Then compute the cost at $2.50 per inch or $40 per meter based on the branch. Store the final cost as 'cost' and report it.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: threshold check determines conversion branch
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_state_tracking=True,
+                requires_long_reasoning_chain=True,
+            ),
+            expected_tool_calls=[
+                "calculator",
+                "unit_converter",
+                "scratchpad",
+            ],
+            expected_answer=["49.48", "49.47", "$49.48", "$49.47"],
+            verifier_config={
+                "answer": ["49.48", "49.47", "cost", "inches"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["calculator", "unit_converter", "scratchpad"],
+                    "optional": ["formula_lookup"],
+                    "min_calls": 3,
+                    "max_calls": 8,
+                },
+                "state": {
+                    "conversions_performed": {
+                        "$contains": {
+                            "from_unit": "cm",
+                            "to_unit": "inches",
+                        }
+                    },
+                    "scratchpad": {
+                        "$contains": {
+                            "circ_cm": {"$regex": "(?i)50\\.2|50\\.26|50\\.27"},
+                            "cost": {"$regex": "(?i)49\\.4|49\\.47|49\\.48"},
+                        }
+                    },
+                },
+                "expected_state": {
+                    "conversions_performed": {
+                        "$contains": {
+                            "from_unit": "cm",
+                            "to_unit": "inches",
+                        }
+                    },
+                    "scratchpad": {
+                        "$contains": {
+                            "circ_cm": {"$regex": "(?i)50\\.2|50\\.26|50\\.27"},
+                            "cost": {"$regex": "(?i)49\\.4|49\\.47|49\\.48"},
+                        }
+                    },
+                },
+            },
+            description="TRUE tool-driven: threshold check determines conversion branch and pricing",
+            min_tool_calls=3,
+            max_tool_calls=8,
+            tags=["discovery", "conditional", "conversion", "multi-step"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="math_discovery_07",
+            name="Compare Areas and Branch",
+            prompt="Compute the area of a circle with radius 7 and the area of a square with side 10. Store them as 'circle_area' and 'square_area' in the scratchpad. If the circle area is larger, compute the difference (circle_area - square_area); otherwise compute the ratio (square_area / circle_area). Store the final result as 'result' and report it.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,  # TRUE: comparison determines branch
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_state_tracking=True,
+                requires_long_reasoning_chain=True,
+            ),
+            expected_tool_calls=[
+                "calculator",
+                "scratchpad",
+            ],
+            expected_answer=["53.94", "53.93", "difference"],
+            verifier_config={
+                "answer": ["53.94", "53.93", "difference"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["calculator", "scratchpad"],
+                    "optional": ["formula_lookup"],
+                    "min_calls": 3,
+                    "max_calls": 8,
+                },
+                "state": {
+                    "scratchpad": {
+                        "$contains": {
+                            "circle_area": {"$regex": "(?i)153\\.9"},
+                            "square_area": {"$regex": "(?i)100"},
+                            "result": {"$regex": "(?i)53\\.9"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "scratchpad": {
+                        "$contains": {
+                            "circle_area": {"$regex": "(?i)153\\.9"},
+                            "square_area": {"$regex": "(?i)100"},
+                            "result": {"$regex": "(?i)53\\.9"},
+                        }
+                    }
+                },
+            },
+            description="TRUE tool-driven: computed comparison determines whether to subtract or divide",
+            min_tool_calls=3,
+            max_tool_calls=8,
+            tags=["discovery", "conditional", "geometry", "multi-step"],
+        )
+    )
+
     # ============================================================================
     # GSM8K/MATH-INSPIRED TASKS
     # Multi-step problems that test context maintenance and reasoning chains

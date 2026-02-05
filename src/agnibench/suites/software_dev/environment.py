@@ -940,10 +940,18 @@ Get user by ID (admin only).
         # Also set the data in the tools module
         set_software_dev_data(self.state)
 
-    def get_state(self) -> Dict[str, Any]:
-        """Get current environment state."""
-        return self.state
+    def get_state(self, key: str = None, default: Any = None) -> Any:
+        """Get current environment state or a specific key."""
+        if key is None:
+            return self.state
+        return self.state.get(key, default)
 
     def reset_state(self) -> None:
         """Reset environment to default state."""
         self._setup_default_state()
+
+    def sync_state_from_software(self) -> None:
+        """Sync environment state from the software dev data store."""
+        data = get_software_dev_data()
+        for key in ("fixes_applied", "tests_run", "notes_added"):
+            self.state[key] = data.get(key, [])

@@ -10,6 +10,8 @@ from agnibench.suites.customer_service.environment import \
     CustomerServiceEnvironment
 from agnibench.suites.customer_service.tasks import get_customer_service_tasks
 from agnibench.suites.customer_service.tools import get_customer_service_tools
+from agnibench.suites.customer_service.verifiers import \
+    create_customer_service_verifier
 
 
 def CustomerServiceSuite() -> BenchmarkSuite:
@@ -20,6 +22,9 @@ def CustomerServiceSuite() -> BenchmarkSuite:
         tasks=get_customer_service_tasks(),
         tools=get_customer_service_tools(),
         environment_class=CustomerServiceEnvironment,
+        verifier_factory=lambda task: create_customer_service_verifier(
+            task.verifier_config
+        ),
         version="1.0.0",
         tags=["customer_service", "troubleshooting", "support", "diagnosis"],
     )

@@ -564,7 +564,24 @@ Provide a comprehensive security report.""",
                     "min_calls": 6,
                     "max_calls": 20,
                 },
-                "state": {"notes_added": {"$length": {"$gte": 1}}},
+                "state": {
+                    "notes_added": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*case[- ]?insensitive)(?=.*password)(?=.*session)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "notes_added": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*case[- ]?insensitive)(?=.*password)(?=.*session)"
+                            }
+                        }
+                    }
+                },
             },
             description="Comprehensive security audit",
             min_tool_calls=6,
@@ -626,8 +643,24 @@ Provide a detailed root cause analysis report.""",
                     "max_calls": 20,
                 },
                 "state": {
-                    "notes_added": {"$length": {"$gte": 1}},
-                    "tests_run": {"$length": {"$gte": 1}},
+                    "notes_added": {
+                        "$contains": {
+                            "content": {"$regex": "(?i)root\\s+cause"}
+                        }
+                    },
+                    "tests_run": {
+                        "$contains": {"results_count": {"$range": [1, 1000]}}
+                    },
+                },
+                "expected_state": {
+                    "notes_added": {
+                        "$contains": {
+                            "content": {"$regex": "(?i)root\\s+cause"}
+                        }
+                    },
+                    "tests_run": {
+                        "$contains": {"results_count": {"$range": [1, 1000]}}
+                    },
                 },
             },
             description="Multi-failure root cause analysis",
@@ -689,7 +722,24 @@ Provide an architecture overview with improvement recommendations.""",
                     "min_calls": 6,
                     "max_calls": 20,
                 },
-                "state": {"notes_added": {"$length": {"$gte": 1}}},
+                "state": {
+                    "notes_added": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*dependency)(?=.*data\\s+flow)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "notes_added": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*dependency)(?=.*data\\s+flow)"
+                            }
+                        }
+                    }
+                },
             },
             description="Full architecture review",
             min_tool_calls=6,
@@ -922,7 +972,48 @@ Provide a summary of all three bugs.""",
                     "min_calls": 8,
                     "max_calls": 25,
                 },
-                "state": {"notes_added": {"$length": {"$gte": 2}}},
+                "state": {
+                    "notes_added": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*password)(?=.*case[- ]?insensitive)"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*unauthorized)(?=.*admin)(?=.*api\\s*/?users)"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*session)(?=.*restart)"
+                                }
+                            },
+                        ]
+                    }
+                },
+                "expected_state": {
+                    "notes_added": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*password)(?=.*case[- ]?insensitive)"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*unauthorized)(?=.*admin)(?=.*api\\s*/?users)"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*session)(?=.*restart)"
+                                }
+                            },
+                        ]
+                    }
+                },
             },
             description="Compound: Investigate three independent bugs",
             min_tool_calls=8,
@@ -985,7 +1076,16 @@ Provide a combined report covering all three parts.""",
                     "min_calls": 6,
                     "max_calls": 25,
                 },
-                "state": {"tests_run": {"$length": {"$gte": 1}}},
+                "state": {
+                    "tests_run": {
+                        "$contains": {"results_count": {"$range": [1, 1000]}}
+                    }
+                },
+                "expected_state": {
+                    "tests_run": {
+                        "$contains": {"results_count": {"$range": [1, 1000]}}
+                    }
+                },
             },
             description="Compound: Code review, testing, and history analysis",
             min_tool_calls=6,

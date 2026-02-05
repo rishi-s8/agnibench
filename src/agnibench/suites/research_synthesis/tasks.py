@@ -170,6 +170,24 @@ def get_research_tasks() -> List[Task]:
                     "min_calls": 2,
                     "max_calls": 6,
                 },
+                "state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*\\$?45\\.2\\s*M?)(?=.*15%)(?=.*(22%|operating\\s+margin))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*\\$?45\\.2\\s*M?)(?=.*15%)(?=.*(22%|operating\\s+margin))"
+                            }
+                        }
+                    }
+                },
             },
             description="Extract and record key facts",
             min_tool_calls=2,
@@ -341,6 +359,24 @@ def get_research_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
+                "state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*enterprise)(?=.*20%)(?=.*(62%|\\$?28\\s*M))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*enterprise)(?=.*20%)(?=.*(62%|\\$?28\\s*M))"
+                            }
+                        }
+                    }
+                },
             },
             description="Cross-reference and verify information",
             min_tool_calls=3,
@@ -385,6 +421,36 @@ def get_research_tasks() -> List[Task]:
                     "min_calls": 4,
                     "max_calls": 12,
                 },
+                "state": {
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Competitive Intelligence Report"},
+                                    {"title": "Product Roadmap 2024"},
+                                ]
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Competitive Intelligence Report"},
+                                    {"title": "Product Roadmap 2024"},
+                                ]
+                            }
+                        }
+                    }
+                },
             },
             description="Multi-document strategy synthesis",
             min_tool_calls=4,
@@ -422,6 +488,24 @@ def get_research_tasks() -> List[Task]:
                     "optional": ["search_documents", "read_document", "take_notes"],
                     "min_calls": 4,
                     "max_calls": 10,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*(gap|missing|not\\s+addressed))(?=.*(mobile|documentation|onboarding|analytics))(?=.*(3\\.2|3\\.5|3\\.6|45%))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*(gap|missing|not\\s+addressed))(?=.*(mobile|documentation|onboarding|analytics))(?=.*(3\\.2|3\\.5|3\\.6|45%))"
+                            }
+                        }
+                    }
                 },
             },
             description="Alignment analysis between customer needs and product plans",
@@ -475,6 +559,114 @@ def get_research_tasks() -> List[Task]:
         )
     )
 
+    tasks.append(
+        Task(
+            id="research_hard_05",
+            name="Metric Memory Chain Briefing",
+            prompt="Create a leadership snapshot that combines three exact metrics: revenue growth from the Q4 financial report, market share/position from the market analysis, and NPS from the customer survey. Take separate notes for each metric (with the correct source document), then generate a summary that pulls from those notes.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "read_document",
+                "read_document",
+                "take_notes",
+                "take_notes",
+                "take_notes",
+                "generate_summary",
+            ],
+            expected_answer=["15%", "12%", "#3", "NPS 42", "summary"],
+            verifier_config={
+                "answer": ["15%", "12%", "#3", "NPS", "summary"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "take_notes", "generate_summary"],
+                    "optional": ["read_document", "extract_facts"],
+                    "min_calls": 6,
+                    "max_calls": 12,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "source_document": "doc_q4_report",
+                                "content": {
+                                    "$regex": "(?is)(?=.*\\$?45\\.2\\s*M?)(?=.*15%)"
+                                },
+                            },
+                            {
+                                "source_document": "doc_market_analysis",
+                                "content": {
+                                    "$regex": "(?is)(?=.*12%)(?=.*(#3|rank))"
+                                },
+                            },
+                            {
+                                "source_document": "doc_customer_survey",
+                                "content": {"$regex": "(?is)(?=.*NPS\\s*42|42\\s*NPS)"},
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {"title": "Q4 Financial Performance Report"},
+                                    {"title": "Market Analysis: Industry Trends 2024"},
+                                    {"title": "Customer Satisfaction Survey Results"},
+                                ]
+                            }
+                        }
+                    },
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "source_document": "doc_q4_report",
+                                "content": {
+                                    "$regex": "(?is)(?=.*\\$?45\\.2\\s*M?)(?=.*15%)"
+                                },
+                            },
+                            {
+                                "source_document": "doc_market_analysis",
+                                "content": {
+                                    "$regex": "(?is)(?=.*12%)(?=.*(#3|rank))"
+                                },
+                            },
+                            {
+                                "source_document": "doc_customer_survey",
+                                "content": {"$regex": "(?is)(?=.*NPS\\s*42|42\\s*NPS)"},
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {"title": "Q4 Financial Performance Report"},
+                                    {"title": "Market Analysis: Industry Trends 2024"},
+                                    {"title": "Customer Satisfaction Survey Results"},
+                                ]
+                            }
+                        }
+                    },
+                },
+            },
+            description="Long memory chain with exact numeric carry-through from multiple sources",
+            min_tool_calls=6,
+            max_tool_calls=12,
+            tags=["memory", "precision", "cross-reference", "summary"],
+        )
+    )
+
     # ============================================================================
     # EXPERT TASKS (3 tasks, 11+ tool calls)
     # ============================================================================
@@ -518,6 +710,74 @@ def get_research_tasks() -> List[Task]:
                     ],
                     "min_calls": 6,
                     "max_calls": 15,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*\\$?45\\.2\\s*M?)(?=.*15%)(?=.*(22%|operating\\s+margin))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(12%|#3))(?=.*(market\\s+share|market\\s+position))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(NPS\\s*42|42\\s*NPS))(?=.*(customer|satisfaction))"
+                                }
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {"title": "Q4 Financial Performance Report"},
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Competitive Intelligence Report"},
+                                ]
+                            }
+                        }
+                    },
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*\\$?45\\.2\\s*M?)(?=.*15%)(?=.*(22%|operating\\s+margin))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(12%|#3))(?=.*(market\\s+share|market\\s+position))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(NPS\\s*42|42\\s*NPS))(?=.*(customer|satisfaction))"
+                                }
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {"title": "Q4 Financial Performance Report"},
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Competitive Intelligence Report"},
+                                ]
+                            }
+                        }
+                    },
                 },
             },
             description="Comprehensive multi-source market analysis",
@@ -568,6 +828,68 @@ def get_research_tasks() -> List[Task]:
                     "optional": ["read_document", "compare_sources", "take_notes"],
                     "min_calls": 8,
                     "max_calls": 20,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(gap|shortfall|missing))(?=.*(mobile|documentation|onboarding))(?=.*(3\\.2|3\\.5|3\\.6))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(gap|shortfall|missing))(?=.*AI)(?=.*78%)"
+                                }
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {
+                                        "title": "Customer Satisfaction Survey Results"
+                                    },
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Product Roadmap 2024"},
+                                ]
+                            }
+                        }
+                    },
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(gap|shortfall|missing))(?=.*(mobile|documentation|onboarding))(?=.*(3\\.2|3\\.5|3\\.6))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*(gap|shortfall|missing))(?=.*AI)(?=.*78%)"
+                                }
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {
+                                        "title": "Customer Satisfaction Survey Results"
+                                    },
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Product Roadmap 2024"},
+                                ]
+                            }
+                        }
+                    },
                 },
             },
             description="Multi-dimensional strategic gap analysis",
@@ -632,6 +954,54 @@ def get_research_tasks() -> List[Task]:
                     ],
                     "min_calls": 10,
                     "max_calls": 25,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*(contradiction|consistent|no\\s+contradictions))(?=.*(12%|45\\.2|15%|NPS\\s*42|42\\s*NPS))"
+                            }
+                        }
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {"title": "Q4 Financial Performance Report"},
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {
+                                        "title": "Customer Satisfaction Survey Results"
+                                    },
+                                ]
+                            }
+                        }
+                    },
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*(contradiction|consistent|no\\s+contradictions))(?=.*(12%|45\\.2|15%|NPS\\s*42|42\\s*NPS))"
+                            }
+                        }
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {"title": "Q4 Financial Performance Report"},
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {
+                                        "title": "Customer Satisfaction Survey Results"
+                                    },
+                                ]
+                            }
+                        }
+                    },
                 },
             },
             description="Comprehensive executive briefing preparation",
@@ -885,6 +1255,62 @@ def get_research_tasks() -> List[Task]:
             min_tool_calls=2,
             max_tool_calls=10,
             tags=["discovery", "decision-support", "strategic"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="research_discovery_07",
+            name="Board Health Check Note",
+            prompt="Prepare a one-line board update on company health. Find the exact values for revenue growth and total revenue, market share/rank, and NPS. Record the final sentence as a note.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_long_reasoning_chain=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=[
+                "search_documents",
+                "read_document",
+                "take_notes",
+            ],
+            expected_answer=["15%", "$45.2M", "12%", "#3", "NPS 42"],
+            verifier_config={
+                "answer": ["15%", "45.2", "12%", "NPS", "board"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_documents", "take_notes"],
+                    "optional": ["read_document", "extract_facts", "compare_sources"],
+                    "min_calls": 3,
+                    "max_calls": 10,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*15%)(?=.*\\$?45\\.2\\s*M?)(?=.*(12%|#3))(?=.*(NPS\\s*42|42\\s*NPS))"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*15%)(?=.*\\$?45\\.2\\s*M?)(?=.*(12%|#3))(?=.*(NPS\\s*42|42\\s*NPS))"
+                            }
+                        }
+                    }
+                },
+            },
+            description="TRUE tool-driven: discover exact metrics across sources and record a single-sentence board update",
+            min_tool_calls=3,
+            max_tool_calls=10,
+            tags=["discovery", "precision", "board", "metrics"],
         )
     )
 
@@ -1208,6 +1634,94 @@ Take notes throughout to track what information goes to which stakeholder.""",
                     "min_calls": 10,
                     "max_calls": 30,
                 },
+                "state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*CEO)(?=.*(\\$?45\\.2\\s*M?|15%|12%|#3))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*CTO)(?=.*(AI\\s+Assistant|40%|\\$200M))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*Sales)(?=.*(NPS\\s*42|42\\s*NPS|87%))"
+                                }
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": [
+                            {
+                                "sources": {
+                                    "$contains": {
+                                        "title": "Q4 Financial Performance Report"
+                                    }
+                                }
+                            },
+                            {
+                                "sources": {
+                                    "$contains": {"title": "Product Roadmap 2024"}
+                                }
+                            },
+                            {
+                                "sources": {
+                                    "$contains": {
+                                        "title": "Customer Satisfaction Survey Results"
+                                    }
+                                }
+                            },
+                        ]
+                    },
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": [
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*CEO)(?=.*(\\$?45\\.2\\s*M?|15%|12%|#3))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*CTO)(?=.*(AI\\s+Assistant|40%|\\$200M))"
+                                }
+                            },
+                            {
+                                "content": {
+                                    "$regex": "(?is)(?=.*Sales)(?=.*(NPS\\s*42|42\\s*NPS|87%))"
+                                }
+                            },
+                        ]
+                    },
+                    "summaries": {
+                        "$contains": [
+                            {
+                                "sources": {
+                                    "$contains": {
+                                        "title": "Q4 Financial Performance Report"
+                                    }
+                                }
+                            },
+                            {
+                                "sources": {
+                                    "$contains": {"title": "Product Roadmap 2024"}
+                                }
+                            },
+                            {
+                                "sources": {
+                                    "$contains": {
+                                        "title": "Customer Satisfaction Survey Results"
+                                    }
+                                }
+                            },
+                        ]
+                    },
+                },
             },
             description="Compound: Prepare three tailored briefings from same sources",
             min_tool_calls=10,
@@ -1271,6 +1785,50 @@ SYNTHESIS:
                     "optional": ["read_document", "take_notes", "search_web"],
                     "min_calls": 12,
                     "max_calls": 30,
+                },
+                "state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*(swot|recommend))(?=.*(12%|25%|\\$200M|78%))"
+                            }
+                        }
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Competitive Intelligence Report"},
+                                    {"title": "Product Roadmap 2024"},
+                                ]
+                            }
+                        }
+                    },
+                },
+                "expected_state": {
+                    "notes": {
+                        "$contains": {
+                            "content": {
+                                "$regex": "(?is)(?=.*(swot|recommend))(?=.*(12%|25%|\\$200M|78%))"
+                            }
+                        }
+                    },
+                    "summaries": {
+                        "$contains": {
+                            "sources": {
+                                "$contains": [
+                                    {
+                                        "title": "Market Analysis: Industry Trends 2024"
+                                    },
+                                    {"title": "Competitive Intelligence Report"},
+                                    {"title": "Product Roadmap 2024"},
+                                ]
+                            }
+                        }
+                    },
                 },
             },
             description="Compound: Three-part competitive analysis with synthesis",

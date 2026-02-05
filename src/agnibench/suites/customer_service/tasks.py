@@ -192,8 +192,26 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 2,
                     "max_calls": 6,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "message": {
+                                "$regex": "(?is)(?=.*refund)(?=.*duplicate)(?=.*(TXN123|TXN124|\\$?99(\\.\\d+)?))"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "message": {
+                                "$regex": "(?is)(?=.*refund)(?=.*duplicate)(?=.*(TXN123|TXN124|\\$?99(\\.\\d+)?))"
+                            },
+                        }
+                    }
+                },
             },
             description="Billing issue handling",
             min_tool_calls=2,
@@ -255,8 +273,32 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 1,
                     "max_calls": 4,
                 },
-                "state": {"ticket_updates": {"$length": {"$gte": 1}}},
-                "expected_state": {"ticket_updates": {"$length": {"$gte": 1}}},
+                "state": {
+                    "ticket_updates": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "changes": {
+                                "$contains": {
+                                    "status": "in_progress",
+                                    "notes_added": True,
+                                }
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "ticket_updates": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "changes": {
+                                "$contains": {
+                                    "status": "in_progress",
+                                    "notes_added": True,
+                                }
+                            },
+                        }
+                    }
+                },
             },
             description="Ticket status update",
             min_tool_calls=1,
@@ -360,8 +402,26 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "message": {
+                                "$regex": "(?is)(?=.*password)(?=.*cache)"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "message": {
+                                "$regex": "(?is)(?=.*password)(?=.*cache)"
+                            },
+                        }
+                    }
+                },
             },
             description="Full issue resolution workflow",
             min_tool_calls=3,
@@ -400,8 +460,26 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_003",
+                            "message": {
+                                "$regex": "(?is)(?=.*api)(?=.*500)(?=.*(/api/v2/users|abc123))"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_003",
+                            "message": {
+                                "$regex": "(?is)(?=.*api)(?=.*500)(?=.*(/api/v2/users|abc123))"
+                            },
+                        }
+                    }
+                },
             },
             description="Technical issue with service correlation",
             min_tool_calls=3,
@@ -446,8 +524,38 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "message": {
+                                "$regex": "(?is)(?=.*refund)(?=.*duplicate)(?=.*(TXN123|TXN124|\\$?99(\\.\\d+)?))"
+                            },
+                        }
+                    },
+                    "escalations": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "specialist_team": {"$regex": "(?i)billing"},
+                        }
+                    },
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "message": {
+                                "$regex": "(?is)(?=.*refund)(?=.*duplicate)(?=.*(TXN123|TXN124|\\$?99(\\.\\d+)?))"
+                            },
+                        }
+                    },
+                    "escalations": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "specialist_team": {"$regex": "(?i)billing"},
+                        }
+                    },
+                },
             },
             description="Issue requiring escalation decision",
             min_tool_calls=3,
@@ -526,12 +634,86 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_005",
+                            "message": {
+                                "$regex": "(?is)(?=.*10,?000)(?=.*(scheduled|async))"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_005",
+                            "message": {
+                                "$regex": "(?is)(?=.*10,?000)(?=.*(scheduled|async))"
+                            },
+                        }
+                    }
+                },
             },
             description="Known limitation troubleshooting",
             min_tool_calls=3,
             max_tool_calls=10,
             tags=["export", "troubleshooting", "limitation"],
+        )
+    )
+
+    tasks.append(
+        Task(
+            id="cs_hard_06",
+            name="Tier Reconciliation and SLA Response",
+            prompt="Ticket ticket_011 claims enterprise status and requests the enterprise SLA. Verify the customer's actual tier and respond appropriately. If they are NOT enterprise, clarify their tier, provide the standard SLA timeline (24 hours), and do NOT escalate. If they are enterprise, escalate to the appropriate team and confirm the enterprise SLA.",
+            difficulty=DifficultyLevel.HARD,
+            information_flow=InformationFlow.PROMPT_CONTROL_TOOL_DATA,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=True,
+                data_flow_from_tools=True,
+                requires_cross_reference=True,
+                requires_conditional_logic=True,
+                requires_state_tracking=True,
+            ),
+            expected_tool_calls=["get_ticket", "get_customer", "send_response"],
+            expected_answer=["premium", "SLA", "24 hours"],
+            verifier_config={
+                "answer": ["premium", "SLA", "24 hours", "not enterprise"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["get_ticket", "get_customer", "send_response"],
+                    "optional": ["search_tickets", "update_ticket", "escalate_ticket"],
+                    "min_calls": 3,
+                    "max_calls": 8,
+                },
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_011",
+                            "message": {
+                                "$regex": "(?is)(?=.*premium)(?=.*24\\s*hours)(?=.*(standard\\s+sla|not\\s+enterprise))"
+                            },
+                        }
+                    },
+                    "escalations": {"$length": 0},
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_011",
+                            "message": {
+                                "$regex": "(?is)(?=.*premium)(?=.*24\\s*hours)(?=.*(standard\\s+sla|not\\s+enterprise))"
+                            },
+                        }
+                    },
+                    "escalations": {"$length": 0},
+                },
+            },
+            description="Resolve conflicting tier claims by reconciling ticket vs customer profile",
+            min_tool_calls=3,
+            max_tool_calls=8,
+            tags=["reconciliation", "sla", "tier", "conditional"],
         )
     )
 
@@ -580,8 +762,20 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 5,
                     "max_calls": 20,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)urgent|priority|triage"}
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)urgent|priority|triage"}
+                        }
+                    }
+                },
             },
             description="Full ticket queue triage",
             min_tool_calls=5,
@@ -644,8 +838,50 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 5,
                     "max_calls": 15,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_006",
+                            "message": {
+                                "$regex": "(?is)(?=.*soc\\s*2)(?=.*documentation)(?=.*encryption)(?=.*incident\\s+response)"
+                            },
+                        }
+                    },
+                    "escalations": {
+                        "$contains": {
+                            "ticket_id": "ticket_006",
+                            "specialist_team": {"$regex": "(?i)security"},
+                        }
+                    },
+                    "ticket_updates": {
+                        "$contains": {
+                            "ticket_id": "ticket_006",
+                            "changes": {"$contains": {"notes_added": True}},
+                        }
+                    },
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_006",
+                            "message": {
+                                "$regex": "(?is)(?=.*soc\\s*2)(?=.*documentation)(?=.*encryption)(?=.*incident\\s+response)"
+                            },
+                        }
+                    },
+                    "escalations": {
+                        "$contains": {
+                            "ticket_id": "ticket_006",
+                            "specialist_team": {"$regex": "(?i)security"},
+                        }
+                    },
+                    "ticket_updates": {
+                        "$contains": {
+                            "ticket_id": "ticket_006",
+                            "changes": {"$contains": {"notes_added": True}},
+                        }
+                    },
+                },
             },
             description="High-touch enterprise customer handling",
             min_tool_calls=5,
@@ -693,7 +929,22 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 2,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "message": {"$regex": "(?is)(?=.*login)(?=.*password)"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "message": {"$regex": "(?is)(?=.*login)(?=.*password)"},
+                        }
+                    }
+                },
             },
             description="TRUE tool-driven: issue type determines resolution path",
             min_tool_calls=2,
@@ -736,7 +987,20 @@ def get_customer_service_tasks() -> List[Task]:
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)resolved|issue|follow"}
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)resolved|issue|follow"}
+                        }
+                    }
+                },
             },
             description="TRUE tool-driven: unknown ticket determines entire workflow",
             min_tool_calls=3,
@@ -915,6 +1179,85 @@ def get_customer_service_tasks() -> List[Task]:
         )
     )
 
+    tasks.append(
+        Task(
+            id="cs_discovery_07",
+            name="SLA Deadline Triage",
+            prompt="Review open tickets and take action on any case that risks breaching a response SLA. Use the data you find to decide whether escalation is required and craft the appropriate customer response.",
+            difficulty=DifficultyLevel.EXPERT,
+            information_flow=InformationFlow.TOOL_DISCOVERY,
+            characteristics=TaskCharacteristics(
+                control_flow_from_prompt=False,
+                control_flow_from_tools=True,
+                data_flow_from_tools=True,
+                requires_conditional_logic=True,
+                requires_cross_reference=True,
+                requires_state_tracking=True,
+                requires_plan_adaptation=True,
+            ),
+            expected_tool_calls=[
+                "search_tickets",
+                "get_ticket",
+            ],
+            expected_answer=["SLA", "urgent", "response", "escalat"],
+            verifier_config={
+                "answer": ["SLA", "urgent", "response", "enterprise"],
+                "match_mode": "contains",
+                "tools": {
+                    "required": ["search_tickets", "get_ticket", "send_response"],
+                    "optional": [
+                        "get_customer",
+                        "check_product",
+                        "escalate_ticket",
+                        "update_ticket",
+                    ],
+                    "min_calls": 3,
+                    "max_calls": 12,
+                },
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_009",
+                            "message": {
+                                "$regex": "(?is)(?=.*enterprise)(?=.*production)(?=.*(SLA|deadline|response))(?=.*(urgent|critical))"
+                            },
+                        }
+                    },
+                    "escalations": {
+                        "$contains": {
+                            "ticket_id": "ticket_009",
+                            "specialist_team": {
+                                "$regex": "(?i)incident|on[- ]?call|tier2|engineering"
+                            },
+                        }
+                    },
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_009",
+                            "message": {
+                                "$regex": "(?is)(?=.*enterprise)(?=.*production)(?=.*(SLA|deadline|response))(?=.*(urgent|critical))"
+                            },
+                        }
+                    },
+                    "escalations": {
+                        "$contains": {
+                            "ticket_id": "ticket_009",
+                            "specialist_team": {
+                                "$regex": "(?i)incident|on[- ]?call|tier2|engineering"
+                            },
+                        }
+                    },
+                },
+            },
+            description="TRUE tool-driven: discover SLA risk and conditionally escalate",
+            min_tool_calls=3,
+            max_tool_calls=12,
+            tags=["discovery", "sla", "triage", "conditional", "escalation"],
+        )
+    )
+
     # ============================================================================
     # NATCS/TWEETSUMM-INSPIRED TASKS
     # Multi-turn dialogue resolution tasks inspired by real customer service datasets
@@ -962,7 +1305,24 @@ Review the full conversation history in their tickets, check the current status,
                     "min_calls": 4,
                     "max_calls": 12,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {
+                                "$regex": "(?is)(?=.*refund)(?=.*apolog)(?=.*(99\\.99|7\\s*days))"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {
+                                "$regex": "(?is)(?=.*refund)(?=.*apolog)(?=.*(99\\.99|7\\s*days))"
+                            },
+                        }
+                    }
+                },
             },
             description="NatCS-style: Multi-turn context tracking for billing dispute",
             min_tool_calls=4,
@@ -1010,7 +1370,20 @@ Customer ID: cust_003. Continue from where the previous agent left off. Check th
                     "min_calls": 3,
                     "max_calls": 10,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)rate\\s*limit"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)rate\\s*limit"},
+                        }
+                    }
+                },
             },
             description="NatCS-style: Conversation handoff with context continuation",
             min_tool_calls=3,
@@ -1058,8 +1431,36 @@ Your task:
                     "max_calls": 12,
                 },
                 "state": {
-                    "responses_sent": {"$length": {"$gte": 1}},
-                    "ticket_updates": {"$length": {"$gte": 1}},
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "message": {
+                                "$regex": "(?is)(?=.*summary)(?=.*resol)"
+                            },
+                        }
+                    },
+                    "ticket_updates": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "changes": {"$contains": {"notes_added": True}},
+                        }
+                    },
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "message": {
+                                "$regex": "(?is)(?=.*summary)(?=.*resol)"
+                            },
+                        }
+                    },
+                    "ticket_updates": {
+                        "$contains": {
+                            "ticket_id": "ticket_001",
+                            "changes": {"$contains": {"notes_added": True}},
+                        }
+                    },
                 },
             },
             description="TWEETSUMM-style: Thread summarization and comprehensive resolution",
@@ -1115,7 +1516,26 @@ Craft a response that:
                     "min_calls": 4,
                     "max_calls": 12,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "message": {
+                                "$regex": "(?is)(?=.*apolog)(?=.*timeline)"
+                            },
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "ticket_id": "ticket_002",
+                            "message": {
+                                "$regex": "(?is)(?=.*apolog)(?=.*timeline)"
+                            },
+                        }
+                    }
+                },
             },
             description="NatCS-style: Sentiment-aware customer handling",
             min_tool_calls=4,
@@ -1166,7 +1586,24 @@ Craft a response that:
                     "min_calls": 5,
                     "max_calls": 15,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {
+                                "$regex": "(?is)(?=.*unified)(?=.*plan)"
+                            }
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {
+                                "$regex": "(?is)(?=.*unified)(?=.*plan)"
+                            }
+                        }
+                    }
+                },
             },
             description="NatCS-style: Cross-ticket pattern analysis",
             min_tool_calls=5,
@@ -1233,8 +1670,68 @@ Provide a summary of all three resolutions at the end.""",
                     "min_calls": 9,
                     "max_calls": 25,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 3}}},
-                "expected_state": {"responses_sent": {"$length": {"$gte": 3}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": [
+                            {
+                                "ticket_id": "ticket_001",
+                                "message": {
+                                    "$regex": "(?is)(?=.*login)(?=.*password)"
+                                },
+                            },
+                            {
+                                "ticket_id": "ticket_002",
+                                "message": {
+                                    "$regex": "(?is)(?=.*refund)(?=.*duplicate)(?=.*(TXN123|TXN124|\\$?99(\\.\\d+)?))"
+                                },
+                            },
+                            {
+                                "ticket_id": "ticket_003",
+                                "message": {
+                                    "$regex": "(?is)(?=.*api)(?=.*500)(?=.*(/api/v2/users|abc123))"
+                                },
+                            },
+                        ]
+                    },
+                    "ticket_updates": {
+                        "$contains": [
+                            {"ticket_id": "ticket_001"},
+                            {"ticket_id": "ticket_002"},
+                            {"ticket_id": "ticket_003"},
+                        ]
+                    },
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": [
+                            {
+                                "ticket_id": "ticket_001",
+                                "message": {
+                                    "$regex": "(?is)(?=.*login)(?=.*password)"
+                                },
+                            },
+                            {
+                                "ticket_id": "ticket_002",
+                                "message": {
+                                    "$regex": "(?is)(?=.*refund)(?=.*duplicate)(?=.*(TXN123|TXN124|\\$?99(\\.\\d+)?))"
+                                },
+                            },
+                            {
+                                "ticket_id": "ticket_003",
+                                "message": {
+                                    "$regex": "(?is)(?=.*api)(?=.*500)(?=.*(/api/v2/users|abc123))"
+                                },
+                            },
+                        ]
+                    },
+                    "ticket_updates": {
+                        "$contains": [
+                            {"ticket_id": "ticket_001"},
+                            {"ticket_id": "ticket_002"},
+                            {"ticket_id": "ticket_003"},
+                        ]
+                    },
+                },
             },
             description="Compound: Handle three independent tickets in one session",
             min_tool_calls=9,
@@ -1294,7 +1791,20 @@ Then:
                     "min_calls": 6,
                     "max_calls": 20,
                 },
-                "state": {"responses_sent": {"$length": {"$gte": 1}}},
+                "state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)check[- ]?in"},
+                        }
+                    }
+                },
+                "expected_state": {
+                    "responses_sent": {
+                        "$contains": {
+                            "message": {"$regex": "(?i)check[- ]?in"},
+                        }
+                    }
+                },
             },
             description="Compound: Compare and manage two customer portfolios",
             min_tool_calls=6,

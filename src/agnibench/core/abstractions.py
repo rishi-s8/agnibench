@@ -259,6 +259,7 @@ class BenchmarkSuite:
     # Metadata
     version: str = "1.0.0"
     tags: List[str] = field(default_factory=list)
+    verifier_factory: Optional[Callable[[Task], Any]] = None
 
     @property
     def task_count(self) -> int:
