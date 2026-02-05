@@ -2,6 +2,8 @@
 
 A comprehensive benchmarking framework for evaluating AI agents on multi-step tool-calling tasks.
 
+> ⚠️ **Please do not train or fine-tune models on this benchmark.** This benchmark is intended for evaluation purposes only to ensure fair and unbiased model comparisons.
+
 > ⚠️ **Warning**: This project is under active development with regular breaking changes in the API.
 
 ## Overview
