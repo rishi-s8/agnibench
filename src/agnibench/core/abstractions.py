@@ -203,6 +203,19 @@ class TaskResult:
         """List of unique tool names used."""
         return list(dict.fromkeys(tc.tool_name for tc in self.tool_calls))
 
+    @staticmethod
+    def _serialize_value(val: Any) -> Any:
+        """Make a value JSON-serializable."""
+        if hasattr(val, "model_dump"):
+            return val.model_dump()
+        if hasattr(val, "dict"):
+            return val.dict()
+        if isinstance(val, dict):
+            return {k: TaskResult._serialize_value(v) for k, v in val.items()}
+        if isinstance(val, (list, tuple)):
+            return [TaskResult._serialize_value(v) for v in val]
+        return val
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert result to dictionary for serialization."""
         return {
@@ -214,7 +227,7 @@ class TaskResult:
                 {
                     "tool_name": tc.tool_name,
                     "arguments": tc.arguments,
-                    "result": tc.result,
+                    "result": self._serialize_value(tc.result),
                     "success": tc.success,
                     "error": tc.error,
                 }
