@@ -70,6 +70,11 @@ class NumericToleranceVerifier(Verifier):
         # Check if any expected value is found within tolerance
         matches = []
         for exp in expected:
+            if isinstance(exp, str):
+                try:
+                    exp = float(exp)
+                except (ValueError, TypeError):
+                    continue
             if not isinstance(exp, (int, float)):
                 continue
 
@@ -87,8 +92,19 @@ class NumericToleranceVerifier(Verifier):
                         matches.append((exp, num, abs_diff))
 
         if matches:
+            def _is_numeric(v):
+                if isinstance(v, (int, float)):
+                    return True
+                if isinstance(v, str):
+                    try:
+                        float(v)
+                        return True
+                    except (ValueError, TypeError):
+                        return False
+                return False
+
             score = len(matches) / len(
-                [e for e in expected if isinstance(e, (int, float))]
+                [e for e in expected if _is_numeric(e)]
             )
             return VerificationResult(
                 passed=True,

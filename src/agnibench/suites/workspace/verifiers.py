@@ -127,9 +127,19 @@ class EventCreatedVerifier(Verifier):
                     matches = False
                     details["missing_attendees"] = missing
 
-            if self.min_duration_minutes:
-                # Would need to parse times to verify duration
-                pass
+            if self.min_duration_minutes and matches:
+                start = event.get("start_time", "")
+                end = event.get("end_time", "")
+                if start and end:
+                    try:
+                        from datetime import datetime
+                        fmt = "%Y-%m-%dT%H:%M:%S"
+                        duration = (datetime.strptime(end, fmt) - datetime.strptime(start, fmt)).total_seconds() / 60
+                        if duration < self.min_duration_minutes:
+                            matches = False
+                            details["duration_too_short"] = True
+                    except (ValueError, TypeError):
+                        pass  # Can't parse times, skip duration check
 
             if matches:
                 return VerificationResult(
@@ -302,7 +312,7 @@ class AvailabilityCheckVerifier(Verifier):
             if missing:
                 return VerificationResult(
                     passed=False,
-                    score=len(self.required_attendees - len(missing))
+                    score=(len(self.required_attendees) - len(missing))
                     / len(self.required_attendees),
                     details={
                         "checked_attendees": list(checked_attendees),

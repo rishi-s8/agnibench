@@ -102,6 +102,12 @@ class VisualizationVerifier(Verifier):
             missing = [t for t in self.required_types if t not in types_created]
             if missing:
                 details["missing_types"] = missing
+                return VerificationResult(
+                    passed=False,
+                    score=(len(self.required_types) - len(missing))
+                    / len(self.required_types),
+                    details=details,
+                )
 
         return VerificationResult(
             passed=True,

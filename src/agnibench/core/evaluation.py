@@ -117,6 +117,13 @@ class ExactMatchVerifier(Verifier):
 
     def _check_match(self, response: str, expected: Any) -> bool:
         """Check if response matches a single expected value."""
+        # Convert string expected values to float if possible
+        if isinstance(expected, str):
+            try:
+                expected = float(expected)
+            except (ValueError, TypeError):
+                pass  # Fall through to string matching
+
         # Numeric matching
         if isinstance(expected, (int, float)):
             try:
