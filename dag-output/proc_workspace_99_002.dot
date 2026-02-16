@@ -1,0 +1,10 @@
+digraph "dag_99_simple_1" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_4" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="search_events"];
+  "tool_5" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email"];
+
+  "tool_4" -> "tool_5" [color="#1565C0" style=solid label="modify_data"];
+}

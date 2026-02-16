@@ -8,7 +8,7 @@ and create_workspace_verifier() factory.
 from typing import Any, Dict, List
 
 from agnibench.procedural.archetypes import DomainArchetypeSet
-from agnibench.procedural.dag import NodeType, TaskDAG
+from agnibench.procedural.dag import NodeType, TaskDAG, TaskDAGBundle
 
 
 class VerificationGenerator:
@@ -24,21 +24,22 @@ class VerificationGenerator:
 
     def generate(
         self,
-        dag: TaskDAG,
+        bundle: TaskDAGBundle,
         entity_bindings: Dict[str, Any],
         archetype_to_surface: Dict[str, str],
     ) -> Dict[str, Any]:
         """
-        Generate verifier_config from a DAG.
+        Generate verifier_config from a DAG bundle.
 
         Args:
-            dag: The task DAG
+            bundle: TaskDAGBundle containing the execution DAG
             entity_bindings: Entity bindings from data generator
             archetype_to_surface: Maps archetype_id -> surface tool name
 
         Returns:
             verifier_config dict compatible with existing verification system
         """
+        dag = bundle.execution
         config: Dict[str, Any] = {}
 
         # 1. Tool verification

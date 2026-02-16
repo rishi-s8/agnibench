@@ -1,0 +1,31 @@
+digraph "dag_42_hard_0" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_18" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages"];
+  "tool_19" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="read_email"];
+  "tool_20" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="create_meeting"];
+  "tool_21" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages"];
+  "tool_22" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="lookup_slack"];
+  "tool_23" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="get_contact"];
+  "tool_24" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="slack_message"];
+  "tool_25" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages"];
+  "tool_26" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="online_search"];
+  "tool_27" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="lookup_slack"];
+  "tool_28" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email"];
+
+  "tool_18" -> "tool_19" [color="#1565C0" style=solid label="entity_id -> email_id"];
+  "tool_19" -> "tool_20" [color="#1565C0" style=solid label="detail_data"];
+  "tool_21" -> "tool_23" [color="#1565C0" style=solid label="ref_a"];
+  "tool_22" -> "tool_23" [color="#1565C0" style=solid label="ref_b"];
+  "tool_23" -> "tool_24" [color="#1565C0" style=solid label="cross_ref_data"];
+  "tool_20" -> "tool_21" [color="#757575" style=dashed];
+  "tool_20" -> "tool_22" [color="#757575" style=dashed];
+  "tool_25" -> "tool_28" [color="#1565C0" style=solid label="source_data"];
+  "tool_26" -> "tool_28" [color="#1565C0" style=solid label="source_data"];
+  "tool_27" -> "tool_28" [color="#1565C0" style=solid label="source_data"];
+  "tool_24" -> "tool_25" [color="#757575" style=dashed];
+  "tool_24" -> "tool_26" [color="#757575" style=dashed];
+  "tool_24" -> "tool_27" [color="#757575" style=dashed];
+}

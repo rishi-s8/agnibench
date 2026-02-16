@@ -1,6 +1,11 @@
 """
-Prompt generator that converts a TaskDAG + entity_bindings into
+Prompt generator that converts a TaskDAGBundle + entity_bindings into
 natural language task prompts.
+
+Information-flow-aware:
+- PROMPT_FULL: Explicit step-by-step instructions with data values
+- PROMPT_CONTROL_TOOL_DATA: Explicit steps but data must be discovered via tools
+- TOOL_DISCOVERY: Vague goal only, agent must discover both steps and data
 
 Two-stage: template-based generation + optional LLM polish.
 """
@@ -11,11 +16,12 @@ import os
 import random
 from typing import Any, Dict, List, Optional
 
+from agnibench.core.abstractions import InformationFlow
 from agnibench.procedural.archetypes import DomainArchetypeSet
-from agnibench.procedural.dag import NodeType, TaskDAG
+from agnibench.procedural.dag import ControlSource, NodeType, TaskDAG, TaskDAGBundle
 
-# Intent classification: maps terminal archetype_id -> intent
-_TERMINAL_INTENTS = {
+# Maps archetype_id -> intent label
+_ARCHETYPE_INTENTS = {
     "send_email": "reply_to_email",
     "create_event": "schedule_meeting",
     "send_slack": "send_slack_message",
@@ -28,67 +34,111 @@ _TERMINAL_INTENTS = {
     "web_search": "research_topic",
 }
 
-# Intent -> list of prompt templates
-# Templates use {entity} placeholders filled from entity_bindings
-_PROMPT_TEMPLATES: Dict[str, List[str]] = {
+# --- PROMPT_FULL templates: explicit steps + explicit data ---
+_FULL_TEMPLATES: Dict[str, List[str]] = {
     "reply_to_email": [
         "Find the email from {primary_person_name} about {topic} and reply saying {reply_content}.",
-        "Look up the message from {primary_person_name} regarding {topic}, then send a reply with {reply_content}.",
         "Search for {primary_person_name}'s email about {topic} and respond to it saying {reply_content}.",
     ],
     "schedule_meeting": [
-        "Schedule a meeting about {topic} with {primary_person_name}. Find a time that works and create the event.",
-        "Set up a {topic} meeting with {primary_person_name}. Check their availability first, then book it.",
-        "Organize a meeting for {topic} with {primary_person_name} tomorrow. Create the calendar event.",
+        "Check {primary_person_name}'s availability tomorrow, then schedule a {topic} meeting with them.",
+        "Find a free slot for {primary_person_name} and create a {topic} meeting.",
     ],
     "send_slack_message": [
-        "Send a message to {slack_channel} about the {topic} update.",
-        "Post an update about {topic} to the {slack_channel} Slack channel.",
-        "Notify {slack_channel} about the latest {topic} developments.",
+        "Send a message to {slack_channel} saying there's an update on {topic}.",
+        "Post to {slack_channel} about the {topic} update.",
     ],
     "find_contact_info": [
-        "Find {primary_person_name}'s contact information and email them about {topic}.",
-        "Look up {primary_person_name} in the directory and send them a message about {topic}.",
-        "Get {primary_person_name}'s email address and reach out regarding {topic}.",
+        "Look up {primary_person_name}'s contact details in the directory.",
+        "Find {primary_person_name}'s email address and phone number.",
     ],
     "find_emails": [
-        "Search for emails about {topic} from the past week.",
-        "Find all messages related to {topic}.",
-        "Look through your inbox for emails about {topic}.",
+        "Search for emails about {topic} from {primary_person_name}.",
+        "Find messages related to {topic} in your inbox.",
     ],
     "read_specific_email": [
-        "Read the latest email from {primary_person_name} about {topic}.",
-        "Open the message from {primary_person_name} regarding {topic}.",
-        "Check the email from {primary_person_name} about {topic}.",
+        "Read the email from {primary_person_name} about {topic}.",
+        "Open {primary_person_name}'s message regarding {topic} and read the full content.",
     ],
     "check_schedule": [
-        "Check the calendar for any {topic} meetings this week.",
-        "Look up upcoming events related to {topic}.",
-        "Find calendar events about {topic}.",
+        "Check the calendar for {topic} meetings involving {primary_person_name}.",
+        "Look up upcoming {topic} events on the calendar.",
     ],
     "check_availability": [
         "Check when {primary_person_name} is free tomorrow for a {topic} meeting.",
-        "Find available time slots for a meeting with {primary_person_name} about {topic}.",
-        "Look up {primary_person_name}'s availability for a {topic} discussion.",
+        "Find available time slots for {primary_person_name} tomorrow.",
     ],
     "find_slack_messages": [
-        "Search Slack for recent messages about {topic}.",
-        "Find Slack discussions related to {topic}.",
-        "Look for {topic} updates in Slack.",
+        "Search Slack for messages about {topic} in {slack_channel}.",
+        "Find recent {topic} discussions in Slack.",
     ],
     "research_topic": [
         "Search the web for information about {topic}.",
-        "Find online resources about {topic}.",
-        "Research {topic} using web search.",
+        "Research {topic} online.",
     ],
 }
 
-# Multi-step combination templates for complex tasks
-_MULTI_STEP_TEMPLATES = [
-    "First, {step1}. Then, {step2}.",
-    "{step1}. After that, {step2}.",
-    "I need you to {step1} and then {step2}.",
-    "{step1}. Once done, {step2}.",
+# --- PROMPT_CONTROL_TOOL_DATA templates: explicit steps, data from tools ---
+_CONTROL_TEMPLATES: Dict[str, List[str]] = {
+    "reply_to_email": [
+        "Find the latest unread email from {primary_person_name} and reply to it with {reply_content}.",
+        "Look up {primary_person_name}'s most recent message and send a reply saying {reply_content}.",
+    ],
+    "schedule_meeting": [
+        "Check {primary_person_name}'s availability and schedule a follow-up meeting about {topic}.",
+        "Find when {primary_person_name} is free and book a {topic} meeting.",
+    ],
+    "send_slack_message": [
+        "Post an update about {topic} to the appropriate Slack channel.",
+        "Send a Slack message about {topic} to {slack_channel}.",
+    ],
+    "find_contact_info": [
+        "Look up {primary_person_name}'s contact information.",
+        "Find {primary_person_name} in the company directory.",
+    ],
+    "find_emails": [
+        "Search for recent emails about {topic}.",
+        "Find emails related to {topic}.",
+    ],
+    "read_specific_email": [
+        "Find and read the email about {topic} from {primary_person_name}.",
+        "Look up the message from {primary_person_name} about {topic} and read it.",
+    ],
+    "check_schedule": [
+        "Check the calendar for any upcoming {topic} events.",
+        "Look up {topic}-related meetings on the calendar.",
+    ],
+    "check_availability": [
+        "Check {primary_person_name}'s calendar availability for tomorrow.",
+        "Find when {primary_person_name} has free time.",
+    ],
+    "find_slack_messages": [
+        "Search Slack for recent discussions about {topic}.",
+        "Check Slack for any {topic} updates.",
+    ],
+    "research_topic": [
+        "Search the web for background on {topic}.",
+        "Do some online research about {topic}.",
+    ],
+}
+
+# --- TOOL_DISCOVERY goal templates: vague goals, agent discovers everything ---
+_GOAL_TEMPLATES = [
+    "Handle all the {topic} follow-ups — make sure the right people are informed, meetings are scheduled if needed, and any pending replies are sent.",
+    "Take care of everything related to {topic}. Check emails, look at the calendar, coordinate with the team, and make sure nothing falls through the cracks.",
+    "I need you to manage the {topic} situation end-to-end. Read any relevant messages, check schedules, reach out to the right people, and keep the team updated.",
+    "Deal with the {topic} items on my plate. Review what's come in, respond where needed, schedule what needs scheduling, and update the team.",
+    "Process all outstanding {topic} items — emails, meetings, Slack updates, the works. Use your best judgment on what needs to happen.",
+    "Follow up on {topic}. Figure out what needs attention, who needs to hear back, and whether any meetings need to be set up. Handle it all.",
+]
+
+# Step connectors for multi-step FULL/CONTROL prompts
+_STEP_CONNECTORS = [
+    "{prev}. Then, {next}.",
+    "{prev}. After that, {next}.",
+    "{prev}. Next, {next}.",
+    "{prev}, then {next}.",
+    "{prev}. Once that's done, {next}.",
 ]
 
 # Reply content variants
@@ -105,10 +155,12 @@ _REPLY_CONTENTS = [
 
 class PromptGenerator:
     """
-    Converts a TaskDAG + entity_bindings into a natural language prompt.
+    Converts a TaskDAGBundle + entity_bindings into a natural language prompt.
 
-    Stage 1 (always): Template-based generation
-    Stage 2 (optional): LLM polish for naturalness
+    Varies prompt style based on information_flow:
+    - PROMPT_FULL: Lists all steps with concrete data values
+    - PROMPT_CONTROL_TOOL_DATA: Lists steps, but data comes from tools
+    - TOOL_DISCOVERY: Gives only a high-level goal
     """
 
     def __init__(
@@ -131,16 +183,6 @@ class PromptGenerator:
                 with open(cache_file, "r") as f:
                     self._cache = json.load(f)
 
-    def _classify_intent(self, dag: TaskDAG) -> str:
-        """Classify the task intent from terminal nodes."""
-        terminal_tool_nodes = dag.get_terminal_tool_nodes()
-        if not terminal_tool_nodes:
-            return "find_emails"  # Default fallback
-
-        # Use the last terminal tool call as primary intent
-        terminal = terminal_tool_nodes[-1]
-        return _TERMINAL_INTENTS.get(terminal.archetype_id, "find_emails")
-
     def _fill_template(self, template: str, bindings: Dict[str, Any]) -> str:
         """Fill a template with entity bindings."""
         replacements = {
@@ -157,70 +199,145 @@ class PromptGenerator:
             result = result.replace(f"{{{key}}}", str(value))
         return result
 
-    def _dag_structure_hash(self, dag: TaskDAG) -> str:
-        """Hash the DAG structure for caching."""
+    def _bundle_structure_hash(self, bundle: TaskDAGBundle) -> str:
+        """Hash the bundle structure (control_flow + data_flow) for caching."""
         structure = {
-            "tool_calls": [
-                n.archetype_id
-                for n in dag.get_tool_call_nodes()
+            "control_flow_nodes": [
+                (n.node_id, n.archetype_id, n.control_source.value)
+                for n in bundle.control_flow.get_topological_order()
             ],
-            "edges": [
-                (e.source_node_id, e.target_node_id, e.edge_type.value)
-                for e in dag.edges
+            "control_flow_edges": [
+                (e.source_node_id, e.target_node_id, e.control_source.value)
+                for e in bundle.control_flow.edges
+            ],
+            "data_flow_nodes": sorted([
+                (n.node_id, n.node_type.value, n.data_source.value)
+                for n in bundle.data_flow.nodes.values()
+            ]),
+            "data_flow_edges": [
+                (e.source_node_id, e.target_node_id, e.data_source.value)
+                for e in bundle.data_flow.edges
             ],
         }
         return hashlib.md5(json.dumps(structure, sort_keys=True).encode()).hexdigest()
 
-    def generate(self, dag: TaskDAG, entity_bindings: Dict[str, Any]) -> str:
+    def _get_distinct_intents(self, bundle: TaskDAGBundle) -> List[str]:
         """
-        Generate a natural language prompt from a DAG and entity bindings.
+        Get distinct intent labels from the control flow DAG, preserving
+        topological order. Only include nodes whose control_source == PROMPT.
+        """
+        seen = set()
+        intents = []
+        for node in bundle.control_flow.get_topological_order():
+            if node.control_source != ControlSource.PROMPT:
+                continue
+            intent = _ARCHETYPE_INTENTS.get(node.archetype_id)
+            if intent and intent not in seen:
+                seen.add(intent)
+                intents.append(intent)
+        return intents
+
+    def _generate_full_prompt(self, bundle: TaskDAGBundle, bindings: Dict[str, Any]) -> str:
+        """Generate a PROMPT_FULL prompt: explicit steps with data values."""
+        intents = self._get_distinct_intents(bundle)
+
+        if not intents:
+            return self._fill_template("Handle {topic} tasks.", bindings)
+
+        if len(intents) == 1:
+            templates = _FULL_TEMPLATES.get(intents[0], ["{topic} task."])
+            return self._fill_template(self.rng.choice(templates), bindings)
+
+        # Multi-step: enumerate ALL distinct actions
+        steps = []
+        for intent in intents:
+            templates = _FULL_TEMPLATES.get(intent, [])
+            if templates:
+                step = self._fill_template(self.rng.choice(templates), bindings)
+                steps.append(step)
+
+        return self._chain_steps(steps)
+
+    def _generate_control_prompt(self, bundle: TaskDAGBundle, bindings: Dict[str, Any]) -> str:
+        """Generate a PROMPT_CONTROL_TOOL_DATA prompt: explicit steps, data from tools."""
+        intents = self._get_distinct_intents(bundle)
+
+        if not intents:
+            return self._fill_template("Handle the {topic} follow-ups.", bindings)
+
+        if len(intents) == 1:
+            templates = _CONTROL_TEMPLATES.get(intents[0], ["{topic} task."])
+            return self._fill_template(self.rng.choice(templates), bindings)
+
+        # Multi-step: enumerate ALL distinct actions
+        steps = []
+        for intent in intents:
+            templates = _CONTROL_TEMPLATES.get(intent, [])
+            if templates:
+                step = self._fill_template(self.rng.choice(templates), bindings)
+                steps.append(step)
+
+        return self._chain_steps(steps)
+
+    def _generate_discovery_prompt(self, bundle: TaskDAGBundle, bindings: Dict[str, Any]) -> str:
+        """Generate a TOOL_DISCOVERY prompt: vague goal, agent discovers everything."""
+        template = self.rng.choice(_GOAL_TEMPLATES)
+        return self._fill_template(template, bindings)
+
+    def _chain_steps(self, steps: List[str]) -> str:
+        """Chain multiple step descriptions into a coherent multi-step prompt."""
+        if not steps:
+            return ""
+        if len(steps) == 1:
+            return steps[0]
+
+        # Build up the chain incrementally
+        result = steps[0].rstrip(".")
+        for step in steps[1:]:
+            connector = self.rng.choice(_STEP_CONNECTORS)
+            next_text = step[0].lower() + step[1:] if step else step
+            # Strip all trailing periods from both sides before joining
+            result = connector.format(
+                prev=result.rstrip("."),
+                next=next_text.rstrip("."),
+            )
+
+        # Clean up: ensure exactly one trailing period, no doubles anywhere
+        result = result.replace("..", ".").replace("..", ".").rstrip(".") + "."
+        return result
+
+    def generate(
+        self,
+        bundle: TaskDAGBundle,
+        entity_bindings: Dict[str, Any],
+        information_flow: InformationFlow = InformationFlow.PROMPT_FULL,
+    ) -> str:
+        """
+        Generate a natural language prompt from a DAG bundle and entity bindings.
 
         Args:
-            dag: The task DAG
+            bundle: The TaskDAGBundle containing control flow, data flow, and execution DAGs
             entity_bindings: Maps abstract roles to concrete values
+            information_flow: Controls how much the prompt reveals
 
         Returns:
             Natural language task prompt string
         """
         # Check cache
-        cache_key = f"{self._dag_structure_hash(dag)}_{self.seed}"
+        cache_key = f"{self._bundle_structure_hash(bundle)}_{self.seed}_{information_flow.value}"
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        intent = self._classify_intent(dag)
-
-        # Get templates for this intent
-        templates = _PROMPT_TEMPLATES.get(intent, _PROMPT_TEMPLATES["find_emails"])
-        template = self.rng.choice(templates)
-        prompt = self._fill_template(template, entity_bindings)
-
-        # For multi-step tasks, combine multiple intent prompts
-        tool_nodes = dag.get_tool_call_nodes()
-        if len(tool_nodes) > 3:
-            # Build a multi-step prompt
-            steps = []
-            seen_intents = set()
-
-            for node in tool_nodes:
-                node_intent = _TERMINAL_INTENTS.get(node.archetype_id, None)
-                if node_intent and node_intent not in seen_intents:
-                    node_templates = _PROMPT_TEMPLATES.get(node_intent, [])
-                    if node_templates:
-                        step = self._fill_template(self.rng.choice(node_templates), entity_bindings)
-                        steps.append(step.rstrip("."))
-                        seen_intents.add(node_intent)
-
-            if len(steps) >= 2:
-                combo_template = self.rng.choice(_MULTI_STEP_TEMPLATES)
-                prompt = combo_template.format(
-                    step1=steps[0].lower(),
-                    step2=steps[-1].lower(),
-                )
+        if information_flow == InformationFlow.PROMPT_FULL:
+            prompt = self._generate_full_prompt(bundle, entity_bindings)
+        elif information_flow == InformationFlow.PROMPT_CONTROL_TOOL_DATA:
+            prompt = self._generate_control_prompt(bundle, entity_bindings)
+        else:  # TOOL_DISCOVERY
+            prompt = self._generate_discovery_prompt(bundle, entity_bindings)
 
         # Cache the result
         self._cache[cache_key] = prompt
 
-        # Save cache if cache_dir is set
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
             cache_file = os.path.join(self.cache_dir, f"prompt_cache_{self.seed}.json")

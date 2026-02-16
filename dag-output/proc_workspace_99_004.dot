@@ -1,0 +1,20 @@
+digraph "dag_99_medium_1" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_11" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="get_availability"];
+  "tool_12" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="search_contacts"];
+  "tool_13" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="post_to_channel"];
+  "tool_14" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="search_events"];
+  "tool_15" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="schedule_event"];
+  "prompt_16" [shape=note style=filled fillcolor="#E8F5E9" label="PROMPT\navailability_attendees: "];
+  "prompt_17" [shape=note style=filled fillcolor="#E8F5E9" label="PROMPT\navailability_date: "];
+
+  "tool_11" -> "tool_12" [color="#1565C0" style=solid label="entity_id"];
+  "tool_12" -> "tool_13" [color="#1565C0" style=solid label="detail_data"];
+  "tool_14" -> "tool_15" [color="#1565C0" style=solid label="modify_data"];
+  "tool_13" -> "tool_14" [color="#757575" style=dashed];
+  "prompt_16" -> "tool_11" [color="#1565C0" style=solid label="availability_attendees -> availability_attendees"];
+  "prompt_17" -> "tool_11" [color="#1565C0" style=solid label="availability_date -> availability_date"];
+}

@@ -1,0 +1,27 @@
+digraph "dag_99_hard_0" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_18" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="web_search"];
+  "tool_19" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="get_message"];
+  "tool_20" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="schedule_event"];
+  "tool_21" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="get_availability"];
+  "tool_22" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="web_search"];
+  "tool_23" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="get_message"];
+  "tool_24" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="schedule_event"];
+  "tool_25" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="search_slack"];
+  "tool_26" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email"];
+  "prompt_27" [shape=note style=filled fillcolor="#E8F5E9" label="PROMPT\nweb_query: "];
+
+  "tool_18" -> "tool_19" [color="#1565C0" style=solid label="entity_id -> email_id"];
+  "tool_19" -> "tool_20" [color="#1565C0" style=solid label="detail_data"];
+  "tool_21" -> "tool_23" [color="#1565C0" style=solid label="ref_a"];
+  "tool_22" -> "tool_23" [color="#1565C0" style=solid label="ref_b"];
+  "tool_23" -> "tool_24" [color="#1565C0" style=solid label="cross_ref_data"];
+  "tool_20" -> "tool_21" [color="#757575" style=dashed];
+  "tool_20" -> "tool_22" [color="#757575" style=dashed];
+  "tool_25" -> "tool_26" [color="#1565C0" style=solid label="modify_data"];
+  "tool_24" -> "tool_25" [color="#757575" style=dashed];
+  "prompt_27" -> "tool_18" [color="#1565C0" style=solid label="web_query -> web_query"];
+}

@@ -1,0 +1,31 @@
+digraph "dag_42_hard_0_control_flow" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_18" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages [P]"];
+  "tool_19" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="read_email [P]"];
+  "tool_20" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="create_meeting [P]"];
+  "tool_21" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages [P]"];
+  "tool_22" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="lookup_slack [P]"];
+  "tool_23" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="get_contact [P]"];
+  "tool_24" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="slack_message [P]"];
+  "tool_25" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages [P]"];
+  "tool_26" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="online_search [P]"];
+  "tool_27" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="lookup_slack [P]"];
+  "tool_28" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email [P]"];
+
+  "tool_18" -> "tool_19" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_19" -> "tool_20" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_21" -> "tool_23" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_22" -> "tool_23" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_23" -> "tool_24" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_20" -> "tool_21" [color="#757575" style=dashed label="[P] (ordering)"];
+  "tool_20" -> "tool_22" [color="#757575" style=dashed label="[P] (ordering)"];
+  "tool_25" -> "tool_28" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_26" -> "tool_28" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_27" -> "tool_28" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_24" -> "tool_25" [color="#757575" style=dashed label="[P] (ordering)"];
+  "tool_24" -> "tool_26" [color="#757575" style=dashed label="[P] (ordering)"];
+  "tool_24" -> "tool_27" [color="#757575" style=dashed label="[P] (ordering)"];
+}

@@ -1,0 +1,14 @@
+digraph "dag_42_simple_0" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_1" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="check_free_slots"];
+  "tool_2" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email"];
+  "prompt_3" [shape=note style=filled fillcolor="#E8F5E9" label="PROMPT\navailability_attendees: "];
+  "prompt_4" [shape=note style=filled fillcolor="#E8F5E9" label="PROMPT\navailability_date: "];
+
+  "tool_1" -> "tool_2" [color="#1565C0" style=solid label="modify_data"];
+  "prompt_3" -> "tool_1" [color="#1565C0" style=solid label="availability_attendees -> availability_attendees"];
+  "prompt_4" -> "tool_1" [color="#1565C0" style=solid label="availability_date -> availability_date"];
+}

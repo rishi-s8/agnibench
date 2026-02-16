@@ -1,0 +1,19 @@
+digraph "dag_42_medium_0_control_flow" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_7" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages [P]"];
+  "tool_8" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="read_email [P]"];
+  "tool_9" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email [P]"];
+  "tool_10" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="search_calendar [P]"];
+  "tool_11" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages [P]"];
+  "tool_12" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="slack_message [P]"];
+
+  "tool_7" -> "tool_8" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_8" -> "tool_9" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_10" -> "tool_12" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_11" -> "tool_12" [color="#757575" style=dashed label="[P] (data_dependency)"];
+  "tool_9" -> "tool_10" [color="#757575" style=dashed label="[P] (ordering)"];
+  "tool_9" -> "tool_11" [color="#757575" style=dashed label="[P] (ordering)"];
+}

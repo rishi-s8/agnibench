@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 from agnibench.procedural.archetypes import DomainArchetypeSet
-from agnibench.procedural.dag import DAGNode, NodeType, TaskDAG
+from agnibench.procedural.dag import DAGNode, NodeType, TaskDAG, TaskDAGBundle
 
 # Name pools for generating entity data
 FIRST_NAMES = [
@@ -176,16 +176,20 @@ class DataGenerator:
 
     def generate(
         self,
-        dag: TaskDAG,
+        bundle: TaskDAGBundle,
     ) -> tuple:
         """
         Generate environment data and entity bindings consistent with a DAG.
+
+        Args:
+            bundle: TaskDAGBundle containing the execution DAG
 
         Returns:
             Tuple of (initial_state, entity_bindings) where:
             - initial_state: Dict to pass to environment.initialize()
             - entity_bindings: Dict mapping abstract roles to concrete values
         """
+        dag = bundle.execution
         entity_bindings: Dict[str, Any] = {}
 
         # Generate people that will be referenced

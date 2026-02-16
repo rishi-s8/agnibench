@@ -1,0 +1,11 @@
+digraph "dag_42_simple_1_data_flow" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "df_tout_1" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="find_messages.read_data [TOOL]"];
+  "df_tout_2" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="slack_message.write_result [TOOL]"];
+  "df_tin_3" [shape=box style=filled fillcolor="#FFF3E0" label="slack_message.input"];
+
+  "df_tout_1" -> "df_tin_3" [color="#1565C0" style=solid label="modify_data [TOOL_OUTPUT]"];
+}

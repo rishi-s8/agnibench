@@ -15,7 +15,7 @@ from agnibench.core.abstractions import (
     TaskCharacteristics,
 )
 from agnibench.procedural.archetypes import DomainArchetypeSet
-from agnibench.procedural.dag import TaskDAG
+from agnibench.procedural.dag import TaskDAGBundle
 from agnibench.procedural.dag_generator import DAGGenerator
 from agnibench.procedural.data_generator import DataGenerator
 from agnibench.procedural.difficulty import get_profile
@@ -58,7 +58,7 @@ class ProceduralSuiteFactory:
 
     Pipeline:
         SurfaceMutator -> List[Tool] + surface_maps
-        DAGGenerator -> List[TaskDAG]
+        DAGGenerator -> List[TaskDAGBundle]
         DataGenerator -> entity_bindings + initial_state (per task)
         PromptGenerator -> prompt (per task)
         VerificationGenerator -> verifier_config (per task)
@@ -133,27 +133,27 @@ class ProceduralSuiteFactory:
         task_counter = 0
 
         for difficulty, count in difficulty_distribution.items():
-            dags = dag_generator.generate_batch(difficulty, count)
+            bundles = dag_generator.generate_batch(difficulty, count)
             profile = get_profile(difficulty)
 
-            for dag in dags:
+            for bundle in bundles:
                 task_counter += 1
 
                 # Generate data consistent with DAG
-                initial_state, entity_bindings = data_gen.generate(dag)
+                initial_state, entity_bindings = data_gen.generate(bundle)
                 task_initial_states.append(initial_state)
 
-                # Generate prompt
-                prompt = prompt_gen.generate(dag, entity_bindings)
+                # Generate prompt (information_flow controls how much the prompt reveals)
+                prompt = prompt_gen.generate(bundle, entity_bindings, profile.information_flow)
 
                 # Generate verifier config
                 verifier_config = verif_gen.generate(
-                    dag, entity_bindings, archetype_to_surface
+                    bundle, entity_bindings, archetype_to_surface
                 )
 
                 # Build expected tool call list (surface names)
                 expected_tool_calls = []
-                for node in dag.get_tool_call_nodes():
+                for node in bundle.execution.get_tool_call_nodes():
                     surface_name = archetype_to_surface.get(node.archetype_id, node.archetype_id)
                     expected_tool_calls.append(surface_name)
 
@@ -165,8 +165,8 @@ class ProceduralSuiteFactory:
                 characteristics.requires_conditional_logic = profile.p_conditional > 0.3
                 characteristics.requires_error_recovery = profile.p_error_recovery > 0.3
                 characteristics.requires_plan_adaptation = profile.p_plan_adaptation > 0.3
-                characteristics.requires_state_tracking = dag.tool_call_count > 4
-                characteristics.requires_long_reasoning_chain = dag.depth > 4
+                characteristics.requires_state_tracking = bundle.tool_call_count > 4
+                characteristics.requires_long_reasoning_chain = bundle.depth > 4
 
                 task = Task(
                     id=f"proc_{self.domain}_{self.seed}_{task_counter:03d}",
@@ -179,15 +179,15 @@ class ProceduralSuiteFactory:
                     expected_answer=verifier_config.get("answer", []),
                     verifier_config=verifier_config,
                     description=f"Procedurally generated {difficulty.value} task (seed={self.seed})",
-                    min_tool_calls=dag.tool_call_count,
-                    max_tool_calls=dag.tool_call_count * 2,
+                    min_tool_calls=bundle.tool_call_count,
+                    max_tool_calls=bundle.tool_call_count * 2,
                     tags=["procedural", self.domain, difficulty.value],
                     metadata={
                         "seed": self.seed,
-                        "dag_id": dag.dag_id,
-                        "dag_depth": dag.depth,
-                        "dag_breadth": dag.breadth,
-                        "tool_call_count": dag.tool_call_count,
+                        "dag_id": bundle.dag_id,
+                        "dag_depth": bundle.depth,
+                        "dag_breadth": bundle.breadth,
+                        "tool_call_count": bundle.tool_call_count,
                     },
                 )
                 tasks.append(task)

@@ -1,0 +1,10 @@
+digraph "dag_42_simple_0_control_flow" {
+  rankdir=TB;
+  node [fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  "tool_1" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="check_free_slots [P]"];
+  "tool_2" [shape=box style="filled,rounded" fillcolor="#E3F2FD" label="dispatch_email [P]"];
+
+  "tool_1" -> "tool_2" [color="#757575" style=dashed label="[P] (data_dependency)"];
+}

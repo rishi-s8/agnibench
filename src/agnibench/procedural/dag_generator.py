@@ -8,15 +8,25 @@ The generator selects and composes patterns based on difficulty profiles.
 import random
 from typing import Any, Dict, List, Optional, Tuple
 
-from agnibench.core.abstractions import DifficultyLevel
+from agnibench.core.abstractions import DifficultyLevel, InformationFlow
 from agnibench.procedural.archetypes import DomainArchetypeSet, ToolArchetype
 from agnibench.procedural.dag import (
+    ControlFlowDAG,
+    ControlFlowEdge,
+    ControlFlowNode,
+    ControlSource,
     DAGEdge,
     DAGNode,
+    DataFlowDAG,
+    DataFlowEdge,
+    DataFlowNode,
+    DataFlowNodeType,
     DataSlot,
+    DataSource,
     EdgeType,
+    ExecutionDAG,
     NodeType,
-    TaskDAG,
+    TaskDAGBundle,
 )
 from agnibench.procedural.difficulty import DifficultyProfile, get_profile
 
@@ -42,10 +52,11 @@ READ_MODIFY_WRITE = MicroPattern("read_modify_write", min_tools=3, requires_cate
 
 class DAGGenerator:
     """
-    Generates TaskDAGs from difficulty profiles and domain archetypes.
+    Generates TaskDAGBundles from difficulty profiles and domain archetypes.
 
     Composes micro-patterns into DAGs, assigns tool archetypes to pattern slots,
-    and wires data edges between them.
+    and wires data edges between them. Then splits the execution DAG into
+    separate control flow and data flow DAGs.
     """
 
     def __init__(self, archetype_set: DomainArchetypeSet, seed: int):
@@ -447,20 +458,9 @@ class DAGGenerator:
                             target_param=param.semantic_role,
                         ))
 
-    def generate(self, difficulty: DifficultyLevel, dag_id: str = None) -> TaskDAG:
-        """
-        Generate a TaskDAG for the given difficulty level.
-
-        Args:
-            difficulty: Target difficulty level
-            dag_id: Optional ID for the DAG (auto-generated if None)
-
-        Returns:
-            A TaskDAG ready for data generation and prompt generation
-        """
+    def _build_execution_dag(self, difficulty: DifficultyLevel, dag_id: str) -> Tuple[ExecutionDAG, DifficultyProfile]:
+        """Build an ExecutionDAG (the core generation logic, unchanged from original)."""
         profile = get_profile(difficulty)
-        if dag_id is None:
-            dag_id = f"dag_{self.seed}_{difficulty.value}_{self.rng.randint(0, 99999)}"
 
         patterns = self._select_patterns(profile)
 
@@ -524,20 +524,252 @@ class DAGGenerator:
         source_nodes = {e.source_node_id for e in all_edges}
         final_terminal = [nid for nid in all_nodes if nid not in source_nodes]
 
-        return TaskDAG(
+        exec_dag = ExecutionDAG(
             dag_id=dag_id,
             nodes=all_nodes,
             edges=all_edges,
             entry_nodes=final_entry,
             terminal_nodes=final_terminal,
         )
+        return exec_dag, profile
+
+    def _split_into_bundle(self, execution_dag: ExecutionDAG, profile: DifficultyProfile) -> TaskDAGBundle:
+        """
+        Split an ExecutionDAG into a TaskDAGBundle with separate
+        ControlFlowDAG, DataFlowDAG, and the original ExecutionDAG.
+        """
+        info_flow = profile.information_flow
+
+        # Determine control source based on information_flow
+        if info_flow == InformationFlow.TOOL_DISCOVERY:
+            control_source = ControlSource.DISCOVERY
+        else:
+            control_source = ControlSource.PROMPT
+
+        # Determine data source for prompt-provided data
+        if info_flow == InformationFlow.PROMPT_FULL:
+            prompt_data_source = DataSource.PROMPT
+        else:
+            prompt_data_source = DataSource.TOOL_OUTPUT
+
+        # --- Build ControlFlowDAG ---
+        # Extract all TOOL_CALL nodes
+        tool_node_ids = set()
+        cf_nodes: Dict[str, ControlFlowNode] = {}
+        for nid, node in execution_dag.nodes.items():
+            if node.node_type == NodeType.TOOL_CALL:
+                tool_node_ids.add(nid)
+                cf_nodes[nid] = ControlFlowNode(
+                    node_id=nid,
+                    archetype_id=node.archetype_id or "",
+                    control_source=control_source,
+                    static_params=dict(node.static_params),
+                )
+
+        # Find edges between TOOL_CALL nodes (direct + transitive through PROMPT_DATA)
+        # Build adjacency from execution DAG
+        exec_adj: Dict[str, List[str]] = {nid: [] for nid in execution_dag.nodes}
+        for edge in execution_dag.edges:
+            exec_adj[edge.source_node_id].append(edge.target_node_id)
+
+        cf_edges: List[ControlFlowEdge] = []
+        seen_cf_edges = set()
+        for edge in execution_dag.edges:
+            src = edge.source_node_id
+            tgt = edge.target_node_id
+            if src in tool_node_ids and tgt in tool_node_ids:
+                key = (src, tgt)
+                if key not in seen_cf_edges:
+                    seen_cf_edges.add(key)
+                    reason = "data_dependency" if edge.edge_type == EdgeType.DATA_FLOW else "ordering"
+                    cf_edges.append(ControlFlowEdge(
+                        source_node_id=src,
+                        target_node_id=tgt,
+                        control_source=control_source,
+                        reason=reason,
+                    ))
+            elif src in tool_node_ids and tgt not in tool_node_ids:
+                # Transitive: tool -> non-tool -> ... -> tool
+                # BFS to find tool successors
+                visited = set()
+                queue = [tgt]
+                while queue:
+                    cur = queue.pop(0)
+                    if cur in visited:
+                        continue
+                    visited.add(cur)
+                    if cur in tool_node_ids and cur != src:
+                        key = (src, cur)
+                        if key not in seen_cf_edges:
+                            seen_cf_edges.add(key)
+                            cf_edges.append(ControlFlowEdge(
+                                source_node_id=src,
+                                target_node_id=cur,
+                                control_source=control_source,
+                                reason="data_dependency",
+                            ))
+                    elif cur not in tool_node_ids:
+                        for child in exec_adj.get(cur, []):
+                            queue.append(child)
+            elif src not in tool_node_ids and tgt in tool_node_ids:
+                # Transitive: non-tool sources -> tool target
+                # Find tool predecessors by looking at who feeds into this non-tool node
+                # (handled by the src-in-tool_node_ids case above via BFS)
+                pass
+
+        # Compute entry/terminal for control flow
+        cf_target_set = {e.target_node_id for e in cf_edges}
+        cf_source_set = {e.source_node_id for e in cf_edges}
+        cf_entry = [nid for nid in cf_nodes if nid not in cf_target_set]
+        cf_terminal = [nid for nid in cf_nodes if nid not in cf_source_set]
+
+        control_flow_dag = ControlFlowDAG(
+            dag_id=execution_dag.dag_id,
+            nodes=cf_nodes,
+            edges=cf_edges,
+            entry_nodes=cf_entry,
+            terminal_nodes=cf_terminal,
+        )
+
+        # --- Build DataFlowDAG ---
+        df_nodes: Dict[str, DataFlowNode] = {}
+        df_edges: List[DataFlowEdge] = []
+        df_counter = 0
+
+        def _df_id(prefix: str) -> str:
+            nonlocal df_counter
+            df_counter += 1
+            return f"df_{prefix}_{df_counter}"
+
+        # Track tool output nodes we create (keyed by execution_dag node_id)
+        tool_output_df_ids: Dict[str, str] = {}
+        # Track tool input nodes (keyed by (target_node_id, target_param))
+        tool_input_df_ids: Dict[str, str] = {}
+
+        # Create TOOL_OUTPUT nodes for each TOOL_CALL node's outputs
+        for nid, node in execution_dag.nodes.items():
+            if node.node_type == NodeType.TOOL_CALL:
+                for output_slot in node.outputs:
+                    df_nid = _df_id("tout")
+                    df_nodes[df_nid] = DataFlowNode(
+                        node_id=df_nid,
+                        node_type=DataFlowNodeType.TOOL_OUTPUT,
+                        data_source=DataSource.TOOL_OUTPUT,
+                        archetype_id=node.archetype_id,
+                        output_slot=output_slot.name,
+                        tool_node_ref=nid,
+                    )
+                    tool_output_df_ids[nid] = df_nid
+
+        # Create PROMPT_VALUE nodes for PROMPT_DATA nodes
+        prompt_value_df_ids: Dict[str, str] = {}
+        for nid, node in execution_dag.nodes.items():
+            if node.node_type == NodeType.PROMPT_DATA:
+                df_nid = _df_id("pval")
+                df_nodes[df_nid] = DataFlowNode(
+                    node_id=df_nid,
+                    node_type=DataFlowNodeType.PROMPT_VALUE,
+                    data_source=prompt_data_source,
+                    prompt_key=node.prompt_key,
+                    prompt_value=node.prompt_value,
+                )
+                prompt_value_df_ids[nid] = df_nid
+
+        # Process DATA_FLOW edges to create TOOL_INPUT nodes and data flow edges
+        for edge in execution_dag.edges:
+            if edge.edge_type != EdgeType.DATA_FLOW:
+                continue
+
+            src = edge.source_node_id
+            tgt = edge.target_node_id
+            src_node = execution_dag.nodes[src]
+            tgt_node = execution_dag.nodes[tgt]
+
+            if tgt_node.node_type != NodeType.TOOL_CALL:
+                continue
+
+            # Create a TOOL_INPUT node for the target
+            df_input_nid = _df_id("tin")
+            tgt_archetype_id = tgt_node.archetype_id or ""
+            # Determine data source for this input
+            if src_node.node_type == NodeType.PROMPT_DATA:
+                input_data_source = prompt_data_source
+            else:
+                input_data_source = DataSource.TOOL_OUTPUT
+
+            df_nodes[df_input_nid] = DataFlowNode(
+                node_id=df_input_nid,
+                node_type=DataFlowNodeType.TOOL_INPUT,
+                data_source=input_data_source,
+                archetype_id=tgt_archetype_id,
+                param_role=edge.target_param,
+                tool_node_ref=tgt,
+            )
+            tool_input_df_ids[f"{tgt}_{edge.target_param}"] = df_input_nid
+
+            # Create edge from source to input
+            if src_node.node_type == NodeType.PROMPT_DATA and src in prompt_value_df_ids:
+                source_df_nid = prompt_value_df_ids[src]
+                df_edges.append(DataFlowEdge(
+                    source_node_id=source_df_nid,
+                    target_node_id=df_input_nid,
+                    data_slot=edge.data_slot or DataSlot(name="data", data_type="string"),
+                    data_source=prompt_data_source,
+                    target_param=edge.target_param,
+                ))
+            elif src_node.node_type == NodeType.TOOL_CALL and src in tool_output_df_ids:
+                source_df_nid = tool_output_df_ids[src]
+                df_edges.append(DataFlowEdge(
+                    source_node_id=source_df_nid,
+                    target_node_id=df_input_nid,
+                    data_slot=edge.data_slot or DataSlot(name="data", data_type="string"),
+                    data_source=DataSource.TOOL_OUTPUT,
+                    target_param=edge.target_param,
+                ))
+
+        # Compute entry/terminal for data flow
+        df_target_set = {e.target_node_id for e in df_edges}
+        df_source_set = {e.source_node_id for e in df_edges}
+        df_entry = [nid for nid in df_nodes if nid not in df_target_set]
+        df_terminal = [nid for nid in df_nodes if nid not in df_source_set]
+
+        data_flow_dag = DataFlowDAG(
+            dag_id=execution_dag.dag_id,
+            nodes=df_nodes,
+            edges=df_edges,
+            entry_nodes=df_entry,
+            terminal_nodes=df_terminal,
+        )
+
+        return TaskDAGBundle(
+            control_flow=control_flow_dag,
+            data_flow=data_flow_dag,
+            execution=execution_dag,
+        )
+
+    def generate(self, difficulty: DifficultyLevel, dag_id: str = None) -> TaskDAGBundle:
+        """
+        Generate a TaskDAGBundle for the given difficulty level.
+
+        Args:
+            difficulty: Target difficulty level
+            dag_id: Optional ID for the DAG (auto-generated if None)
+
+        Returns:
+            A TaskDAGBundle containing control flow, data flow, and execution DAGs
+        """
+        if dag_id is None:
+            dag_id = f"dag_{self.seed}_{difficulty.value}_{self.rng.randint(0, 99999)}"
+
+        exec_dag, profile = self._build_execution_dag(difficulty, dag_id)
+        return self._split_into_bundle(exec_dag, profile)
 
     def generate_batch(
         self,
         difficulty: DifficultyLevel,
         count: int,
-    ) -> List[TaskDAG]:
-        """Generate multiple DAGs for a difficulty level."""
+    ) -> List[TaskDAGBundle]:
+        """Generate multiple TaskDAGBundles for a difficulty level."""
         return [
             self.generate(difficulty, dag_id=f"dag_{self.seed}_{difficulty.value}_{i}")
             for i in range(count)
