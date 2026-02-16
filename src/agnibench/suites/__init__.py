@@ -14,6 +14,7 @@ from agnibench.suites.data_analysis import DataAnalysisSuite
 from agnibench.suites.math_reasoning import MathReasoningSuite
 from agnibench.suites.research_synthesis import ResearchSynthesisSuite
 from agnibench.suites.workspace import WorkspaceSuite
+from agnibench.procedural import create_procedural_suite
 
 __all__ = [
     "MathReasoningSuite",
@@ -21,6 +22,7 @@ __all__ = [
     "ResearchSynthesisSuite",
     "CustomerServiceSuite",
     "DataAnalysisSuite",
+    "create_procedural_suite",
 ]
 
 # Registry of all available suites
@@ -30,6 +32,7 @@ SUITE_REGISTRY = {
     "research_synthesis": ResearchSynthesisSuite,
     "customer_service": CustomerServiceSuite,
     "data_analysis": DataAnalysisSuite,
+    "procedural_workspace": lambda: create_procedural_suite("workspace", seed=42),
 }
 
 

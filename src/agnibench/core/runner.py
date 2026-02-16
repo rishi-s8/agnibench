@@ -345,6 +345,7 @@ class BenchmarkRunner:
             "sync_state_from_data",
             "sync_state_from_software",
             "sync_state_from_math",
+            "sync_state_from_procedural",
         )
         for method_name in sync_methods:
             if hasattr(environment, method_name):
